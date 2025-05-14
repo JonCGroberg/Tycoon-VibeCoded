@@ -139,23 +139,25 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         Lvl {business.level}
       </div>
 
-      {/* Only show name, icon, and resource indicators if not Market */}
-      {business.type !== BusinessType.MARKET && <>
-        <div className="text-sm font-bold mt-2 text-center">{getBusinessName()}</div>
-        <div className="mt-2">{getBusinessIcon()}</div>
-        {/* Input Buffer Visualization - Left side */}
-        {business.type !== BusinessType.RESOURCE_GATHERING && (
-          <div className="absolute left-0 top-0 w-2 h-full flex flex-col-reverse">
-            <div
-              className={`w-full ${getBufferStatusColor(
-                business.incomingBuffer?.current,
-                business.incomingBuffer?.capacity,
-              )}`}
-              style={{ height: getBufferHeight(business.incomingBuffer?.current, business.incomingBuffer?.capacity) }}
-            ></div>
-          </div>
-        )}
-        {/* Output Buffer Visualization - Right side */}
+      <div className="text-sm font-bold mt-2 text-center">{getBusinessName()}</div>
+
+      <div className="mt-2">{getBusinessIcon()}</div>
+
+      {/* Input Buffer Visualization - Left side */}
+      {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
+        <div className="absolute left-0 top-0 w-2 h-full flex flex-col-reverse">
+          <div
+            className={`w-full ${getBufferStatusColor(
+              business.incomingBuffer?.current,
+              business.incomingBuffer?.capacity,
+            )}`}
+            style={{ height: getBufferHeight(business.incomingBuffer?.current, business.incomingBuffer?.capacity) }}
+          ></div>
+        </div>
+      )}
+
+      {/* Output Buffer Visualization - Right side */}
+      {business.type !== BusinessType.MARKET && (
         <div className="absolute right-0 top-0 w-2 h-full flex flex-col-reverse">
           <div
             className={`w-full ${getBufferStatusColor(
@@ -165,7 +167,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
             style={{ height: getBufferHeight(business.outgoingBuffer?.current, business.outgoingBuffer?.capacity) }}
           ></div>
         </div>
-      </>}
+      )}
 
       {/* Show workers and delivery drivers */}
       <div className="absolute -bottom-3 -left-2 flex space-x-2">
@@ -187,26 +189,28 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       </div>
 
       {/* Production progress bar and resource indicators at the top (always visible, 1.5x wider) */}
-      <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' /* 1.5 * 96px (entity width) */ }}>
-        <div className="flex items-center justify-between w-full space-x-2">
-          {/* Input Resource Indicator - always visible */}
-          <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING || business.type === BusinessType.MARKET ? 'opacity-30' : ''}`}>
-            {getResourceIcon(business.inputResource)}
-            {/* ! badge if requesting */}
-            {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && business.incomingBuffer.current < business.incomingBuffer.capacity && (
-              <AlertCircleIcon className="absolute -top-2 -right-2 w-3 h-3 text-yellow-500 animate-pulse" />
-            )}
-          </div>
-          {/* Progress bar */}
-          <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
-          </div>
-          {/* Output Resource Indicator - always visible */}
-          <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.type === BusinessType.MARKET ? 'opacity-30' : ''} ${business.outgoingBuffer.current === 0 ? 'opacity-50' : ''}`}>
-            {getResourceIcon(business.outputResource)}
+      {business.type !== BusinessType.MARKET && (
+        <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' }}>
+          <div className="flex items-center justify-between w-full space-x-2">
+            {/* Input Resource Indicator - always visible */}
+            <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING ? 'opacity-30' : ''}`}>
+              {getResourceIcon(business.inputResource)}
+              {/* ! badge if requesting */}
+              {business.type !== BusinessType.RESOURCE_GATHERING && business.incomingBuffer.current < business.incomingBuffer.capacity && (
+                <AlertCircleIcon className="absolute -top-2 -right-2 w-3 h-3 text-yellow-500 animate-pulse" />
+              )}
+            </div>
+            {/* Progress bar */}
+            <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
+            </div>
+            {/* Output Resource Indicator - always visible */}
+            <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingBuffer.current === 0 ? 'opacity-50' : ''}`}>
+              {getResourceIcon(business.outputResource)}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Starvation indicator: show ! if input buffer is empty and business is not resource gathering or market */}
       {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET &&

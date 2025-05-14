@@ -1,0 +1,56 @@
+.business-button {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin: 5px;
+    background: #2c3e50;
+    border: 2px solid #34495e;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: left;
+}
+
+.business-button:hover {
+    background: #34495e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.business-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #2c3e50;
+    transform: none;
+    box-shadow: none;
+}
+
+.business-icon {
+    font-size: 24px;
+    margin-right: 10px;
+    min-width: 30px;
+    text-align: center;
+}
+
+.business-info {
+    flex: 1;
+}
+
+.business-name {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.business-cost {
+    color: #f1c40f;
+    font-size: 0.9em;
+}
+
+.business-requirements {
+    color: #e74c3c;
+    font-size: 0.8em;
+    margin-top: 4px;
+    font-style: italic;
+}
