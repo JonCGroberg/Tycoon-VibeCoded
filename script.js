@@ -129,6 +129,13 @@ function createBusiness(type, x, y) {
         return null;
     }
 
+    // Set input/output resources and buffers
+    const inputResource = businessType.input ? businessType.input.type : null;
+    const outputResource = businessType.output ? businessType.output.type : null;
+    const incomingBuffer = businessType.input ? { current: 0, capacity: 10 * businessType.input.amount } : { current: 0, capacity: 0 };
+    const outgoingBuffer = businessType.output ? { current: 0, capacity: 10 * businessType.output.amount } : { current: 0, capacity: 0 };
+    const processingTime = businessType.time || 0;
+
     const business = {
         id: generateUniqueId(),
         type,
@@ -138,7 +145,12 @@ function createBusiness(type, x, y) {
         progress: 0,
         lastUpdate: Date.now(),
         isStopped: false,
-        isStoppedReason: null
+        isStoppedReason: null,
+        inputResource,
+        outputResource,
+        incomingBuffer,
+        outgoingBuffer,
+        processingTime
     };
 
     businesses.push(business);
@@ -185,4 +197,19 @@ function createBusinessButtons() {
 
         container.appendChild(button);
     });
+}
+
+// Add this function to handle placing a business and updating the UI
+function handleGridClick(x, y) {
+    if (!selectedBusinessType) return;
+    const newBusiness = createBusiness(selectedBusinessType, x, y);
+    if (newBusiness) {
+        // Deduct coins (assuming coins is a global variable)
+        coins -= BUSINESS_TYPES[selectedBusinessType].cost;
+        // Deselect after placement
+        selectedBusinessType = null;
+        document.body.style.cursor = 'default';
+        // Update the business buttons
+        createBusinessButtons();
+    }
 }
