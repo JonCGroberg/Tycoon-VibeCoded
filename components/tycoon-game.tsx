@@ -438,7 +438,10 @@ export default function TycoonGame() {
       level: 1,
       incomingBuffer: { current: 0, capacity: 100 },
       outgoingBuffer: { current: 0, capacity: 100 },
-      workers: [],
+      workers: businessType === BusinessType.RESOURCE_GATHERING ||
+        businessType === BusinessType.QUARRY ||
+        businessType === BusinessType.MINE ?
+        [{ id: generateUniqueId("worker"), gatherRate: 1 / 3 }] : [],
       deliveryBots: [],
       processingTime: 10,
       productionProgress: 0,
