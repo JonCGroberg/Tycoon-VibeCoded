@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { BusinessType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, HammerIcon, StoreIcon, CoinsIcon, GemIcon, BoxIcon, PackageIcon, WrenchIcon } from "lucide-react"
+import { TreesIcon as TreeIcon, Logs, StoreIcon, CoinsIcon, GemIcon, BoxIcon, PackageIcon, WrenchIcon } from "lucide-react"
 
 interface GameHUDProps {
   coins: number
@@ -52,56 +52,56 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
           <BoxIcon className="w-5 h-5 mr-2 text-gray-800" />
           <span>Place Mine ({buildingCosts[BusinessType.MINE]})</span>
         </Button>
-        <Button
-          variant="outline"
-          className="flex items-center justify-start"
-          onClick={() => onPlaceBusiness(BusinessType.PROCESSING)}
-          disabled={!hasLumberYard}
-          title={!hasLumberYard ? 'Requires at least one Lumber Yard' : ''}
-        >
-          <HammerIcon className="w-5 h-5 mr-2 text-amber-700" />
-          <span>Place Plank Mill ({buildingCosts[BusinessType.PROCESSING]})</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="flex items-center justify-start"
-          onClick={() => onPlaceBusiness(BusinessType.BRICK_KILN)}
-          disabled={!hasQuarry}
-          title={!hasQuarry ? 'Requires at least one Quarry' : ''}
-        >
-          <PackageIcon className="w-5 h-5 mr-2 text-red-700" />
-          <span>Place Brick Kiln ({buildingCosts[BusinessType.BRICK_KILN]})</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="flex items-center justify-start"
-          onClick={() => onPlaceBusiness(BusinessType.SMELTER)}
-          disabled={!hasMine}
-          title={!hasMine ? 'Requires at least one Mine' : ''}
-        >
-          <BoxIcon className="w-5 h-5 mr-2 text-gray-500" />
-          <span>Place Smelter ({buildingCosts[BusinessType.SMELTER]})</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="flex items-center justify-start"
-          onClick={() => onPlaceBusiness(BusinessType.SHOP)}
-          disabled={!hasPlankMill}
-          title={!hasPlankMill ? 'Requires at least one Plank Mill' : ''}
-        >
-          <StoreIcon className="w-5 h-5 mr-2 text-blue-700" />
-          <span>Place Furniture Shop ({buildingCosts[BusinessType.SHOP]})</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="flex items-center justify-start"
-          onClick={() => onPlaceBusiness(BusinessType.TOOL_SHOP)}
-          disabled={!hasSmelter}
-          title={!hasSmelter ? 'Requires at least one Smelter' : ''}
-        >
-          <WrenchIcon className="w-5 h-5 mr-2 text-blue-900" />
-          <span>Place Tool Shop ({buildingCosts[BusinessType.TOOL_SHOP]})</span>
-        </Button>
+        {hasLumberYard && (
+          <Button
+            variant="outline"
+            className="flex items-center justify-start"
+            onClick={() => onPlaceBusiness(BusinessType.PROCESSING)}
+          >
+            <Logs className="w-5 h-5 mr-2 text-amber-700" />
+            <span>Place Plank Mill ({buildingCosts[BusinessType.PROCESSING]})</span>
+          </Button>
+        )}
+        {hasQuarry && (
+          <Button
+            variant="outline"
+            className="flex items-center justify-start"
+            onClick={() => onPlaceBusiness(BusinessType.BRICK_KILN)}
+          >
+            <PackageIcon className="w-5 h-5 mr-2 text-red-700" />
+            <span>Place Brick Kiln ({buildingCosts[BusinessType.BRICK_KILN]})</span>
+          </Button>
+        )}
+        {hasMine && (
+          <Button
+            variant="outline"
+            className="flex items-center justify-start"
+            onClick={() => onPlaceBusiness(BusinessType.SMELTER)}
+          >
+            <BoxIcon className="w-5 h-5 mr-2 text-gray-500" />
+            <span>Place Smelter ({buildingCosts[BusinessType.SMELTER]})</span>
+          </Button>
+        )}
+        {hasPlankMill && (
+          <Button
+            variant="outline"
+            className="flex items-center justify-start"
+            onClick={() => onPlaceBusiness(BusinessType.SHOP)}
+          >
+            <StoreIcon className="w-5 h-5 mr-2 text-blue-700" />
+            <span>Place Furniture Shop ({buildingCosts[BusinessType.SHOP]})</span>
+          </Button>
+        )}
+        {hasSmelter && (
+          <Button
+            variant="outline"
+            className="flex items-center justify-start"
+            onClick={() => onPlaceBusiness(BusinessType.TOOL_SHOP)}
+          >
+            <WrenchIcon className="w-5 h-5 mr-2 text-blue-900" />
+            <span>Place Tool Shop ({buildingCosts[BusinessType.TOOL_SHOP]})</span>
+          </Button>
+        )}
       </div>
     </div>
   )

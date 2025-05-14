@@ -99,7 +99,7 @@ export default function TycoonGame() {
           const base = baseValues[rt as ResourceType] || 1;
           newPrices[rt as ResourceType] = {
             ...newPrices[rt as ResourceType],
-            target: base * (0.5 + Math.random())
+            target: base * (0.9 + Math.random() * 4.1)
           };
         });
         return newPrices;
@@ -172,9 +172,10 @@ export default function TycoonGame() {
       if (sourceBusiness && targetBusiness) {
         // Process the delivery
         if (targetBusiness.type === BusinessType.MARKET) {
-          // Selling to market at 50% value
-          const resourceValue = getResourceValue(delivery.resourceType)
-          const profit = delivery.resourceAmount * resourceValue * 0.5
+          // Selling to market at current market price
+          const marketPrice = marketPrices[delivery.resourceType]?.value || getResourceValue(delivery.resourceType)
+          const profit = delivery.resourceAmount * marketPrice
+          console.log(`Sold ${delivery.resourceAmount} ${delivery.resourceType} to market at ${marketPrice.toFixed(2)} each, total: ${profit.toFixed(2)}`)
           newState.coins += profit
 
           // Show profit indicator on source business
@@ -214,7 +215,7 @@ export default function TycoonGame() {
 
       return newState
     })
-  }, [])
+  }, [marketPrices])
 
   // Game tick - update resources, workers, bots every second
   useEffect(() => {
@@ -273,17 +274,17 @@ export default function TycoonGame() {
             )
 
             if (!bot.isDelivering && !isAlreadyDelivering && business.outgoingBuffer.current >= 1) {
-              console.log('Bot ready for delivery:', { botId: bot.id, businessId: business.id })
+              // console.log('Bot ready for delivery:', { botId: bot.id, businessId: business.id })
 
               // Find best delivery target
               const target = findBestDeliveryTarget(business, newState.businesses)
 
               if (target) {
-                console.log('Found delivery target:', {
-                  targetId: target.id,
-                  targetType: target.type,
-                  resourceAmount: business.outgoingBuffer.current
-                })
+                // console.log('Found delivery target:', {
+                //   targetId: target.id,
+                //   targetType: target.type,
+                //   resourceAmount: business.outgoingBuffer.current
+                // })
 
                 bot.isDelivering = true
                 bot.targetBusinessId = target.id
@@ -299,10 +300,10 @@ export default function TycoonGame() {
                   resourceAmount: bot.carryingAmount,
                   resourceType: business.outputResource,
                 }
-                console.log('Created new delivery:', newDelivery)
+                // console.log('Created new delivery:', newDelivery)
 
                 newState.activeDeliveries.push(newDelivery)
-                console.log('Total active deliveries:', newState.activeDeliveries.length)
+                // console.log('Total active deliveries:', newState.activeDeliveries.length)
               }
             }
           })
@@ -392,7 +393,7 @@ export default function TycoonGame() {
       [BusinessType.MARKET]: 0,
     }
     const count = gameState.businesses.filter(b => b.type === businessType).length
-    return Math.floor(baseCosts[businessType] * Math.pow(2, count))
+    return Math.floor(baseCosts[businessType] * Math.pow(1.3, count))
   }
 
   function getWorkerCost(business: Business): number {
@@ -407,9 +408,30 @@ export default function TycoonGame() {
     return Math.floor(base * Math.pow(1.2, n))
   }
 
-  function getUpgradeCost(business: Business): number {
+  function getUpgradeCost(business: Business, upgradeType?: "incomingCapacity" | "processingTime" | "outgoingCapacity"): number {
     const base = 50
-    return Math.floor(base * Math.pow(2, business.level - 1))
+    // Track upgrades per type on the business object
+    if (!business.upgrades) {
+      business.upgrades = {
+        incomingCapacity: 0,
+        processingTime: 0,
+        outgoingCapacity: 0
+      }
+    }
+    // If no upgradeType is provided, fallback to old logic
+    if (!upgradeType) {
+      return Math.floor(base * Math.pow(2, business.level - 1))
+    }
+    // Cost is 2x for the current upgrade type, 1.5x for each other type not yet upgraded
+    let cost = base
+    cost *= Math.pow(2, business.upgrades[upgradeType])
+    const otherTypes: Array<"incomingCapacity" | "processingTime" | "outgoingCapacity"> = ["incomingCapacity", "processingTime", "outgoingCapacity"].filter(t => t !== upgradeType) as any
+    otherTypes.forEach(type => {
+      if (business.upgrades && business.upgrades[type] === 0) {
+        cost *= 1.5
+      }
+    })
+    return Math.floor(cost)
   }
 
   // Place a new business on the game world
@@ -436,8 +458,8 @@ export default function TycoonGame() {
       type: businessType,
       position,
       level: 1,
-      incomingBuffer: { current: 0, capacity: 100 },
-      outgoingBuffer: { current: 0, capacity: 100 },
+      incomingBuffer: { current: 0, capacity: 10 },
+      outgoingBuffer: { current: 0, capacity: 10 },
       workers: businessType === BusinessType.RESOURCE_GATHERING ||
         businessType === BusinessType.QUARRY ||
         businessType === BusinessType.MINE ?
@@ -563,7 +585,7 @@ export default function TycoonGame() {
       if (businessIndex === -1) return prevState
 
       const business = newState.businesses[businessIndex]
-      const upgradeCost = getUpgradeCost(business)
+      const upgradeCost = getUpgradeCost(business, upgradeType)
 
       if (newState.coins < upgradeCost) return prevState
 
@@ -579,6 +601,15 @@ export default function TycoonGame() {
           business.outgoingBuffer.capacity = business.outgoingBuffer.capacity * 2
           break
       }
+      // Track upgrades per type
+      if (!business.upgrades) {
+        business.upgrades = {
+          incomingCapacity: 0,
+          processingTime: 0,
+          outgoingCapacity: 0
+        }
+      }
+      business.upgrades[upgradeType] = (business.upgrades[upgradeType] || 0) + 1
 
       business.level += 1
       newState.coins -= upgradeCost
@@ -673,7 +704,7 @@ export default function TycoonGame() {
         </div>
       )}
 
-      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} />}
+      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} gameState={gameState} />}
 
       <GameHUD
         coins={gameState.coins}

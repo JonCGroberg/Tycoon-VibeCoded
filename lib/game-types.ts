@@ -58,6 +58,11 @@ export interface Business {
   outputResource: ResourceType
   recentProfit?: number // For showing profit indicators
   profitDisplayTime?: number // Time remaining to display profit
+  upgrades?: {
+    incomingCapacity: number
+    processingTime: number
+    outgoingCapacity: number
+  }
 }
 
 export interface GameState {

@@ -1,7 +1,7 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, HammerIcon, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon } from "lucide-react"
+import { TreesIcon as TreeIcon, Logs, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon } from "lucide-react"
 
 interface BusinessEntityProps {
   business: Business
@@ -15,7 +15,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       case BusinessType.RESOURCE_GATHERING:
         return <TreeIcon className="w-6 h-6 text-green-800" />
       case BusinessType.PROCESSING:
-        return <HammerIcon className="w-6 h-6 text-amber-700" />
+        return <Logs className="w-6 h-6 text-amber-700" />
       case BusinessType.SHOP:
         return <StoreIcon className="w-6 h-6 text-blue-700" />
       case BusinessType.MARKET:
@@ -93,7 +93,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       case ResourceType.IRON_ORE:
         return <BoxIcon className="w-3.5 h-3.5 text-white" />
       case ResourceType.PLANKS:
-        return <HammerIcon className="w-3.5 h-3.5 text-white" />
+        return <Logs className="w-3.5 h-3.5 text-white" />
       case ResourceType.BRICKS:
         return <PackageIcon className="w-3.5 h-3.5 text-white" />
       case ResourceType.IRON_INGOT:
