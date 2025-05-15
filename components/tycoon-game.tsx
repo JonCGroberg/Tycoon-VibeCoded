@@ -318,23 +318,36 @@ export default function TycoonGame() {
 
   // Helper function to find the best delivery target
   function findBestDeliveryTarget(sourceBusiness: Business, allBusinesses: Business[]): Business | null {
-    // For the prototype, we'll use a simplified algorithm
-    // First, check if there are any businesses that need this resource
+    // Find all possible targets: businesses that need this resource and the market
     const potentialTargets = allBusinesses.filter(
       (business) =>
         business.id !== sourceBusiness.id &&
         business.inputResource === sourceBusiness.outputResource &&
         business.incomingBuffer.current < business.incomingBuffer.capacity,
     )
+    const market = allBusinesses.find((business) => business.type === BusinessType.MARKET)
 
-    if (potentialTargets.length > 0) {
-      // For simplicity, just return the first one
-      // In a real implementation, we'd calculate scores based on distance and value
-      return potentialTargets[0]
+    // Calculate profit/value for each target
+    let bestTarget: Business | null = null
+    let bestValue = -Infinity
+    // Check businesses
+    for (const business of potentialTargets) {
+      // Value is the static resource value (could be improved to use downstream market value)
+      const value = getResourceValue(sourceBusiness.outputResource)
+      if (value > bestValue) {
+        bestValue = value
+        bestTarget = business
+      }
     }
-
-    // If no businesses need this resource, deliver to market
-    return allBusinesses.find((business) => business.type === BusinessType.MARKET) || null
+    // Check market
+    if (market) {
+      const marketValue = marketPrices[sourceBusiness.outputResource]?.value || getResourceValue(sourceBusiness.outputResource)
+      if (marketValue > bestValue) {
+        bestValue = marketValue
+        bestTarget = market
+      }
+    }
+    return bestTarget
   }
 
   // Helper function to get resource value
