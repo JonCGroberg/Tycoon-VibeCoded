@@ -15,6 +15,7 @@ import {
   type ActiveDelivery,
 } from "@/lib/game-types"
 import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
+import { getBusinessData } from "@/lib/business-data"
 
 export default function TycoonGame() {
   const [gameState, setGameState] = useState<GameState>(initializeGameState())
@@ -168,7 +169,9 @@ export default function TycoonGame() {
 
         // Process worker gathering
         newState.businesses.forEach((business) => {
-          if (business.type === BusinessType.RESOURCE_GATHERING) {
+          if (business.type === BusinessType.RESOURCE_GATHERING ||
+            business.type === BusinessType.QUARRY ||
+            business.type === BusinessType.MINE) {
             // Each worker gathers 1 unit every 3 seconds
             if (!business.gatherProgress) business.gatherProgress = 0
             business.gatherProgress += business.workers.length * (1 / 3)
@@ -419,19 +422,9 @@ export default function TycoonGame() {
 
   // New cost formulas
   function getBuildingCost(businessType: BusinessType): number {
-    const baseCosts: Record<BusinessType, number> = {
-      [BusinessType.RESOURCE_GATHERING]: 100,
-      [BusinessType.QUARRY]: 120,
-      [BusinessType.MINE]: 150,
-      [BusinessType.PROCESSING]: 250,
-      [BusinessType.BRICK_KILN]: 300,
-      [BusinessType.SMELTER]: 350,
-      [BusinessType.SHOP]: 500,
-      [BusinessType.TOOL_SHOP]: 600,
-      [BusinessType.MARKET]: 0,
-    }
+    const data = getBusinessData(businessType)
     const count = gameState.businesses.filter(b => b.type === businessType).length
-    return Math.floor(baseCosts[businessType] * Math.pow(1.3, count))
+    return Math.floor(data.baseCost * Math.pow(1.3, count))
   }
 
   function getWorkerCost(business: Business): number {
@@ -472,6 +465,17 @@ export default function TycoonGame() {
     return Math.floor(cost)
   }
 
+  // Helper functions to determine input/output resources based on business type
+  function getInputResourceForBusinessType(businessType: BusinessType): ResourceType {
+    const data = getBusinessData(businessType)
+    return data.inputResource as ResourceType
+  }
+
+  function getOutputResourceForBusinessType(businessType: BusinessType): ResourceType {
+    const data = getBusinessData(businessType)
+    return data.outputResource as ResourceType
+  }
+
   // Place a new business on the game world
   const handlePlaceBusiness = (businessType: BusinessType, position: { x: number; y: number }) => {
     if (isPlacing) return // Prevent multiple placements
@@ -491,22 +495,20 @@ export default function TycoonGame() {
       return
     }
 
+    const data = getBusinessData(businessType)
     const newBusiness: Business = {
       id: generateUniqueId("business"),
       type: businessType,
       position,
       level: 1,
-      incomingBuffer: { current: 0, capacity: 10 },
-      outgoingBuffer: { current: 0, capacity: 10 },
-      workers: businessType === BusinessType.RESOURCE_GATHERING ||
-        businessType === BusinessType.QUARRY ||
-        businessType === BusinessType.MINE ?
-        [{ id: generateUniqueId("worker"), gatherRate: 1 / 3 }] : [],
+      incomingBuffer: { current: 0, capacity: data.buffer.incoming.initialCapacity },
+      outgoingBuffer: { current: 0, capacity: data.buffer.outgoing.initialCapacity },
+      workers: data.workers.initial > 0 ? [{ id: generateUniqueId("worker"), gatherRate: data.workers.gatherRate || 1 / 3 }] : [],
       deliveryBots: [],
-      processingTime: 10,
+      processingTime: data.processingTime,
       productionProgress: 0,
-      inputResource: getInputResourceForBusinessType(businessType),
-      outputResource: getOutputResourceForBusinessType(businessType)
+      inputResource: data.inputResource as ResourceType,
+      outputResource: data.outputResource as ResourceType
     }
 
     console.log('Created new business:', newBusiness)
@@ -528,68 +530,21 @@ export default function TycoonGame() {
     setPlacingBusiness(null)
   }
 
-  // Helper functions to determine input/output resources based on business type
-  function getInputResourceForBusinessType(businessType: BusinessType): ResourceType {
-    switch (businessType) {
-      case BusinessType.RESOURCE_GATHERING:
-        return ResourceType.NONE
-      case BusinessType.PROCESSING:
-        return ResourceType.WOOD // Default for Plank Mill, will override for others
-      case BusinessType.SHOP:
-        return ResourceType.PLANKS // Default for Furniture Shop, will override for others
-      case BusinessType.QUARRY:
-        return ResourceType.NONE
-      case BusinessType.MINE:
-        return ResourceType.NONE
-      case BusinessType.BRICK_KILN:
-        return ResourceType.STONE
-      case BusinessType.SMELTER:
-        return ResourceType.IRON_ORE
-      case BusinessType.TOOL_SHOP:
-        return ResourceType.IRON_INGOT
-      default:
-        return ResourceType.NONE
-    }
-  }
-
-  function getOutputResourceForBusinessType(businessType: BusinessType): ResourceType {
-    switch (businessType) {
-      case BusinessType.RESOURCE_GATHERING:
-        return ResourceType.WOOD // Default for Woodcutter, will override for others
-      case BusinessType.PROCESSING:
-        return ResourceType.PLANKS // Default for Plank Mill, will override for others
-      case BusinessType.SHOP:
-        return ResourceType.FURNITURE // Default for Furniture Shop, will override for others
-      case BusinessType.QUARRY:
-        return ResourceType.STONE
-      case BusinessType.MINE:
-        return ResourceType.IRON_ORE
-      case BusinessType.BRICK_KILN:
-        return ResourceType.BRICKS
-      case BusinessType.SMELTER:
-        return ResourceType.IRON_INGOT
-      case BusinessType.TOOL_SHOP:
-        return ResourceType.TOOLS
-      default:
-        return ResourceType.NONE
-    }
-  }
-
   // Hire a delivery bot for a business
-  const handleHireDeliveryBot = (businessId: string) => {
-    if (isHiringBotRef.current) return;
-    isHiringBotRef.current = true;
+  const handleHireDeliveryBot = useCallback((businessId: string) => {
+    const transactionId = Date.now();
+    console.log('Hiring bot attempt:', { businessId, transactionId });
 
     setGameState((prevState) => {
-      const newState = { ...prevState }
-      const businessIndex = newState.businesses.findIndex((b) => b.id === businessId)
+      // Check if this business already has a pending hire
+      const business = prevState.businesses.find(b => b.id === businessId);
+      if (!business) return prevState;
 
-      if (businessIndex === -1) return prevState
+      // Check if we can afford it
+      const botCost = getBotCost(business);
+      if (prevState.coins < botCost) return prevState;
 
-      const botCost = getBotCost(newState.businesses[businessIndex])
-
-      if (newState.coins < botCost) return prevState
-
+      // Create new bot
       const newBot: DeliveryBot = {
         id: generateUniqueId("bot"),
         capacity: 25,
@@ -597,19 +552,27 @@ export default function TycoonGame() {
         isDelivering: false,
         targetBusinessId: null,
         carryingAmount: 0,
-      }
+      };
 
-      newState.businesses[businessIndex].deliveryBots.push(newBot)
-      newState.coins -= botCost
+      // Create new state with the bot added
+      const newState = {
+        ...prevState,
+        coins: prevState.coins - botCost,
+        businesses: prevState.businesses.map(b => {
+          if (b.id === businessId) {
+            return {
+              ...b,
+              deliveryBots: [...b.deliveryBots, newBot]
+            };
+          }
+          return b;
+        })
+      };
 
-      // Log the delivery driver count after purchase
-      console.log(`Business ${newState.businesses[businessIndex].id} now has ${newState.businesses[businessIndex].deliveryBots.length} delivery drivers.`)
-
-      return newState
-    })
-
-    setTimeout(() => { isHiringBotRef.current = false }, 200);
-  }
+      console.log(`Business ${businessId} now has ${newState.businesses.find(b => b.id === businessId)?.deliveryBots.length} delivery drivers.`);
+      return newState;
+    });
+  }, []);
 
   // Upgrade a business
   const handleUpgradeBusiness = (

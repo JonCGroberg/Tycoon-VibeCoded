@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { BusinessType } from "@/lib/game-types"
+import { getBusinessData } from "@/lib/business-data"
 import { TreesIcon as TreeIcon, Logs, StoreIcon, CoinsIcon, GemIcon, BoxIcon, PackageIcon, WrenchIcon } from "lucide-react"
 
 interface GameHUDProps {
@@ -34,7 +35,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
           onClick={() => onPlaceBusiness(BusinessType.RESOURCE_GATHERING)}
         >
           <TreeIcon className="w-5 h-5 mr-2 text-green-700" />
-          <span>Place Lumber Yard ({buildingCosts[BusinessType.RESOURCE_GATHERING]})</span>
+          <span>Place {getBusinessData(BusinessType.RESOURCE_GATHERING).name} ({buildingCosts[BusinessType.RESOURCE_GATHERING]})</span>
         </Button>
         <Button
           variant="outline"
@@ -42,7 +43,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
           onClick={() => onPlaceBusiness(BusinessType.QUARRY)}
         >
           <GemIcon className="w-5 h-5 mr-2 text-gray-700" />
-          <span>Place Quarry ({buildingCosts[BusinessType.QUARRY]})</span>
+          <span>Place {getBusinessData(BusinessType.QUARRY).name} ({buildingCosts[BusinessType.QUARRY]})</span>
         </Button>
         <Button
           variant="outline"
@@ -50,7 +51,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
           onClick={() => onPlaceBusiness(BusinessType.MINE)}
         >
           <BoxIcon className="w-5 h-5 mr-2 text-gray-800" />
-          <span>Place Mine ({buildingCosts[BusinessType.MINE]})</span>
+          <span>Place {getBusinessData(BusinessType.MINE).name} ({buildingCosts[BusinessType.MINE]})</span>
         </Button>
         {hasLumberYard && (
           <Button
@@ -59,7 +60,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
             onClick={() => onPlaceBusiness(BusinessType.PROCESSING)}
           >
             <Logs className="w-5 h-5 mr-2 text-amber-700" />
-            <span>Place Plank Mill ({buildingCosts[BusinessType.PROCESSING]})</span>
+            <span>Place {getBusinessData(BusinessType.PROCESSING).name} ({buildingCosts[BusinessType.PROCESSING]})</span>
           </Button>
         )}
         {hasQuarry && (
@@ -69,7 +70,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
             onClick={() => onPlaceBusiness(BusinessType.BRICK_KILN)}
           >
             <PackageIcon className="w-5 h-5 mr-2 text-red-700" />
-            <span>Place Brick Kiln ({buildingCosts[BusinessType.BRICK_KILN]})</span>
+            <span>Place {getBusinessData(BusinessType.BRICK_KILN).name} ({buildingCosts[BusinessType.BRICK_KILN]})</span>
           </Button>
         )}
         {hasMine && (
@@ -79,7 +80,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
             onClick={() => onPlaceBusiness(BusinessType.SMELTER)}
           >
             <BoxIcon className="w-5 h-5 mr-2 text-gray-500" />
-            <span>Place Smelter ({buildingCosts[BusinessType.SMELTER]})</span>
+            <span>Place {getBusinessData(BusinessType.SMELTER).name} ({buildingCosts[BusinessType.SMELTER]})</span>
           </Button>
         )}
         {hasPlankMill && (
@@ -89,7 +90,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
             onClick={() => onPlaceBusiness(BusinessType.SHOP)}
           >
             <StoreIcon className="w-5 h-5 mr-2 text-blue-700" />
-            <span>Place Furniture Shop ({buildingCosts[BusinessType.SHOP]})</span>
+            <span>Place {getBusinessData(BusinessType.SHOP).name} ({buildingCosts[BusinessType.SHOP]})</span>
           </Button>
         )}
         {hasSmelter && (
@@ -99,7 +100,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
             onClick={() => onPlaceBusiness(BusinessType.TOOL_SHOP)}
           >
             <WrenchIcon className="w-5 h-5 mr-2 text-blue-900" />
-            <span>Place Tool Shop ({buildingCosts[BusinessType.TOOL_SHOP]})</span>
+            <span>Place {getBusinessData(BusinessType.TOOL_SHOP).name} ({buildingCosts[BusinessType.TOOL_SHOP]})</span>
           </Button>
         )}
       </div>

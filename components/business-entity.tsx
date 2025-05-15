@@ -1,6 +1,7 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
+import { getBusinessData } from "@/lib/business-data"
 import { TreesIcon as TreeIcon, Logs, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon } from "lucide-react"
 
 interface BusinessEntityProps {
@@ -9,55 +10,27 @@ interface BusinessEntityProps {
 }
 
 export default function BusinessEntity({ business, onClick }: BusinessEntityProps) {
-  // Get the appropriate icon based on business type
-  const getBusinessIcon = () => {
-    switch (business.type) {
-      case BusinessType.RESOURCE_GATHERING:
-        return <TreeIcon className="w-6 h-6 text-green-800" />
-      case BusinessType.PROCESSING:
-        return <Logs className="w-6 h-6 text-amber-700" />
-      case BusinessType.SHOP:
-        return <StoreIcon className="w-6 h-6 text-blue-700" />
-      case BusinessType.MARKET:
-        return <CoinsIcon className="w-6 h-6 text-yellow-500" />
-    }
+  const businessData = getBusinessData(business.type)
+
+  // Get the appropriate icon component
+  const iconMap = {
+    TreeIcon,
+    GemIcon,
+    BoxIcon,
+    Logs,
+    PackageIcon,
+    WrenchIcon,
+    StoreIcon,
+    CoinsIcon
   }
+
+  const BusinessIcon = iconMap[businessData.icon as keyof typeof iconMap]
 
   // Get color based on business type
-  const getBusinessColor = () => {
-    switch (business.type) {
-      case BusinessType.RESOURCE_GATHERING:
-        return "bg-green-200 border-green-600"
-      case BusinessType.PROCESSING:
-        return "bg-amber-200 border-amber-600"
-      case BusinessType.SHOP:
-        return "bg-blue-200 border-blue-600"
-      case BusinessType.MARKET:
-        return "bg-yellow-200 border-yellow-600"
-    }
-  }
+  const businessColor = `${businessData.color.background} ${businessData.color.border}`
 
-  // Get business name based on type and resources
-  const getBusinessName = () => {
-    switch (business.type) {
-      case BusinessType.RESOURCE_GATHERING:
-        return business.outputResource === ResourceType.WOOD
-          ? "Lumber Yard"
-          : business.outputResource === ResourceType.STONE
-            ? "Quarry"
-            : "Mine"
-      case BusinessType.PROCESSING:
-        return business.outputResource === ResourceType.PLANKS
-          ? "Plank Mill"
-          : business.outputResource === ResourceType.BRICKS
-            ? "Brick Kiln"
-            : "Smelter"
-      case BusinessType.SHOP:
-        return business.outputResource === ResourceType.FURNITURE ? "Furniture Shop" : "Tool Shop"
-      case BusinessType.MARKET:
-        return "Market"
-    }
-  }
+  // Get business name
+  const businessName = businessData.name
 
   // Get resource color
   const getResourceColor = (resourceType: ResourceType) => {
@@ -127,7 +100,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
 
   return (
     <div
-      className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
+      className={`absolute w-24 h-24 ${businessColor} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
       style={{
         left: business.position.x - 48,
         top: business.position.y - 48,
@@ -139,22 +112,25 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         Lvl {business.level}
       </div>
 
-      <div className="text-sm font-bold mt-2 text-center">{getBusinessName()}</div>
+      <div className="text-sm font-bold mt-2 text-center">{businessName}</div>
 
-      <div className="mt-2">{getBusinessIcon()}</div>
+      <div className="mt-2">{BusinessIcon && <BusinessIcon className={`w-6 h-6 ${businessData.iconColor}`} />}</div>
 
       {/* Input Buffer Visualization - Left side */}
-      {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
-        <div className="absolute left-0 top-0 w-2 h-full flex flex-col-reverse">
-          <div
-            className={`w-full ${getBufferStatusColor(
-              business.incomingBuffer?.current,
-              business.incomingBuffer?.capacity,
-            )}`}
-            style={{ height: getBufferHeight(business.incomingBuffer?.current, business.incomingBuffer?.capacity) }}
-          ></div>
-        </div>
-      )}
+      {business.type !== BusinessType.RESOURCE_GATHERING &&
+        business.type !== BusinessType.QUARRY &&
+        business.type !== BusinessType.MINE &&
+        business.type !== BusinessType.MARKET && (
+          <div className="absolute left-0 top-0 w-2 h-full flex flex-col-reverse">
+            <div
+              className={`w-full ${getBufferStatusColor(
+                business.incomingBuffer?.current,
+                business.incomingBuffer?.capacity,
+              )}`}
+              style={{ height: getBufferHeight(business.incomingBuffer?.current, business.incomingBuffer?.capacity) }}
+            ></div>
+          </div>
+        )}
 
       {/* Output Buffer Visualization - Right side */}
       {business.type !== BusinessType.MARKET && (
@@ -170,7 +146,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       )}
 
       {/* Show workers and delivery drivers */}
-      <div className="absolute -bottom-3 -left-2 flex space-x-2">
+      <div className="absolute -bottom-6 -left-4 flex space-x-2">
         {/*
         {business.workers.length > 0 && (
           <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
@@ -192,13 +168,16 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       {business.type !== BusinessType.MARKET && (
         <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' }}>
           <div className="flex items-center justify-between w-full space-x-2">
-            {/* Input Resource Indicator - always visible */}
-            <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING ? 'opacity-30' : ''}`}>
+            {/* Input Resource Indicator - invisible for tier 1 businesses and when no input */}
+            <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${(business.type === BusinessType.RESOURCE_GATHERING || business.type === BusinessType.QUARRY || business.type === BusinessType.MINE || business.inputResource === ResourceType.NONE) ? 'invisible' : ''}`}>
               {getResourceIcon(business.inputResource)}
               {/* ! badge if requesting */}
-              {business.type !== BusinessType.RESOURCE_GATHERING && business.incomingBuffer.current < business.incomingBuffer.capacity && (
-                <AlertCircleIcon className="absolute -top-2 -right-2 w-3 h-3 text-yellow-500 animate-pulse" />
-              )}
+              {business.type !== BusinessType.RESOURCE_GATHERING &&
+                business.type !== BusinessType.QUARRY &&
+                business.type !== BusinessType.MINE &&
+                business.incomingBuffer.current < business.incomingBuffer.capacity && (
+                  <AlertCircleIcon className="absolute -top-2 -right-2 w-3 h-3 text-red-500" />
+                )}
             </div>
             {/* Progress bar */}
             <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
@@ -211,17 +190,6 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
           </div>
         </div>
       )}
-
-      {/* Starvation indicator: show ! if input buffer is empty and business is not resource gathering or market */}
-      {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET &&
-        business.incomingBuffer.current === 0 && (
-          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex items-center z-10">
-            <AlertCircleIcon className="w-5 h-5 text-yellow-500 animate-pulse mr-1" />
-            <span className="text-xs font-bold text-yellow-700 bg-white bg-opacity-80 px-1 rounded">
-              Needs {business.inputResource.charAt(0) + business.inputResource.slice(1).toLowerCase()}
-            </span>
-          </div>
-        )}
 
       {/* Profit indicators */}
       {business.recentProfit && business.recentProfit > 0 && (

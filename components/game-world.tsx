@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useRef } from "react"
 import { type Business, BusinessType } from "@/lib/game-types"
+import { getBusinessData } from "@/lib/business-data"
 import BusinessEntity from "./business-entity"
 import DeliveryBotEntity from "./delivery-bot"
 
@@ -44,12 +45,11 @@ export default function GameWorld({
   // Handle click to place business
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent event bubbling
-    if (placingBusiness) {
-      console.log('Click detected:', {
-        placingBusiness,
-        timestamp: Date.now()
-      })
-      onPlaceBusiness(placingBusiness, mousePosition)
+    if (placingBusiness && worldRef.current) {
+      const rect = worldRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      onPlaceBusiness(placingBusiness, { x, y })
     }
   }
 
@@ -107,6 +107,9 @@ export default function GameWorld({
 
         if (!sourceBusiness || !targetBusiness) return null
 
+        // Only render the bot if it's actively delivering
+        if (!delivery.bot.isDelivering) return null
+
         return (
           <DeliveryBotEntity
             key={delivery.id}
@@ -115,6 +118,7 @@ export default function GameWorld({
             targetPosition={targetBusiness.position}
             resourceType={sourceBusiness.outputResource}
             onDeliveryComplete={() => onDeliveryComplete(delivery.id)}
+            expectedArrival={delivery.expectedArrival}
           />
         )
       })}
@@ -130,11 +134,7 @@ export default function GameWorld({
           }}
         >
           <div className="text-sm text-center text-white font-bold mt-2">
-            {placingBusiness === BusinessType.RESOURCE_GATHERING
-              ? "Woodcutter"
-              : placingBusiness === BusinessType.PROCESSING
-                ? "Plank Mill"
-                : "Furniture Shop"}
+            {getBusinessData(placingBusiness).name}
           </div>
         </div>
       )}

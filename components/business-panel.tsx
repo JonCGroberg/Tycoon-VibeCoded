@@ -5,6 +5,7 @@ import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getBusinessData } from "@/lib/business-data"
 import {
   UserIcon,
   TruckIcon,
@@ -31,6 +32,7 @@ export default function BusinessPanel({
   onUpgrade,
 }: BusinessPanelProps) {
   const [activeTab, setActiveTab] = useState("info")
+  const businessData = getBusinessData(business.type)
 
   // Helper cost functions (copied from tycoon-game, but use props.business)
   function getWorkerCost(business: Business): number {
@@ -46,28 +48,6 @@ export default function BusinessPanel({
   function getUpgradeCost(business: Business): number {
     const base = 50
     return Math.floor(base * Math.pow(2, business.level - 1))
-  }
-
-  // Get business name based on type and resources
-  const getBusinessName = () => {
-    switch (business.type) {
-      case BusinessType.RESOURCE_GATHERING:
-        return business.outputResource === ResourceType.WOOD
-          ? "Woodcutter"
-          : business.outputResource === ResourceType.STONE
-            ? "Quarry"
-            : "Mine"
-      case BusinessType.PROCESSING:
-        return business.outputResource === ResourceType.PLANKS
-          ? "Plank Mill"
-          : business.outputResource === ResourceType.BRICKS
-            ? "Brick Kiln"
-            : "Smelter"
-      case BusinessType.SHOP:
-        return business.outputResource === ResourceType.FURNITURE ? "Furniture Shop" : "Tool Shop"
-      case BusinessType.MARKET:
-        return "Market"
-    }
   }
 
   // Get resource name
@@ -109,7 +89,7 @@ export default function BusinessPanel({
     <div className="absolute bottom-4 right-4 w-80 bg-white rounded-lg shadow-lg border border-gray-300 z-20">
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div>
-          <h3 className="font-bold text-lg">{getBusinessName()}</h3>
+          <h3 className="font-bold text-lg">{businessData.name}</h3>
           <div className="text-sm text-gray-600">Level {business.level}</div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -193,29 +173,20 @@ export default function BusinessPanel({
 
           {/* Workers & Delivery Drivers */}
           <div className="grid grid-cols-2 gap-4 mt-4 mb-2">
-            {/*
-            <div>
-              <div className="flex items-center mb-2">
-                <UserIcon className="w-4 h-4 mr-1" />
-                <span className="text-sm font-medium">Workers: {business.workers.length}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-1"
-                onClick={() => onHireWorker(business.id)}
-                disabled={business.type !== BusinessType.RESOURCE_GATHERING}
-              >
-                Hire Worker ({getWorkerCost(business)})
-              </Button>
-            </div>
-            */}
             <div>
               <div className="flex items-center mb-2">
                 <TruckIcon className="w-4 h-4 mr-1" />
                 <span className="text-sm font-medium">Drivers: {business.deliveryBots.length}</span>
               </div>
-              <Button variant="outline" size="sm" className="w-full mt-1" onClick={() => onHireDeliveryBot(business.id)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onHireDeliveryBot(business.id);
+                }}
+              >
                 Hire Driver ({getBotCost(business)})
               </Button>
             </div>

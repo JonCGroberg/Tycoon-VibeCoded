@@ -10,6 +10,7 @@ interface DeliveryBotEntityProps {
   targetPosition: { x: number; y: number }
   resourceType: ResourceType
   onDeliveryComplete: () => void
+  expectedArrival: number
 }
 
 export default function DeliveryBotEntity({
@@ -18,10 +19,11 @@ export default function DeliveryBotEntity({
   targetPosition,
   resourceType,
   onDeliveryComplete,
+  expectedArrival,
 }: DeliveryBotEntityProps) {
   const [position, setPosition] = useState({ x: sourcePosition.x, y: sourcePosition.y })
   const [progress, setProgress] = useState(0)
-  const duration = 100 // 5 seconds for delivery animation (increased from 2s)
+  const duration = expectedArrival - Date.now()
 
   // Get resource color
   const getResourceColor = (resourceType: ResourceType) => {
@@ -48,6 +50,13 @@ export default function DeliveryBotEntity({
   }
 
   useEffect(() => {
+    // Only start animation if the bot is actively delivering
+    if (!bot.isDelivering) {
+      setPosition({ x: sourcePosition.x, y: sourcePosition.y });
+      setProgress(0);
+      return;
+    }
+
     const startTime = Date.now()
 
     const animateDelivery = () => {
@@ -75,7 +84,7 @@ export default function DeliveryBotEntity({
     return () => {
       // Cleanup if needed
     }
-  }, [sourcePosition, targetPosition, duration, onDeliveryComplete])
+  }, [sourcePosition, targetPosition, duration, onDeliveryComplete, bot.isDelivering])
 
   return (
     <div
