@@ -63,6 +63,7 @@ export interface Business {
     processingTime: number
     outgoingCapacity: number
   }
+  gatherProgress?: number
 }
 
 export interface GameState {
@@ -78,4 +79,5 @@ export interface ActiveDelivery {
   bot: DeliveryBot
   resourceAmount: number
   resourceType: ResourceType
+  expectedArrival: number // timestamp in ms when delivery should complete
 }
