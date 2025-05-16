@@ -107,6 +107,9 @@ export default function GameWorld({
 
         if (!sourceBusiness || !targetBusiness) return null
 
+        // Use a createdAt timestamp for delivery start time, fallback to estimate if not present
+        const deliveryStartTime = delivery.createdAt || (delivery.expectedArrival - delivery.travelTimeMs || 0)
+
         return (
           <DeliveryBotEntity
             key={delivery.id}
@@ -115,6 +118,8 @@ export default function GameWorld({
             targetPosition={targetBusiness.position}
             resourceType={sourceBusiness.outputResource}
             onDeliveryComplete={() => onDeliveryComplete(delivery.id)}
+            deliveryStartTime={deliveryStartTime}
+            deliveryExpectedArrival={delivery.expectedArrival}
           />
         )
       })}

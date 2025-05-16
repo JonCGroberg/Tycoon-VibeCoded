@@ -10,6 +10,8 @@ interface DeliveryBotEntityProps {
   targetPosition: { x: number; y: number }
   resourceType: ResourceType
   onDeliveryComplete: () => void
+  deliveryStartTime: number
+  deliveryExpectedArrival: number
 }
 
 export default function DeliveryBotEntity({
@@ -18,10 +20,11 @@ export default function DeliveryBotEntity({
   targetPosition,
   resourceType,
   onDeliveryComplete,
+  deliveryStartTime,
+  deliveryExpectedArrival,
 }: DeliveryBotEntityProps) {
   const [position, setPosition] = useState({ x: sourcePosition.x, y: sourcePosition.y })
   const [progress, setProgress] = useState(0)
-  const duration = 100 // 5 seconds for delivery animation (increased from 2s)
 
   // Get resource color
   const getResourceColor = (resourceType: ResourceType) => {
@@ -48,12 +51,15 @@ export default function DeliveryBotEntity({
   }
 
   useEffect(() => {
-    const startTime = Date.now()
+    const now = Date.now()
+    // Calculate the remaining time for this delivery
+    const totalDuration = Math.max(100, deliveryExpectedArrival - deliveryStartTime)
+    const startTime = deliveryStartTime
 
     const animateDelivery = () => {
       const currentTime = Date.now()
       const elapsed = currentTime - startTime
-      const newProgress = Math.min(1, elapsed / duration)
+      const newProgress = Math.min(1, elapsed / totalDuration)
 
       // Linear interpolation between source and target
       const newX = sourcePosition.x + (targetPosition.x - sourcePosition.x) * newProgress
@@ -65,7 +71,6 @@ export default function DeliveryBotEntity({
       if (newProgress < 1) {
         requestAnimationFrame(animateDelivery)
       } else {
-        // Delivery complete
         onDeliveryComplete()
       }
     }
@@ -75,7 +80,7 @@ export default function DeliveryBotEntity({
     return () => {
       // Cleanup if needed
     }
-  }, [sourcePosition, targetPosition, duration, onDeliveryComplete])
+  }, [sourcePosition, targetPosition, deliveryExpectedArrival, deliveryStartTime, onDeliveryComplete])
 
   return (
     <div

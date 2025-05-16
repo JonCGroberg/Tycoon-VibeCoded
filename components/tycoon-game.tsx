@@ -169,29 +169,15 @@ export default function TycoonGame() {
         // Process worker gathering
         newState.businesses.forEach((business) => {
           if (business.type === BusinessType.RESOURCE_GATHERING) {
-            // Each worker gathers 1 unit every 3 seconds
-            if (!business.gatherProgress) business.gatherProgress = 0
-            business.gatherProgress += business.workers.length * (1 / 3)
-            const wholeUnits = Math.floor(business.gatherProgress)
-            if (wholeUnits > 0) {
-              // Check if there's space in the incoming buffer
-              const addAmount = Math.min(wholeUnits, business.incomingBuffer.capacity - business.incomingBuffer.current)
-              business.incomingBuffer.current += addAmount
-              business.gatherProgress -= addAmount
-              // Pay worker wages: 0.25 coins per unit gathered
-              newState.coins -= addAmount * 0.25
-            }
-            // Move from incoming to outgoing buffer (simulate production for resource gathering)
-            if (
-              business.incomingBuffer.current >= 1 &&
-              business.outgoingBuffer.current < business.outgoingBuffer.capacity
-            ) {
-              const moveAmount = Math.min(
-                Math.floor(business.incomingBuffer.current),
-                business.outgoingBuffer.capacity - business.outgoingBuffer.current
-              )
-              business.incomingBuffer.current -= moveAmount
-              business.outgoingBuffer.current += moveAmount
+            // Each worker gathers 1 unit every 3 seconds (or 1/3 per second)
+            // SLOW DOWN: 1/30 per second (10x slower)
+            const gatherRate = business.workers.length * (1 / 30)
+
+            // Check if there's space in the incoming buffer
+            if (business.incomingBuffer.current + gatherRate <= business.incomingBuffer.capacity) {
+              business.incomingBuffer.current += gatherRate
+              // Pay worker wages (0.25 coins per gathered unit)
+              newState.coins -= gatherRate * 0.25 * 10 // 10x currency multiplier for wage cost
             }
           }
 
@@ -200,7 +186,8 @@ export default function TycoonGame() {
             business.incomingBuffer.current >= 1 &&
             business.outgoingBuffer.current < business.outgoingBuffer.capacity
           ) {
-            business.productionProgress += 1 / business.processingTime
+            // SLOW DOWN: production progress 10x slower
+            business.productionProgress += 0.1 * (1 / business.processingTime)
 
             if (business.productionProgress >= 1) {
               // Convert 1 unit of input to 1 unit of output
@@ -252,17 +239,10 @@ export default function TycoonGame() {
                   Math.pow(target.position.x - business.position.x, 2) +
                   Math.pow(target.position.y - business.position.y, 2)
                 )
-                const travelSeconds = distance / bot.speed
+                const travelSeconds = (distance / bot.speed) * 10 // 10x slower delivery
                 const expectedArrival = Date.now() + travelSeconds * 1000
-                // console.log('Creating delivery:', {
-                //   from: business.type,
-                //   to: target.type,
-                //   distance,
-                //   speed: bot.speed,
-                //   travelSeconds,
-                //   expectedArrival: new Date(expectedArrival).toISOString(),
-                //   now: new Date().toISOString()
-                // })
+                const createdAt = Date.now();
+                const travelTimeMs = travelSeconds * 1000;
                 const newDelivery: ActiveDelivery = {
                   id: generateUniqueId("delivery"),
                   sourceBusinessId: business.id,
@@ -271,6 +251,8 @@ export default function TycoonGame() {
                   resourceAmount: bot.carryingAmount,
                   resourceType: business.outputResource,
                   expectedArrival,
+                  createdAt,
+                  travelTimeMs,
                 }
                 // console.log('Created new delivery:', newDelivery)
 
@@ -300,39 +282,45 @@ export default function TycoonGame() {
             const targetBusiness = newState.businesses.find((b) => b.id === delivery.targetBusinessId)
             if (sourceBusiness && targetBusiness) {
               if (targetBusiness.type === BusinessType.MARKET) {
-                const marketPrice = marketPrices[delivery.resourceType]?.value || getResourceValue(delivery.resourceType)
-                const profit = delivery.resourceAmount * marketPrice
-                // console.log(`Sold ${delivery.resourceAmount} ${delivery.resourceType} to market at ${marketPrice.toFixed(2)} each, total: ${profit.toFixed(2)}`)
+                // Selling to market at 50% value
+                const resourceValue = getResourceValue(delivery.resourceType)
+                const profit = delivery.resourceAmount * resourceValue * 0.5 * 10 // 10x currency multiplier
                 newState.coins += profit
+
+                // Show profit indicator on source business
                 sourceBusiness.recentProfit = profit
                 sourceBusiness.profitDisplayTime = 0
               } else {
+                // Delivering to another business
                 if (
                   targetBusiness.incomingBuffer.current + delivery.resourceAmount <=
                   targetBusiness.incomingBuffer.capacity
                 ) {
                   targetBusiness.incomingBuffer.current += delivery.resourceAmount
-                  // Calculate profit based on the value of the delivered resource
+
+                  // If this is a player-to-player transaction, we'd handle payment here
+                  // For the prototype, we'll just add coins based on resource value
                   const resourceValue = getResourceValue(delivery.resourceType)
-                  const profit = delivery.resourceAmount * resourceValue
-                  // console.log(`Delivered ${delivery.resourceAmount} ${delivery.resourceType} to ${targetBusiness.type} for ${profit.toFixed(2)} coins`)
+                  const profit = delivery.resourceAmount * resourceValue * 10 // 10x currency multiplier
                   newState.coins += profit
+
+                  // Show profit indicator on source business
                   sourceBusiness.recentProfit = profit
                   sourceBusiness.profitDisplayTime = 0
                 }
               }
-              // Reset bot state in the source business
-              const botIndex = sourceBusiness.deliveryBots.findIndex((b) => b.id === delivery.bot.id)
-              if (botIndex !== -1) {
-                sourceBusiness.deliveryBots[botIndex].isDelivering = false
-                sourceBusiness.deliveryBots[botIndex].targetBusinessId = null
-                sourceBusiness.deliveryBots[botIndex].carryingAmount = 0
-              }
+            // Reset bot state in the source business
+            const botIndex = sourceBusiness.deliveryBots.findIndex((b) => b.id === delivery.bot.id)
+            if (botIndex !== -1) {
+              sourceBusiness.deliveryBots[botIndex].isDelivering = false
+              sourceBusiness.deliveryBots[botIndex].targetBusinessId = null
+              sourceBusiness.deliveryBots[botIndex].carryingAmount = 0
             }
-            // Remove the delivery from active deliveries
-            newState.activeDeliveries.splice(i, 1)
           }
+          // Remove the delivery from active deliveries
+          newState.activeDeliveries.splice(i, 1)
         }
+      }
 
         return newState
       })

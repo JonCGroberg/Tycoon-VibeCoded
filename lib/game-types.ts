@@ -80,4 +80,6 @@ export interface ActiveDelivery {
   resourceAmount: number
   resourceType: ResourceType
   expectedArrival: number // timestamp in ms when delivery should complete
+  createdAt: number
+  travelTimeMs: number
 }
