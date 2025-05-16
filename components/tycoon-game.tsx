@@ -239,7 +239,8 @@ export default function TycoonGame() {
                   Math.pow(target.position.x - business.position.x, 2) +
                   Math.pow(target.position.y - business.position.y, 2)
                 )
-                const travelSeconds = (distance / bot.speed) * 10 // 10x slower delivery
+                // 10x slower previously, now 10/3 = ~3.33x slower than original
+                const travelSeconds = (distance / bot.speed) * (10 / 3)
                 const expectedArrival = Date.now() + travelSeconds * 1000
                 const createdAt = Date.now();
                 const travelTimeMs = travelSeconds * 1000;
