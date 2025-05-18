@@ -24,7 +24,7 @@ export enum ResourceType {
   TOOLS = "TOOLS",
 }
 
-export interface Buffer {
+export interface Storage {
   current: number
   capacity: number
 }
@@ -58,8 +58,8 @@ export interface Business {
   id: string
   type: BusinessType
   position: { x: number; y: number }
-  incomingBuffer: Buffer
-  outgoingBuffer: Buffer
+  incomingStorage: Storage
+  outgoingStorage: Storage
   processingTime: number // Seconds per unit
   productionProgress: number // 0-1 progress of current production
   workers: Worker[]

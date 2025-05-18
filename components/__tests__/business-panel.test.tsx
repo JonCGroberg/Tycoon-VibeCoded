@@ -1,36 +1,34 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import BusinessPanel from '../business-panel'
-import { BusinessType, ResourceType, DeliveryBot } from '@/lib/game-types'
+import { BusinessType, ResourceType, DeliveryBot, type Business } from '@/lib/game-types'
 import { getUpgradeCost, getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
 
 // Mock the business data
 const mockBots: DeliveryBot[] = [
-    { id: '1', maxLoad: 10, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 },
+    { id: '1', maxLoad: 5, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 },
     { id: '2', maxLoad: 10, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 },
 ]
-const mockBusiness = {
-    id: '1',
+const mockBusiness: Business = {
+    id: "test-business",
     type: BusinessType.RESOURCE_GATHERING,
-    level: 1,
-    inputResource: ResourceType.NONE,
-    outputResource: ResourceType.WOOD,
-    incomingBuffer: { current: 0, capacity: 10 },
-    outgoingBuffer: { current: 0, capacity: 10 },
-    processingTime: 5,
+    position: { x: 0, y: 0 },
+    incomingStorage: { current: 0, capacity: 10 },
+    outgoingStorage: { current: 0, capacity: 10 },
+    processingTime: 1,
     productionProgress: 0,
     workers: [],
-    shippingTypes: [
-        { type: 'truck', bots: mockBots },
-    ],
-    position: { x: 0, y: 0 },
+    shippingTypes: [],
+    level: 1,
+    inputResource: ResourceType.WOOD,
+    outputResource: ResourceType.WOOD,
     recentProfit: 0,
     profitDisplayTime: 0,
-    severity: 0
 }
 
 describe('BusinessPanel', () => {
     const mockOnClose = jest.fn()
     const mockOnHireShippingType = jest.fn()
+    const mockOnSellShippingType = jest.fn()
     const mockOnUpgrade = jest.fn()
 
     beforeEach(() => {
@@ -77,8 +75,8 @@ describe('BusinessPanel', () => {
                     throw new Error('Function not implemented.')
                 }} />
         )
-        expect(screen.getByText('Incoming Buffer')).toBeInTheDocument()
-        expect(screen.getByText('Outgoing Buffer')).toBeInTheDocument()
+        expect(screen.getByText('Input Storage')).toBeInTheDocument()
+        expect(screen.getByText('Output Storage')).toBeInTheDocument()
         expect(screen.getByText('Processing')).toBeInTheDocument()
     })
 
@@ -171,6 +169,21 @@ describe('BusinessPanel', () => {
         )
         fireEvent.click(screen.getByTestId('upgrade-outgoing'))
         expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'outgoingCapacity')
+    })
+
+    it('displays correct storage information', () => {
+        render(
+            <BusinessPanel
+                business={mockBusiness}
+                coins={1000}
+                onClose={mockOnClose}
+                onHireShippingType={mockOnHireShippingType}
+                onSellShippingType={mockOnSellShippingType}
+                onUpgrade={mockOnUpgrade}
+            />
+        )
+        expect(screen.getByText('Input Storage')).toBeInTheDocument()
+        expect(screen.getByText('Output Storage')).toBeInTheDocument()
     })
 })
 

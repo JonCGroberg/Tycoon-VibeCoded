@@ -164,7 +164,7 @@ export default function BusinessPanel({
                 <div className="flex items-center mb-1 justify-between">
                   <div className="flex items-center">
                     <PackageIcon className="w-4 h-4 mr-1 text-blue-600" />
-                    <span className="text-sm font-medium">Incoming Buffer</span>
+                    <span className="text-sm font-medium">Incoming Storage</span>
                   </div>
                   <Button
                     variant="outline"
@@ -174,7 +174,7 @@ export default function BusinessPanel({
                     onClick={() => onUpgrade(business.id, "incomingCapacity")}
                   >
                     <UpgradeIcon className="w-3 h-3" />
-                    {formatCurrency(getUpgradeCost(business, "incomingCapacity"))}
+                    Upgrade {formatCurrency(getUpgradeCost(business, "incomingCapacity"))}
                   </Button>
                 </div>
                 <div className="flex items-center justify-between mb-1">
@@ -183,15 +183,15 @@ export default function BusinessPanel({
                   </span>
                   <span
                     className={`text-xs font-medium ${getBufferStatusColor(
-                      business.incomingBuffer?.current ?? 0,
-                      business.incomingBuffer?.capacity ?? 1,
+                      business.incomingStorage?.current ?? 0,
+                      business.incomingStorage?.capacity ?? 1,
                     )}`}
                   >
-                    {(business.incomingBuffer?.current ?? 0).toFixed(1)} / {business.incomingBuffer?.capacity ?? 0}
+                    {(business.incomingStorage?.current ?? 0).toFixed(1)} / {business.incomingStorage?.capacity ?? 0}
                   </span>
                 </div>
                 <Progress
-                  value={((business.incomingBuffer?.current ?? 0) / (business.incomingBuffer?.capacity ?? 1)) * 100}
+                  value={((business.incomingStorage?.current ?? 0) / (business.incomingStorage?.capacity ?? 1)) * 100}
                   className="h-2"
                 />
               </div>
@@ -212,7 +212,7 @@ export default function BusinessPanel({
                   onClick={() => onUpgrade(business.id, "processingTime")}
                 >
                   <UpgradeIcon className="w-3 h-3" />
-                  {formatCurrency(getUpgradeCost(business, "processingTime"))}
+                  Upgrade {formatCurrency(getUpgradeCost(business, "processingTime"))}
                 </Button>
               </div>
               <div className="flex items-center justify-between mb-1">
@@ -227,7 +227,7 @@ export default function BusinessPanel({
               <div className="flex items-center mb-1 justify-between">
                 <div className="flex items-center">
                   <BoxIcon className="w-4 h-4 mr-1 text-green-600" />
-                  <span className="text-sm font-medium">Outgoing Buffer</span>
+                  <span className="text-sm font-medium">Outgoing Storage</span>
                 </div>
                 <Button
                   variant="outline"
@@ -237,22 +237,22 @@ export default function BusinessPanel({
                   onClick={() => onUpgrade(business.id, "outgoingCapacity")}
                 >
                   <UpgradeIcon className="w-3 h-3" />
-                  {formatCurrency(getUpgradeCost(business, "outgoingCapacity"))}
+                  Upgrade {formatCurrency(getUpgradeCost(business, "outgoingCapacity"))}
                 </Button>
               </div>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-600">{getResourceName(business.outputResource)}</span>
                 <span
                   className={`text-xs font-medium ${getBufferStatusColor(
-                    business.outgoingBuffer?.current ?? 0,
-                    business.outgoingBuffer?.capacity ?? 1,
+                    business.outgoingStorage?.current ?? 0,
+                    business.outgoingStorage?.capacity ?? 1,
                   )}`}
                 >
-                  {(business.outgoingBuffer?.current ?? 0).toFixed(1)} / {business.outgoingBuffer?.capacity ?? 0}
+                  {(business.outgoingStorage?.current ?? 0).toFixed(1)} / {business.outgoingStorage?.capacity ?? 0}
                 </span>
               </div>
               <Progress
-                value={((business.outgoingBuffer?.current ?? 0) / (business.outgoingBuffer?.capacity ?? 1)) * 100}
+                value={((business.outgoingStorage?.current ?? 0) / (business.outgoingStorage?.capacity ?? 1)) * 100}
                 className="h-2"
               />
             </div>

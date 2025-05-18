@@ -127,6 +127,15 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
     return `${Math.min(100, (currentValue / capacityValue) * 100)}%`
   }
 
+  const incomingStorageHeight = getBufferHeight(
+    business.incomingStorage?.current,
+    business.incomingStorage?.capacity,
+  )
+  const outgoingStorageHeight = getBufferHeight(
+    business.outgoingStorage?.current,
+    business.outgoingStorage?.capacity,
+  )
+
   return (
     <div
       data-testid="business-entity"
@@ -151,10 +160,10 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         <div className="absolute left-0 top-0 w-1 h-full flex flex-col-reverse">
           <div
             className={`w-full ${getBufferStatusColor(
-              business.incomingBuffer?.current,
-              business.incomingBuffer?.capacity,
+              business.incomingStorage?.current,
+              business.incomingStorage?.capacity,
             )}`}
-            style={{ height: getBufferHeight(business.incomingBuffer?.current, business.incomingBuffer?.capacity) }}
+            style={{ height: incomingStorageHeight }}
           ></div>
         </div>
       )}
@@ -164,10 +173,10 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         <div className="absolute right-0 top-0 w-1 h-full flex flex-col-reverse">
           <div
             className={`w-full ${getBufferStatusColor(
-              business.outgoingBuffer?.current,
-              business.outgoingBuffer?.capacity,
+              business.outgoingStorage?.current,
+              business.outgoingStorage?.capacity,
             )}`}
-            style={{ height: getBufferHeight(business.outgoingBuffer?.current, business.outgoingBuffer?.capacity) }}
+            style={{ height: outgoingStorageHeight }}
           ></div>
         </div>
       )}
@@ -198,9 +207,9 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
               {getResourceIcon(business.inputResource)}
               {/* ! badge if starving (red) or requesting (yellow)*/}
               {business.type !== BusinessType.RESOURCE_GATHERING &&
-                business.incomingBuffer.current < business.incomingBuffer.capacity && (
+                business.incomingStorage.current < business.incomingStorage.capacity && (
                   <div className="absolute -top-2 -right-2 z-10">
-                    {business.incomingBuffer.current === 0 ? (
+                    {business.incomingStorage.current === 0 ? (
                       <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-red-500 rounded-full p-0.5" />
                     ) : (
                       <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-yellow-500 rounded-full p-0.5" />
@@ -213,7 +222,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
               <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
             </div>
             {/* Output Resource Indicator - always visible */}
-            <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingBuffer.current === 0 ? 'opacity-50' : ''}`}>
+            <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingStorage.current === 0 ? 'opacity-50' : ''}`}>
               {getResourceIcon(business.outputResource)}
             </div>
           </div>

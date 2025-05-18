@@ -30,18 +30,31 @@ export default function TutorialOverlay({ onClose, gameState }: TutorialOverlayP
               <TruckIcon className="w-7 h-7 text-blue-700" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-blue-700">Hire Deliveries</h3>
+              <h3 className="font-bold text-lg text-blue-700">Hire Delivery Drivers</h3>
               <p className="text-gray-700 text-sm">Open the <b>Shipping</b> tab and hire walkers, bicyclists, trucks, and more to move goods.</p>
             </div>
           </div>
-          {/* Step 3: Profit! */}
+          {/* Step 3: Upgrades */}
+          <div className="flex items-center p-3 rounded-lg bg-purple-50 border-l-4 border-purple-400">
+            <div className="p-2 rounded-full mr-4 bg-purple-100">
+              <TimerIcon className="w-7 h-7 text-purple-700" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg text-purple-700">Upgrade Your Business</h3>
+              <p className="text-gray-700 text-sm">Click the <b>Upgrade</b> buttons to increase storage capacity and processing speed. Each upgrade doubles the capacity or halves the processing time!</p>
+            </div>
+          </div>
+          {/* Step 4: Profit! */}
           <div className="flex items-center p-3 rounded-lg bg-yellow-50 border-l-4 border-yellow-400">
             <div className="p-2 rounded-full mr-4 bg-yellow-100">
               <CoinsIcon className="w-7 h-7 text-yellow-600" />
             </div>
             <div>
               <h3 className="font-bold text-lg text-yellow-600">Profit!</h3>
-              <p className="text-gray-700 text-sm">Upgrade, expand, and sell goods to the market. Grow your tycoon and experiment with new strategies!</p>
+              <p className="text-gray-700 text-sm">
+                Sell goods to <b>other businesses at full value</b> or to the <b>market at 50% value</b>.
+                Upgrade, expand, and experiment with new strategies to grow your tycoon empire!
+              </p>
             </div>
           </div>
         </div>

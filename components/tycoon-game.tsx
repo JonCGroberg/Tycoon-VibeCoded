@@ -10,12 +10,11 @@ import {
   type Business,
   ResourceType,
   BusinessType,
-  type DeliveryBot,
-  type Worker,
   type ActiveDelivery,
 } from "@/lib/game-types"
 import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
 import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
+import { v4 as uuidv4 } from "uuid"
 
 // Helper: all shipping types
 const ALL_SHIPPING_TYPES = [
@@ -180,8 +179,8 @@ export default function TycoonGame() {
         // Process worker gathering
         newState.businesses.forEach((business) => {
           if (business.type === BusinessType.RESOURCE_GATHERING) {
-            // Wood Cutter Camp: input buffer is always full
-            business.incomingBuffer.current = business.incomingBuffer.capacity;
+            // Wood Cutter Camp: input storage is always full
+            business.incomingStorage.current = business.incomingStorage.capacity;
             // Pay worker wages (0.25 coins per gathered unit)
             const gatherRate = business.workers.length * (1 / 30);
             newState.coins -= gatherRate * 0.25 * 10; // 10x currency multiplier for wage cost
@@ -189,20 +188,20 @@ export default function TycoonGame() {
 
           // Process production
           if (
-            business.incomingBuffer.current >= 1 &&
-            business.outgoingBuffer.current < business.outgoingBuffer.capacity
+            business.incomingStorage.current >= 1 &&
+            business.outgoingStorage.current < business.outgoingStorage.capacity
           ) {
             // SLOW DOWN: production progress 10x slower
             business.productionProgress += 0.1 * (1 / business.processingTime)
 
             if (business.productionProgress >= 1) {
               // Convert 1 unit of input to 1 unit of output
-              business.incomingBuffer.current -= 1
-              business.outgoingBuffer.current += 1
+              business.incomingStorage.current -= 1
+              business.outgoingStorage.current += 1
               business.productionProgress = 0
-              // For Wood Cutter Camp, instantly refill input buffer after pulling resource
+              // For Wood Cutter Camp, instantly refill input storage after pulling resource
               if (business.type === BusinessType.RESOURCE_GATHERING) {
-                business.incomingBuffer.current = business.incomingBuffer.capacity;
+                business.incomingStorage.current = business.incomingStorage.capacity;
               }
             }
           }
@@ -227,7 +226,7 @@ export default function TycoonGame() {
               const isAlreadyDelivering = newState.activeDeliveries.some(
                 (delivery) => delivery.sourceBusinessId === business.id && delivery.bot.id === bot.id,
               );
-              if (isAlreadyDelivering || business.outgoingBuffer.current < 1) return;
+              if (isAlreadyDelivering || business.outgoingStorage.current < 1) return;
 
               // Find all possible targets
               const allTargets = newState.businesses.filter(
@@ -237,9 +236,9 @@ export default function TycoonGame() {
               const market = newState.businesses.find((b) => b.type === BusinessType.MARKET);
               if (market) allTargets.push(market);
 
-              // Find the first target that can accept the full delivery (buffer + pending)
+              // Find the first target that can accept the full delivery (storage + pending)
               let chosenTarget: Business | null = null;
-              let chosenAmount = Math.min(bot.maxLoad, business.outgoingBuffer.current);
+              let chosenAmount = Math.min(bot.maxLoad, business.outgoingStorage.current);
               for (const target of allTargets) {
                 if (target.type === BusinessType.MARKET) {
                   chosenTarget = target;
@@ -247,7 +246,7 @@ export default function TycoonGame() {
                 }
                 if (!target.pendingDeliveries) target.pendingDeliveries = [];
                 const pendingAmount = target.pendingDeliveries.reduce((sum, d) => sum + d.resourceAmount, 0);
-                const availableSpace = target.incomingBuffer.capacity - target.incomingBuffer.current - pendingAmount;
+                const availableSpace = target.incomingStorage.capacity - target.incomingStorage.current - pendingAmount;
                 if (availableSpace >= chosenAmount) {
                   chosenTarget = target;
                   break;
@@ -258,7 +257,7 @@ export default function TycoonGame() {
               bot.isDelivering = true;
               bot.targetBusinessId = chosenTarget.id;
               bot.currentLoad = chosenAmount;
-              business.outgoingBuffer.current -= chosenAmount;
+              business.outgoingStorage.current -= chosenAmount;
 
               if (chosenTarget.type !== BusinessType.MARKET) {
                 if (!chosenTarget.pendingDeliveries) chosenTarget.pendingDeliveries = [];
@@ -320,10 +319,10 @@ export default function TycoonGame() {
               } else {
                 // Delivering to another business
                 if (
-                  targetBusiness.incomingBuffer.current + delivery.resourceAmount <=
-                  targetBusiness.incomingBuffer.capacity
+                  targetBusiness.incomingStorage.current + delivery.resourceAmount <=
+                  targetBusiness.incomingStorage.capacity
                 ) {
-                  targetBusiness.incomingBuffer.current += delivery.resourceAmount
+                  targetBusiness.incomingStorage.current += delivery.resourceAmount
 
                   // If this is a player-to-player transaction, we'd handle payment here
                   // For the prototype, we'll just add coins based on resource value
@@ -366,7 +365,7 @@ export default function TycoonGame() {
       (business) =>
         business.id !== sourceBusiness.id &&
         business.inputResource === sourceBusiness.outputResource &&
-        business.incomingBuffer.current < business.incomingBuffer.capacity,
+        business.incomingStorage.current < business.incomingStorage.capacity,
     )
     const market = allBusinesses.find((business) => business.type === BusinessType.MARKET)
 
@@ -491,13 +490,13 @@ export default function TycoonGame() {
   }
 
   // Place a new business on the game world
-  const handlePlaceBusiness = (businessType: BusinessType, position: { x: number; y: number }) => {
+  const handlePlaceBusiness = (type: BusinessType, position: { x: number; y: number }) => {
     if (isPlacing) return // Prevent multiple placements
     setIsPlacing(true)
 
-    console.log('Attempting to place business:', { businessType, position })
+    console.log('Attempting to place business:', { type, position })
 
-    const businessCost = getBuildingCost(businessType)
+    const businessCost = getBuildingCost(type)
     console.log('Business cost:', businessCost, 'Current coins:', gameState.coins)
 
     if (gameState.coins < businessCost) {
@@ -510,30 +509,33 @@ export default function TycoonGame() {
     }
 
     const newBusiness: Business = {
-      id: generateUniqueId("business"),
-      type: businessType,
+      id: uuidv4(),
+      type,
       position,
       level: 1,
-      incomingBuffer: { current: 0, capacity: 4 },
-      outgoingBuffer: { current: (businessType === BusinessType.RESOURCE_GATHERING ? 1 : 0), capacity: 4 },
-      workers: (businessType === BusinessType.RESOURCE_GATHERING ||
-        businessType === BusinessType.QUARRY ||
-        businessType === BusinessType.MINE)
-        ? [{ id: generateUniqueId("worker"), gatherRate: 1 / 3 }] : [],
-      shippingTypes: ALL_SHIPPING_TYPES.map(type => ({ type: type.id, bots: [] })),
-      processingTime: 10,
+      processingTime: 1,
+      incomingStorage: { current: 0, capacity: 10 },
+      outgoingStorage: { current: 0, capacity: 10 },
       productionProgress: 0,
-      inputResource: getInputResourceForBusinessType(businessType),
-      outputResource: getOutputResourceForBusinessType(businessType),
+      workers: [],
+      shippingTypes: type === BusinessType.RESOURCE_GATHERING ? [
+        {
+          type: 'walker',
+          bots: [{
+            id: uuidv4(),
+            maxLoad: 1,
+            speed: 50,
+            isDelivering: false,
+            targetBusinessId: null,
+            currentLoad: 0,
+          }]
+        }
+      ] : [],
       pendingDeliveries: [],
-      upgrades: {
-        incomingCapacity: 0,
-        processingTime: 0,
-        outgoingCapacity: 0
-      },
-      gatherProgress: 0,
       recentProfit: 0,
       profitDisplayTime: 0,
+      inputResource: type === BusinessType.RESOURCE_GATHERING ? ResourceType.WOOD : ResourceType.NONE,
+      outputResource: type === BusinessType.RESOURCE_GATHERING ? ResourceType.WOOD : ResourceType.NONE,
     }
 
     console.log('Created new business:', newBusiness)
@@ -673,13 +675,13 @@ export default function TycoonGame() {
       // Apply upgrade based on type - new logic
       switch (upgradeType) {
         case "incomingCapacity":
-          business.incomingBuffer.capacity = business.incomingBuffer.capacity * 2
+          business.incomingStorage.capacity = business.incomingStorage.capacity * 2
           break
         case "processingTime":
           business.processingTime = business.processingTime / 2
           break
         case "outgoingCapacity":
-          business.outgoingBuffer.capacity = business.outgoingBuffer.capacity * 2
+          business.outgoingStorage.capacity = business.outgoingStorage.capacity * 2
           break
       }
       // Track upgrades per type
