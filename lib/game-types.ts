@@ -24,7 +24,7 @@ export enum ResourceType {
   TOOLS = "TOOLS",
 }
 
-export interface Buffer {
+export interface Storage {
   current: number
   capacity: number
 }
@@ -36,28 +36,47 @@ export interface Worker {
 
 export interface DeliveryBot {
   id: string
-  capacity: number
+  maxLoad: number
   speed: number // Studs per second
   isDelivering: boolean
   targetBusinessId: string | null
-  carryingAmount: number
+  currentLoad: number
+}
+
+export interface PendingDelivery {
+  sourceBusinessId: string
+  resourceAmount: number
+  resourceType: ResourceType
+}
+
+export interface ShippingTypeState {
+  type: string; // e.g. 'walker', 'bicyclist', 'truck', 'semi', etc.
+  bots: DeliveryBot[];
 }
 
 export interface Business {
   id: string
   type: BusinessType
   position: { x: number; y: number }
-  incomingBuffer: Buffer
-  outgoingBuffer: Buffer
+  incomingStorage: Storage
+  outgoingStorage: Storage
   processingTime: number // Seconds per unit
   productionProgress: number // 0-1 progress of current production
   workers: Worker[]
-  deliveryBots: DeliveryBot[]
+  shippingTypes: ShippingTypeState[]
   level: number
   inputResource: ResourceType
   outputResource: ResourceType
-  recentProfit?: number // For showing profit indicators
-  profitDisplayTime?: number // Time remaining to display profit
+  recentProfit: number // For showing profit indicators
+  profitDisplayTime: number// Time remaining to display profit
+  upgrades?: {
+    incomingCapacity: number
+    processingTime: number
+    outgoingCapacity: number
+  }
+  gatherProgress?: number
+  pendingDeliveries?: PendingDelivery[]
+  totalInvested: number // Track total coins spent on this business
 }
 
 export interface GameState {
@@ -73,4 +92,7 @@ export interface ActiveDelivery {
   bot: DeliveryBot
   resourceAmount: number
   resourceType: ResourceType
+  expectedArrival: number // timestamp in ms when delivery should complete
+  createdAt: number
+  travelTimeMs: number
 }

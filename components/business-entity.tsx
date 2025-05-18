@@ -1,7 +1,15 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, HammerIcon, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon } from "lucide-react"
+import { TreesIcon as TreeIcon, Columns4, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangleIcon, AlertTriangle, ShipIcon, PlaneIcon } from "lucide-react"
+import { Alert } from "./ui/alert"
+import { getResourceName } from "./business-panel"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface BusinessEntityProps {
   business: Business
@@ -9,13 +17,14 @@ interface BusinessEntityProps {
 }
 
 export default function BusinessEntity({ business, onClick }: BusinessEntityProps) {
+
   // Get the appropriate icon based on business type
   const getBusinessIcon = () => {
     switch (business.type) {
       case BusinessType.RESOURCE_GATHERING:
         return <TreeIcon className="w-6 h-6 text-green-800" />
       case BusinessType.PROCESSING:
-        return <HammerIcon className="w-6 h-6 text-amber-700" />
+        return <Columns4 className="w-6 h-6 text-amber-700" />
       case BusinessType.SHOP:
         return <StoreIcon className="w-6 h-6 text-blue-700" />
       case BusinessType.MARKET:
@@ -42,7 +51,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
     switch (business.type) {
       case BusinessType.RESOURCE_GATHERING:
         return business.outputResource === ResourceType.WOOD
-          ? "Lumber Yard"
+          ? "Wood Camp"
           : business.outputResource === ResourceType.STONE
             ? "Quarry"
             : "Mine"
@@ -93,7 +102,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       case ResourceType.IRON_ORE:
         return <BoxIcon className="w-3.5 h-3.5 text-white" />
       case ResourceType.PLANKS:
-        return <HammerIcon className="w-3.5 h-3.5 text-white" />
+        return <Columns4 className="w-3.5 h-3.5 text-white" />
       case ResourceType.BRICKS:
         return <PackageIcon className="w-3.5 h-3.5 text-white" />
       case ResourceType.IRON_INGOT:
@@ -112,9 +121,9 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
     const currentValue = current ?? 0
     const capacityValue = capacity ?? 1
     const fillPercentage = (currentValue / capacityValue) * 100
-    if (fillPercentage >= 90) return "bg-red-500" // Bottleneck - nearly full
-    if (fillPercentage >= 70) return "bg-yellow-500" // Warning - getting full
-    if (fillPercentage <= 10 && fillPercentage > 0) return "bg-blue-500" // Low - needs more
+    if (fillPercentage >= 85) return "bg-red-500" // Bottleneck - nearly full
+    if (fillPercentage >= 65) return "bg-yellow-500" // Warning - getting full
+    if (fillPercentage <= 20 && fillPercentage > 0) return "bg-blue-500" // Low - needs more
     return "bg-green-500" // Normal operation
   }
 
@@ -125,116 +134,147 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
     return `${Math.min(100, (currentValue / capacityValue) * 100)}%`
   }
 
+  const incomingStorageHeight = getBufferHeight(
+    business.incomingStorage?.current,
+    business.incomingStorage?.capacity,
+  )
+  const outgoingStorageHeight = getBufferHeight(
+    business.outgoingStorage?.current,
+    business.outgoingStorage?.capacity,
+  )
+
   return (
-    <div
-      className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
-      style={{
-        left: business.position.x - 48,
-        top: business.position.y - 48,
-      }}
-      onClick={onClick}
-    >
-      {/* Business Level - Changed to plain text */}
-      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800">
-        Lvl {business.level}
-      </div>
-
-      <div className="text-sm font-bold mt-2 text-center">{getBusinessName()}</div>
-
-      <div className="mt-2">{getBusinessIcon()}</div>
-
-      {/* Input Buffer Visualization - Left side */}
-      {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
-        <div className="absolute left-0 top-0 w-2 h-full flex flex-col-reverse">
+    <TooltipProvider>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
           <div
-            className={`w-full ${getBufferStatusColor(
-              business.incomingBuffer?.current,
-              business.incomingBuffer?.capacity,
-            )}`}
-            style={{ height: getBufferHeight(business.incomingBuffer?.current, business.incomingBuffer?.capacity) }}
-          ></div>
-        </div>
-      )}
+            data-testid="business-entity"
+            className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
+            style={{
+              left: business.position.x - 48,
+              top: business.position.y - 48,
+            }}
+            onClick={onClick}
+          >
+            {/* Business Level - Changed to plain text */}
+            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800">
+              Lvl {business.level}
+            </div>
 
-      {/* Output Buffer Visualization - Right side */}
-      {business.type !== BusinessType.MARKET && (
-        <div className="absolute right-0 top-0 w-2 h-full flex flex-col-reverse">
-          <div
-            className={`w-full ${getBufferStatusColor(
-              business.outgoingBuffer?.current,
-              business.outgoingBuffer?.capacity,
-            )}`}
-            style={{ height: getBufferHeight(business.outgoingBuffer?.current, business.outgoingBuffer?.capacity) }}
-          ></div>
-        </div>
-      )}
+            <div className="text-sm font-bold mt-2 text-center text-nowrap">{getBusinessName()}</div>
 
-      {/* Show workers and delivery drivers */}
-      <div className="absolute -bottom-3 -left-2 flex space-x-2">
-        {/*
-        {business.workers.length > 0 && (
-          <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
-            <UserIcon className="w-4 h-4 text-gray-700" />
-            <span className="text-sm ml-1">{business.workers.length}</span>
-          </div>
-        )}
-        */}
-        {business.deliveryBots.length > 0 && (
-          <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
-            <TruckIcon className="w-4 h-4 text-gray-700" />
-            <span className="text-sm ml-1">{business.deliveryBots.length}</span>
-            <span className="text-xs ml-1 text-gray-500">driver{business.deliveryBots.length > 1 ? 's' : ''}</span>
-          </div>
-        )}
-      </div>
+            <div className="mt-2">{getBusinessIcon()}</div>
 
-      {/* Production progress bar and resource indicators at the top (always visible, 1.5x wider) */}
-      {business.type !== BusinessType.MARKET && (
-        <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' }}>
-          <div className="flex items-center justify-between w-full space-x-2">
-            {/* Input Resource Indicator - always visible */}
-            <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING ? 'opacity-30' : ''}`}>
-              {getResourceIcon(business.inputResource)}
-              {/* ! badge if requesting */}
-              {business.type !== BusinessType.RESOURCE_GATHERING && business.incomingBuffer.current < business.incomingBuffer.capacity && (
-                <AlertCircleIcon className="absolute -top-2 -right-2 w-3 h-3 text-yellow-500 animate-pulse" />
+            {/* Input Buffer Visualization - Left side */}
+            {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
+              <div className="absolute left-0 top-0 w-1 h-full flex flex-col-reverse">
+                <div
+                  className={`w-full ${getBufferStatusColor(
+                    business.incomingStorage?.current,
+                    business.incomingStorage?.capacity,
+                  )}`}
+                  style={{ height: incomingStorageHeight }}
+                ></div>
+              </div>
+            )}
+
+            {/* Output Buffer Visualization - Right side */}
+            {business.type !== BusinessType.MARKET && (
+              <div className="absolute right-0 top-0 w-1 h-full flex flex-col-reverse">
+                <div
+                  className={`w-full ${getBufferStatusColor(
+                    business.outgoingStorage?.current,
+                    business.outgoingStorage?.capacity,
+                  )}`}
+                  style={{ height: outgoingStorageHeight }}
+                ></div>
+              </div>
+            )}
+
+            {/* shipping */}
+            <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
+              {business.type !== BusinessType.MARKET && business.shippingTypes?.length > 0 && (
+                <div className="relative w-8 h-8">
+                  {business.shippingTypes.map((shippingType, index) => {
+                    const botCount = Array.isArray(shippingType.bots) ? shippingType.bots.length : 0;
+                    const faded = botCount === 0 ? 'opacity-40' : '';
+                    return (
+                      <div
+                        key={shippingType.type}
+                        className={`absolute ${faded}`}
+                        style={{
+                          transform: `translateX(${index * 4}px)`,
+                          zIndex: index
+                        }}
+                      >
+                        {shippingType.type === 'TRUCK' && (
+                          <TruckIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
+                        )}
+                        {shippingType.type === 'BOAT' && (
+                          <ShipIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
+                        )}
+                        {shippingType.type === 'PLANE' && (
+                          <PlaneIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
-            {/* Progress bar */}
-            <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
-            </div>
-            {/* Output Resource Indicator - always visible */}
-            <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingBuffer.current === 0 ? 'opacity-50' : ''}`}>
-              {getResourceIcon(business.outputResource)}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Starvation indicator: show ! if input buffer is empty and business is not resource gathering or market */}
-      {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET &&
-        business.incomingBuffer.current === 0 && (
-          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex items-center z-10">
-            <AlertCircleIcon className="w-5 h-5 text-yellow-500 animate-pulse mr-1" />
-            <span className="text-xs font-bold text-yellow-700 bg-white bg-opacity-80 px-1 rounded">
-              Needs {business.inputResource.charAt(0) + business.inputResource.slice(1).toLowerCase()}
-            </span>
+            {/* Production progress bar and resource indicators at the top (always visible) */}
+            {business.type !== BusinessType.MARKET && (
+              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' }}>
+                <div className="flex items-center justify-between w-full space-x-2">
+                  {/* Input Resource Indicator*/}
+                  <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING ? 'opacity-30' : ''}`}>
+                    {getResourceIcon(business.inputResource)}
+                    {/* ! badge if input is less than 50% */}
+                    {business.type !== BusinessType.RESOURCE_GATHERING &&
+                      business.incomingStorage.current < 0.5 * business.incomingStorage.capacity && (
+                        <div className="absolute -top-2 -right-2 z-10">
+                          {business.incomingStorage.current === 0 ? (
+                            <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-red-500 rounded-full p-0.5" />
+                          ) : (
+                            <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-yellow-500 rounded-full p-0.5" />
+                          )}
+                        </div>
+                      )}
+                  </div>
+                  {/* Progress bar */}
+                  <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
+                  </div>
+                  {/* Output Resource Indicator - always visible */}
+                  <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingStorage.current === 0 ? 'opacity-50' : ''}`}>
+                    {getResourceIcon(business.outputResource)}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
-
-      {/* Profit indicators */}
-      {business.recentProfit && business.recentProfit > 0 && (
-        <div
-          className="absolute -top-16 left-1/2 transform -translate-x-1/2 text-green-600 font-bold text-base animate-float"
-          style={{
-            animation: "float 2s ease-out forwards",
-            opacity: business.profitDisplayTime ? Math.max(0, 1 - business.profitDisplayTime / 2000) : 1,
-          }}
-        >
-          +{business.recentProfit.toFixed(1)}
-        </div>
-      )}
-    </div>
+        </TooltipTrigger>
+        {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET &&
+          business.incomingStorage.current < 0.5 * business.incomingStorage.capacity && (
+            <TooltipContent
+              side="top"
+              sideOffset={40}
+              className="bg-white border-2 border-gray-300 shadow-lg px-3 py-2 text-sm font-medium rounded-md"
+            >
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${getResourceColor(business.inputResource)}`} />
+                  <span className={`${business.incomingStorage.current === 0 ? "text-red-600" : "text-yellow-600"} font-semibold`}>
+                    {business.incomingStorage.current === 0
+                      ? `No ${getResourceName(business.inputResource)} available!`
+                      : `Looking for ${getResourceName(business.inputResource)}!`}
+                  </span>
+                </div>
+              </div>
+            </TooltipContent>
+          )}
+      </Tooltip>
+    </TooltipProvider>
   )
 }

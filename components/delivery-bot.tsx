@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { type DeliveryBot, ResourceType } from "@/lib/game-types"
 import { TruckIcon } from "lucide-react"
+import { getShippingTypeConfig } from "@/lib/shipping-types"
 
 interface DeliveryBotEntityProps {
   bot: DeliveryBot
@@ -10,6 +11,9 @@ interface DeliveryBotEntityProps {
   targetPosition: { x: number; y: number }
   resourceType: ResourceType
   onDeliveryComplete: () => void
+  deliveryStartTime: number
+  deliveryExpectedArrival: number
+  shippingTypeId: string
 }
 
 export default function DeliveryBotEntity({
@@ -18,10 +22,14 @@ export default function DeliveryBotEntity({
   targetPosition,
   resourceType,
   onDeliveryComplete,
+  deliveryStartTime,
+  deliveryExpectedArrival,
+  shippingTypeId,
 }: DeliveryBotEntityProps) {
   const [position, setPosition] = useState({ x: sourcePosition.x, y: sourcePosition.y })
   const [progress, setProgress] = useState(0)
-  const duration = 100 // 5 seconds for delivery animation (increased from 2s)
+  const shippingTypeConfig = getShippingTypeConfig(shippingTypeId);
+  const Icon = shippingTypeConfig.icon;
 
   // Get resource color
   const getResourceColor = (resourceType: ResourceType) => {
@@ -48,12 +56,15 @@ export default function DeliveryBotEntity({
   }
 
   useEffect(() => {
-    const startTime = Date.now()
+    const now = Date.now()
+    // Calculate the remaining time for this delivery
+    const totalDuration = Math.max(100, deliveryExpectedArrival - deliveryStartTime)
+    const startTime = deliveryStartTime
 
     const animateDelivery = () => {
       const currentTime = Date.now()
       const elapsed = currentTime - startTime
-      const newProgress = Math.min(1, elapsed / duration)
+      const newProgress = Math.min(1, elapsed / totalDuration)
 
       // Linear interpolation between source and target
       const newX = sourcePosition.x + (targetPosition.x - sourcePosition.x) * newProgress
@@ -65,7 +76,6 @@ export default function DeliveryBotEntity({
       if (newProgress < 1) {
         requestAnimationFrame(animateDelivery)
       } else {
-        // Delivery complete
         onDeliveryComplete()
       }
     }
@@ -75,7 +85,7 @@ export default function DeliveryBotEntity({
     return () => {
       // Cleanup if needed
     }
-  }, [sourcePosition, targetPosition, duration, onDeliveryComplete])
+  }, [sourcePosition, targetPosition, deliveryExpectedArrival, deliveryStartTime, onDeliveryComplete])
 
   return (
     <div
@@ -86,15 +96,15 @@ export default function DeliveryBotEntity({
         zIndex: 50,
       }}
     >
-      <TruckIcon className="w-4 h-4 text-gray-700" />
+      <Icon className="w-4 h-4 text-gray-700" />
 
       {/* Resource being carried */}
       <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${getResourceColor(resourceType)}`}></div>
 
       {/* Amount being carried */}
-      {bot.carryingAmount > 0 && (
+      {bot.currentLoad > 0 && (
         <div className="absolute -bottom-2 text-xs font-bold bg-white px-1 rounded-full border border-gray-300">
-          {bot.carryingAmount}
+          {bot.currentLoad}
         </div>
       )}
     </div>
