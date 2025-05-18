@@ -6,11 +6,11 @@ import { ResourceType, DeliveryBot } from '@/lib/game-types'
 describe('DeliveryBotEntity', () => {
     const baseBot: DeliveryBot = {
         id: 'bot1',
-        capacity: 10,
+        maxLoad: 10,
         speed: 1,
         isDelivering: true,
         targetBusinessId: 'b2',
-        carryingAmount: 5,
+        currentLoad: 5,
     }
     const baseProps = {
         bot: baseBot,
@@ -33,7 +33,7 @@ describe('DeliveryBotEntity', () => {
     })
 
     it('shows no carrying amount if zero', () => {
-        render(<DeliveryBotEntity {...baseProps} bot={{ ...baseBot, carryingAmount: 0 }} />)
+        render(<DeliveryBotEntity {...baseProps} bot={{ ...baseBot, currentLoad: 0 }} />)
         expect(screen.queryByText('0')).not.toBeInTheDocument()
     })
 

@@ -172,15 +172,14 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       )}
 
       {/* delivery drivers */}
-      {/* <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
+      <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
         {business.deliveryBots.length > 0 && (
           <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
             <TruckIcon className="w-4 h-4 text-gray-700" />
             <span className="text-xs ml-1">{business.deliveryBots.filter(bot => !bot.isDelivering).length}/{business.deliveryBots.length}</span>
           </div>
         )}
-      </div> */}
-
+      </div>
 
       {/* Production progress bar and resource indicators at the top (always visible) */}
       {business.type !== BusinessType.MARKET && (

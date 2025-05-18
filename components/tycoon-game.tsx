@@ -17,6 +17,7 @@ import {
 import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
 
 export default function TycoonGame() {
+
   const [gameState, setGameState] = useState<GameState>(initializeGameState())
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
@@ -25,8 +26,6 @@ export default function TycoonGame() {
   const [isPlacing, setIsPlacing] = useState(false)
   const [flashRed, setFlashRed] = useState(false)
   const [gameOver, setGameOver] = useState(false)
-  const isHiringWorkerRef = useRef(false)
-  const isHiringBotRef = useRef(false)
   const [maxBuildings, setMaxBuildings] = useState(1)
   const [maxLevel, setMaxLevel] = useState(1)
   const [maxCoins, setMaxCoins] = useState(gameState.coins)
@@ -202,7 +201,7 @@ export default function TycoonGame() {
             if (business.profitDisplayTime > 2000) {
               // 2 seconds
               business.recentProfit = 0
-              business.profitDisplayTime = undefined
+              business.profitDisplayTime = 0
             }
           }
         })
@@ -210,11 +209,10 @@ export default function TycoonGame() {
         // Process delivery bots - only start new deliveries if there are no active ones for this bot
         newState.businesses.forEach((business) => {
           if (!business.pendingDeliveries) business.pendingDeliveries = [];
-          business.deliveryBots.forEach((bot) => {
+          business.deliveryBots.forEach((bot, botIdx) => {
             const isAlreadyDelivering = newState.activeDeliveries.some(
               (delivery) => delivery.sourceBusinessId === business.id && delivery.bot.id === bot.id,
             )
-
             if (!bot.isDelivering && !isAlreadyDelivering && business.outgoingBuffer.current >= 1) {
               // Find all possible targets
               const allTargets = newState.businesses.filter(
@@ -226,7 +224,7 @@ export default function TycoonGame() {
 
               // Find the first target that can accept the full delivery (buffer + pending)
               let chosenTarget: Business | null = null;
-              let chosenAmount = Math.min(bot.capacity, business.outgoingBuffer.current);
+              let chosenAmount = Math.min(bot.maxLoad, business.outgoingBuffer.current);
               for (const target of allTargets) {
                 if (target.type === BusinessType.MARKET) {
                   chosenTarget = target;
@@ -244,7 +242,7 @@ export default function TycoonGame() {
 
               bot.isDelivering = true;
               bot.targetBusinessId = chosenTarget.id;
-              bot.carryingAmount = chosenAmount;
+              bot.currentLoad = chosenAmount;
               business.outgoingBuffer.current -= chosenAmount;
 
               if (chosenTarget.type !== BusinessType.MARKET) {
@@ -333,18 +331,18 @@ export default function TycoonGame() {
                   sourceBusiness.profitDisplayTime = 0
                 }
               }
-            // Reset bot state in the source business
-            const botIndex = sourceBusiness.deliveryBots.findIndex((b) => b.id === delivery.bot.id)
-            if (botIndex !== -1) {
-              sourceBusiness.deliveryBots[botIndex].isDelivering = false
-              sourceBusiness.deliveryBots[botIndex].targetBusinessId = null
-              sourceBusiness.deliveryBots[botIndex].carryingAmount = 0
+              // Reset bot state in the source business
+              const botIndex = sourceBusiness.deliveryBots.findIndex((b) => b.id === delivery.bot.id)
+              if (botIndex !== -1) {
+                sourceBusiness.deliveryBots[botIndex].isDelivering = false
+                sourceBusiness.deliveryBots[botIndex].targetBusinessId = null
+                sourceBusiness.deliveryBots[botIndex].currentLoad = 0
+              }
             }
+            // Remove the delivery from active deliveries
+            newState.activeDeliveries.splice(i, 1)
           }
-          // Remove the delivery from active deliveries
-          newState.activeDeliveries.splice(i, 1)
         }
-      }
 
         return newState
       })
@@ -509,12 +507,21 @@ export default function TycoonGame() {
       position,
       level: 1,
       incomingBuffer: { current: 0, capacity: 10 },
-      outgoingBuffer: { current: 0, capacity: 10 },
+      outgoingBuffer: { current: (businessType === BusinessType.RESOURCE_GATHERING ? 1 : 0), capacity: 10 },
       workers: (businessType === BusinessType.RESOURCE_GATHERING ||
         businessType === BusinessType.QUARRY ||
         businessType === BusinessType.MINE)
         ? [{ id: generateUniqueId("worker"), gatherRate: 1 / 3 }] : [],
-      deliveryBots: [],
+      deliveryBots: (businessType === BusinessType.RESOURCE_GATHERING)
+        ? [{
+          id: generateUniqueId("bot"),
+          maxLoad: 1,
+          speed: 100,
+          isDelivering: false,
+          targetBusinessId: null,
+          currentLoad: 0,
+        }]
+        : [],
       processingTime: 10,
       productionProgress: 0,
       inputResource: getInputResourceForBusinessType(businessType),
@@ -527,16 +534,14 @@ export default function TycoonGame() {
       },
       gatherProgress: 0,
       recentProfit: 0,
-      profitDisplayTime: undefined,
+      profitDisplayTime: 0,
     }
 
     console.log('Created new business:', newBusiness)
 
     setGameState(prev => {
       const newBusinesses = [...prev.businesses, newBusiness]
-      console.log('Total businesses after placement:', newBusinesses.length)
       const newCoins = prev.coins - businessCost
-      console.log('Remaining coins:', newCoins)
       playSuccessChime()
       return {
         ...prev,
@@ -598,9 +603,6 @@ export default function TycoonGame() {
 
   // Hire a delivery bot for a business
   const handleHireDeliveryBot = (businessId: string) => {
-    if (isHiringBotRef.current) return;
-    isHiringBotRef.current = true;
-
     setGameState((prevState) => {
       const newState = { ...prevState }
       const businessIndex = newState.businesses.findIndex((b) => b.id === businessId)
@@ -613,11 +615,11 @@ export default function TycoonGame() {
 
       const newBot: DeliveryBot = {
         id: generateUniqueId("bot"),
-        capacity: 25,
+        maxLoad: 1,
         speed: 200,
         isDelivering: false,
         targetBusinessId: null,
-        carryingAmount: 0,
+        currentLoad: 0,
       }
 
       newState.businesses[businessIndex].deliveryBots.push(newBot)
@@ -629,7 +631,6 @@ export default function TycoonGame() {
       return newState
     })
 
-    setTimeout(() => { isHiringBotRef.current = false }, 200);
   }
 
   // Upgrade a business
@@ -673,6 +674,7 @@ export default function TycoonGame() {
       business.level += 1
       newState.coins -= upgradeCost
 
+      console.log("Upgrade complete")
       return newState
     })
   }

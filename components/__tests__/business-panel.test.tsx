@@ -5,8 +5,8 @@ import { getBotCost, getUpgradeCost, getBusinessName, getResourceName, getBuffer
 
 // Mock the business data
 const mockDeliveryBots: DeliveryBot[] = [
-    { id: '1', capacity: 10, speed: 1, isDelivering: false, targetBusinessId: null, carryingAmount: 0 },
-    { id: '2', capacity: 10, speed: 1, isDelivering: false, targetBusinessId: null, carryingAmount: 0 },
+    { id: '1', maxLoad: 10, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 },
+    { id: '2', maxLoad: 10, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 },
 ]
 const mockBusiness = {
     id: '1',
@@ -19,7 +19,7 @@ const mockBusiness = {
     processingTime: 5,
     productionProgress: 0,
     workers: [],
-    deliveryBots: mockDeliveryBots,
+    deliveryBots: [mockDeliveryBots[0]],
     position: { x: 0, y: 0 },
     recentProfit: 0,
     profitDisplayTime: 0,

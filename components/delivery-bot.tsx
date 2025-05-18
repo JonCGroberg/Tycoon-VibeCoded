@@ -97,9 +97,9 @@ export default function DeliveryBotEntity({
       <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${getResourceColor(resourceType)}`}></div>
 
       {/* Amount being carried */}
-      {bot.carryingAmount > 0 && (
+      {bot.currentLoad > 0 && (
         <div className="absolute -bottom-2 text-xs font-bold bg-white px-1 rounded-full border border-gray-300">
-          {bot.carryingAmount}
+          {bot.currentLoad}
         </div>
       )}
     </div>

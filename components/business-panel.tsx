@@ -194,29 +194,18 @@ export default function BusinessPanel({
             />
           </div>
 
-          {/* Workers & Delivery Drivers */}
+          {/* Delivery Drivers */}
           <div className="grid grid-cols-2 gap-4 mt-4 mb-2">
-            {/*
-            <div>
-              <div className="flex items-center mb-2">
-                <UserIcon className="w-4 h-4 mr-1" />
-                <span className="text-sm font-medium">Workers: {business.workers.length}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-1"
-                onClick={() => onHireWorker(business.id)}
-                disabled={business.type !== BusinessType.RESOURCE_GATHERING}
-              >
-                Hire Worker ({getWorkerCost(business)})
-              </Button>
-            </div>
-            */}
             <div>
               <div className="flex items-center mb-2">
                 <TruckIcon className="w-4 h-4 mr-1" />
-                <span className="text-sm font-medium">Drivers: {business.deliveryBots.length}</span>
+                {business.deliveryBots.length === 0 ? (
+                  <span className="text-sm font-medium">Drivers: 0</span>
+                ) : (
+                  <span className="text-sm font-medium">
+                    Drivers: {business.deliveryBots.filter(bot => !bot.isDelivering).length}/{business.deliveryBots.length}
+                  </span>
+                )}
               </div>
               <Button variant="outline" size="sm" className="w-full mt-1" onClick={() => onHireDeliveryBot(business.id)}>
                 Hire Driver ({getBotCost(business)})

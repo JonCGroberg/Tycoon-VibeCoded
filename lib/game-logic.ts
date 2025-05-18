@@ -28,6 +28,8 @@ export function initializeGameState(): GameState {
         level: 1,
         inputResource: ResourceType.NONE,
         outputResource: ResourceType.NONE,
+        recentProfit: 0,
+        profitDisplayTime: 0,
       },
     ],
     activeDeliveries: [], // Initialize empty array for active deliveries

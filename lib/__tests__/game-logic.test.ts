@@ -37,7 +37,7 @@ describe('initializeGameState', () => {
     expect(market.processingTime).toBe(0)
     expect(market.productionProgress).toBe(0)
     expect(market.workers).toEqual([])
-    expect(market.deliveryBots).toEqual([])
+    expect(market.deliveryBots).toHaveLength(0)
     expect(market.level).toBe(1)
     expect(market.inputResource).toBe(ResourceType.NONE)
     expect(market.outputResource).toBe(ResourceType.NONE)

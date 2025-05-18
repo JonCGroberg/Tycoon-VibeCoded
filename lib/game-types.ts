@@ -36,11 +36,11 @@ export interface Worker {
 
 export interface DeliveryBot {
   id: string
-  capacity: number
+  maxLoad: number
   speed: number // Studs per second
   isDelivering: boolean
   targetBusinessId: string | null
-  carryingAmount: number
+  currentLoad: number
 }
 
 export interface PendingDelivery {
