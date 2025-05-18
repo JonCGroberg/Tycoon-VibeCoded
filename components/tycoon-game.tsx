@@ -224,21 +224,19 @@ export default function TycoonGame() {
               const market = newState.businesses.find((b) => b.type === BusinessType.MARKET);
               if (market) allTargets.push(market);
 
-              // Find the first target with enough available space (or market)
+              // Find the first target that can accept the full delivery (buffer + pending)
               let chosenTarget: Business | null = null;
-              let chosenAmount = 0;
+              let chosenAmount = Math.min(bot.capacity, business.outgoingBuffer.current);
               for (const target of allTargets) {
                 if (target.type === BusinessType.MARKET) {
                   chosenTarget = target;
-                  chosenAmount = Math.min(bot.capacity, business.outgoingBuffer.current);
                   break;
                 }
                 if (!target.pendingDeliveries) target.pendingDeliveries = [];
                 const pendingAmount = target.pendingDeliveries.reduce((sum, d) => sum + d.resourceAmount, 0);
                 const availableSpace = target.incomingBuffer.capacity - target.incomingBuffer.current - pendingAmount;
-                if (availableSpace >= 1) {
+                if (availableSpace >= chosenAmount) {
                   chosenTarget = target;
-                  chosenAmount = Math.min(bot.capacity, business.outgoingBuffer.current, availableSpace);
                   break;
                 }
               }
