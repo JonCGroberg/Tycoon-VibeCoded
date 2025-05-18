@@ -150,7 +150,7 @@ export default function BusinessPanel({
         </Button>
       </div>
 
-      <Tabs defaultValue={defaultTab} className="w-full " onValueChange={setActiveTab}>
+      <Tabs defaultValue={defaultTab} value={activeTab} className="w-full " onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-2">
           <TabsTrigger value="info" className="flex items-center">
             <InfoIcon className="w-4 h-4 mr-1" />

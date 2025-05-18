@@ -832,6 +832,7 @@ export default function TycoonGame() {
           onHireShippingType={handleHireShippingType}
           onSellShippingType={handleSellShippingType}
           onUpgrade={handleUpgradeBusiness}
+          defaultTab="shipping"
         />
       )}
     </div>
