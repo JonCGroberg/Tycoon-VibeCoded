@@ -808,6 +808,7 @@ export default function TycoonGame() {
           [BusinessType.MARKET]: 0
         }}
         businesses={gameState.businesses}
+        onOpenTutorial={() => setShowTutorial(true)}
       />
       {/* The market prices panel is intentionally hidden. Remove or comment out its import and usage in GameHUD if it is a separate component. */}
 
@@ -832,6 +833,7 @@ export default function TycoonGame() {
           onHireShippingType={handleHireShippingType}
           onSellShippingType={handleSellShippingType}
           onUpgrade={handleUpgradeBusiness}
+          defaultTab="shipping"
         />
       )}
     </div>

@@ -10,8 +10,8 @@ describe('BusinessEntity', () => {
         position: { x: 100, y: 100 },
         inputResource: ResourceType.WOOD,
         outputResource: ResourceType.WOOD,
-        incomingBuffer: { current: 0, capacity: 10 },
-        outgoingBuffer: { current: 0, capacity: 10 },
+        incomingStorage: { current: 0, capacity: 10 },
+        outgoingStorage: { current: 0, capacity: 10 },
         productionProgress: 0,
         workers: [],
         shippingTypes: [
@@ -19,7 +19,8 @@ describe('BusinessEntity', () => {
         ],
         recentProfit: 0,
         profitDisplayTime: 0,
-        processingTime: 1000
+        processingTime: 1000,
+        totalInvested: 0
     }
 
     const baseProps = {
@@ -60,7 +61,7 @@ describe('BusinessEntity', () => {
             type: BusinessType.PROCESSING,
             inputResource: ResourceType.WOOD,
             outputResource: ResourceType.PLANKS,
-            incomingBuffer: { current: 0, capacity: 10 }
+            incomingStorage: { current: 0, capacity: 10 }
         }
         const { container } = render(<BusinessEntity business={processingBusiness} onClick={baseProps.onClick} />)
         expect(container.querySelector('.bg-red-500')).toBeInTheDocument()
