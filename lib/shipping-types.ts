@@ -26,7 +26,7 @@ export const SHIPPING_TYPES: ShippingTypeConfig[] = [
     icon: BikeIcon,
     baseCost: 150,
     baseSpeed: 125,
-    baseLoad: 5,
+    baseLoad: 6,
     description: "Faster than walking, can carry more"
   },
   {
@@ -35,7 +35,7 @@ export const SHIPPING_TYPES: ShippingTypeConfig[] = [
     icon: TruckIcon,
     baseCost: 1500,
     baseSpeed: 312,
-    baseLoad: 25,
+    baseLoad: 36,
     description: "Good balance of speed and capacity"
   },
   {
@@ -44,7 +44,7 @@ export const SHIPPING_TYPES: ShippingTypeConfig[] = [
     icon: TruckIcon,
     baseCost: 15000,
     baseSpeed: 781,
-    baseLoad: 125,
+    baseLoad: 216,
     description: "Large capacity for heavy loads"
   },
   {
@@ -53,7 +53,7 @@ export const SHIPPING_TYPES: ShippingTypeConfig[] = [
     icon: TrainIcon,
     baseCost: 150000,
     baseSpeed: 1953,
-    baseLoad: 625,
+    baseLoad: 1296,
     description: "High capacity, good for long distances"
   },
   {
@@ -61,8 +61,8 @@ export const SHIPPING_TYPES: ShippingTypeConfig[] = [
     displayName: "Ship",
     icon: ShipIcon,
     baseCost: 1500000,
-    baseSpeed: 4882,
-    baseLoad: 3125,
+    baseSpeed: 4883,
+    baseLoad: 7776,
     description: "Massive capacity, moderate speed"
   },
   {
@@ -71,7 +71,7 @@ export const SHIPPING_TYPES: ShippingTypeConfig[] = [
     icon: PlaneIcon,
     baseCost: 10000000,
     baseSpeed: 12207,
-    baseLoad: 15625,
+    baseLoad: 46656,
     description: "Fastest delivery, high capacity"
   }
 ];

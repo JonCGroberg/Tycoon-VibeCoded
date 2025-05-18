@@ -129,6 +129,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
 
   return (
     <div
+      data-testid="business-entity"
       className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
       style={{
         left: business.position.x - 48,

@@ -56,6 +56,7 @@ export default function GameWorld({
   return (
     <div
       ref={worldRef}
+      data-testid="game-world"
       className="w-full h-full bg-green-100 relative overflow-hidden border-2 border-gray-400 rounded-lg"
       onMouseMove={handleMouseMove}
       onClick={handleClick}

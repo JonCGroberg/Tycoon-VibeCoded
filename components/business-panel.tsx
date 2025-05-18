@@ -291,7 +291,7 @@ export default function BusinessPanel({
                         <div className="flex w-full mt-1 gap-2 items-start">
                           <span className="text-xs text-gray-500 flex-shrink-0 mt-1">{inUse} / {total} In Use</span>
                           <div className="flex-1" />
-                          <div className="flex flex-row flex-wrap-reverse gap-2 justify-end min-w-0">
+                          <div className="flex flex-row flex-wrap-reverse gap-1 justify-end min-w-0">
                             <Button
                               variant="outline"
                               size="sm"
