@@ -24,6 +24,23 @@ interface BusinessPanelProps {
   onUpgrade: (businessId: string, upgradeType: "incomingCapacity" | "processingTime" | "outgoingCapacity") => void
 }
 
+export function getWorkerCost(business: Business): number {
+  const base = 50
+  const n = business.workers.length
+  return Math.floor(base * Math.pow(1.1, n))
+}
+
+export function getBotCost(business: Business): number {
+  const base = 100
+  const n = business.deliveryBots.length
+  return Math.floor(base * Math.pow(1.2, n))
+}
+
+export function getUpgradeCost(business: Business): number {
+  const base = 50
+  return Math.floor(base * Math.pow(2, business.level - 1))
+}
+
 export default function BusinessPanel({
   business,
   onClose,
@@ -31,22 +48,6 @@ export default function BusinessPanel({
   onUpgrade,
 }: BusinessPanelProps) {
   const [activeTab, setActiveTab] = useState("info")
-
-  // Helper cost functions (copied from tycoon-game, but use props.business)
-  function getWorkerCost(business: Business): number {
-    const base = 50
-    const n = business.workers.length
-    return Math.floor(base * Math.pow(1.1, n))
-  }
-  function getBotCost(business: Business): number {
-    const base = 100
-    const n = business.deliveryBots.length
-    return Math.floor(base * Math.pow(1.2, n))
-  }
-  function getUpgradeCost(business: Business): number {
-    const base = 50
-    return Math.floor(base * Math.pow(2, business.level - 1))
-  }
 
   // Get business name based on type and resources
   const getBusinessName = () => {
