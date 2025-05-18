@@ -22,6 +22,7 @@ interface BusinessPanelProps {
   onClose: () => void
   onHireDeliveryBot: (businessId: string) => void
   onUpgrade: (businessId: string, upgradeType: "incomingCapacity" | "processingTime" | "outgoingCapacity") => void
+  defaultTab?: string
 }
 
 export function getWorkerCost(business: Business): number {
@@ -41,76 +42,77 @@ export function getUpgradeCost(business: Business): number {
   return Math.floor(base * Math.pow(2, business.level - 1))
 }
 
+export function getBusinessName(business: Business): string {
+  switch (business.type) {
+    case BusinessType.RESOURCE_GATHERING:
+      return business.outputResource === ResourceType.WOOD
+        ? "Wood Cutter Camp"
+        : business.outputResource === ResourceType.STONE
+          ? "Quarry"
+          : "Mine"
+    case BusinessType.PROCESSING:
+      return business.outputResource === ResourceType.PLANKS
+        ? "Plank Mill"
+        : business.outputResource === ResourceType.BRICKS
+          ? "Brick Kiln"
+          : "Smelter"
+    case BusinessType.SHOP:
+      return business.outputResource === ResourceType.FURNITURE ? "Furniture Shop" : "Tool Shop"
+    case BusinessType.MARKET:
+      return "Market"
+    default:
+      return "Unknown Business"
+  }
+}
+
+export function getResourceName(resourceType: ResourceType): string {
+  switch (resourceType) {
+    case ResourceType.WOOD:
+      return "Wood"
+    case ResourceType.STONE:
+      return "Stone"
+    case ResourceType.IRON_ORE:
+      return "Iron Ore"
+    case ResourceType.PLANKS:
+      return "Planks"
+    case ResourceType.BRICKS:
+      return "Bricks"
+    case ResourceType.IRON_INGOT:
+      return "Iron Ingot"
+    case ResourceType.FURNITURE:
+      return "Furniture"
+    case ResourceType.TOOLS:
+      return "Tools"
+    default:
+      return "None"
+  }
+}
+
+// Get buffer status color (for bottleneck visualization)
+export function getBufferStatusColor(current: number | null | undefined, capacity: number | null | undefined): string {
+  const currentValue = current ?? 0
+  const capacityValue = capacity ?? 1
+  const fillPercentage = (currentValue / capacityValue) * 100
+  if (fillPercentage >= 90) return "text-red-500" // Bottleneck - nearly full
+  if (fillPercentage >= 70) return "text-yellow-500" // Warning - getting full
+  if (fillPercentage <= 10 && fillPercentage > 0) return "text-blue-500" // Low - needs more
+  return "text-green-500" // Normal operation
+}
+
 export default function BusinessPanel({
   business,
   onClose,
   onHireDeliveryBot,
   onUpgrade,
+  defaultTab = "info",
 }: BusinessPanelProps) {
-  const [activeTab, setActiveTab] = useState("info")
-
-  // Get business name based on type and resources
-  const getBusinessName = () => {
-    switch (business.type) {
-      case BusinessType.RESOURCE_GATHERING:
-        return business.outputResource === ResourceType.WOOD
-          ? "Wood Cutter Camp"
-          : business.outputResource === ResourceType.STONE
-            ? "Quarry"
-            : "Mine"
-      case BusinessType.PROCESSING:
-        return business.outputResource === ResourceType.PLANKS
-          ? "Plank Mill"
-          : business.outputResource === ResourceType.BRICKS
-            ? "Brick Kiln"
-            : "Smelter"
-      case BusinessType.SHOP:
-        return business.outputResource === ResourceType.FURNITURE ? "Furniture Shop" : "Tool Shop"
-      case BusinessType.MARKET:
-        return "Market"
-    }
-  }
-
-  // Get resource name
-  const getResourceName = (resourceType: ResourceType) => {
-    switch (resourceType) {
-      case ResourceType.WOOD:
-        return "Wood"
-      case ResourceType.STONE:
-        return "Stone"
-      case ResourceType.IRON_ORE:
-        return "Iron Ore"
-      case ResourceType.PLANKS:
-        return "Planks"
-      case ResourceType.BRICKS:
-        return "Bricks"
-      case ResourceType.IRON_INGOT:
-        return "Iron Ingot"
-      case ResourceType.FURNITURE:
-        return "Furniture"
-      case ResourceType.TOOLS:
-        return "Tools"
-      default:
-        return "None"
-    }
-  }
-
-  // Get buffer status color (for bottleneck visualization)
-  const getBufferStatusColor = (current: number | null | undefined, capacity: number | null | undefined) => {
-    const currentValue = current ?? 0
-    const capacityValue = capacity ?? 1
-    const fillPercentage = (currentValue / capacityValue) * 100
-    if (fillPercentage >= 90) return "text-red-500" // Bottleneck - nearly full
-    if (fillPercentage >= 70) return "text-yellow-500" // Warning - getting full
-    if (fillPercentage <= 10 && fillPercentage > 0) return "text-blue-500" // Low - needs more
-    return "text-green-500" // Normal operation
-  }
+  const [activeTab, setActiveTab] = useState(defaultTab)
 
   return (
     <div className="absolute bottom-4 right-4 w-80 bg-white rounded-lg shadow-lg border border-gray-300 z-20">
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div>
-          <h3 className="font-bold text-lg">{getBusinessName()}</h3>
+          <h3 className="font-bold text-lg">{getBusinessName(business)}</h3>
           <div className="text-sm text-gray-600">Level {business.level}</div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -118,7 +120,7 @@ export default function BusinessPanel({
         </Button>
       </div>
 
-      <Tabs defaultValue="info" className="w-full" onValueChange={setActiveTab}>
+      <Tabs defaultValue={defaultTab} className="w-full" onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-2 mx-4 mt-2">
           <TabsTrigger value="info" className="flex items-center">
             <InfoIcon className="w-4 h-4 mr-1" />
