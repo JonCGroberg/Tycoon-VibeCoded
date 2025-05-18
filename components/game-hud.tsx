@@ -34,7 +34,7 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
           onClick={() => onPlaceBusiness(BusinessType.RESOURCE_GATHERING)}
         >
           <TreeIcon className="w-5 h-5 mr-2 text-green-700" />
-          <span>Place Lumber Yard ({buildingCosts[BusinessType.RESOURCE_GATHERING]})</span>
+          <span>Place Wood Cutter Camp ({buildingCosts[BusinessType.RESOURCE_GATHERING]})</span>
         </Button>
         <Button
           variant="outline"
