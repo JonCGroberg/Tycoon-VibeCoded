@@ -169,16 +169,11 @@ export default function TycoonGame() {
         // Process worker gathering
         newState.businesses.forEach((business) => {
           if (business.type === BusinessType.RESOURCE_GATHERING) {
-            // Each worker gathers 1 unit every 3 seconds (or 1/3 per second)
-            // SLOW DOWN: 1/30 per second (10x slower)
-            const gatherRate = business.workers.length * (1 / 30)
-
-            // Check if there's space in the incoming buffer
-            if (business.incomingBuffer.current + gatherRate <= business.incomingBuffer.capacity) {
-              business.incomingBuffer.current += gatherRate
-              // Pay worker wages (0.25 coins per gathered unit)
-              newState.coins -= gatherRate * 0.25 * 10 // 10x currency multiplier for wage cost
-            }
+            // Wood Cutter Camp: input buffer is always full
+            business.incomingBuffer.current = business.incomingBuffer.capacity;
+            // Pay worker wages (0.25 coins per gathered unit)
+            const gatherRate = business.workers.length * (1 / 30);
+            newState.coins -= gatherRate * 0.25 * 10; // 10x currency multiplier for wage cost
           }
 
           // Process production
@@ -194,6 +189,10 @@ export default function TycoonGame() {
               business.incomingBuffer.current -= 1
               business.outgoingBuffer.current += 1
               business.productionProgress = 0
+              // For Wood Cutter Camp, instantly refill input buffer after pulling resource
+              if (business.type === BusinessType.RESOURCE_GATHERING) {
+                business.incomingBuffer.current = business.incomingBuffer.capacity;
+              }
             }
           }
 
@@ -210,56 +209,76 @@ export default function TycoonGame() {
 
         // Process delivery bots - only start new deliveries if there are no active ones for this bot
         newState.businesses.forEach((business) => {
+          if (!business.pendingDeliveries) business.pendingDeliveries = [];
           business.deliveryBots.forEach((bot) => {
-            // Check if this bot is already in an active delivery
             const isAlreadyDelivering = newState.activeDeliveries.some(
               (delivery) => delivery.sourceBusinessId === business.id && delivery.bot.id === bot.id,
             )
 
             if (!bot.isDelivering && !isAlreadyDelivering && business.outgoingBuffer.current >= 1) {
-              // console.log('Bot ready for delivery:', { botId: bot.id, businessId: business.id })
+              // Find all possible targets
+              const allTargets = newState.businesses.filter(
+                (b) => b.id !== business.id && b.inputResource === business.outputResource
+              );
+              // Always include the market as a fallback
+              const market = newState.businesses.find((b) => b.type === BusinessType.MARKET);
+              if (market) allTargets.push(market);
 
-              // Find best delivery target
-              const target = findBestDeliveryTarget(business, newState.businesses)
-
-              if (target) {
-                // console.log('Found delivery target:', {
-                //   targetId: target.id,
-                //   targetType: target.type,
-                //   resourceAmount: business.outgoingBuffer.current
-                // })
-
-                bot.isDelivering = true
-                bot.targetBusinessId = target.id
-                bot.carryingAmount = Math.min(bot.capacity, business.outgoingBuffer.current)
-                business.outgoingBuffer.current -= bot.carryingAmount
-
-                // Create a new active delivery
-                const distance = Math.sqrt(
-                  Math.pow(target.position.x - business.position.x, 2) +
-                  Math.pow(target.position.y - business.position.y, 2)
-                )
-                // 10x slower previously, now 10/3 = ~3.33x slower than original
-                const travelSeconds = (distance / bot.speed) * (10 / 3)
-                const expectedArrival = Date.now() + travelSeconds * 1000
-                const createdAt = Date.now();
-                const travelTimeMs = travelSeconds * 1000;
-                const newDelivery: ActiveDelivery = {
-                  id: generateUniqueId("delivery"),
-                  sourceBusinessId: business.id,
-                  targetBusinessId: target.id,
-                  bot: { ...bot },
-                  resourceAmount: bot.carryingAmount,
-                  resourceType: business.outputResource,
-                  expectedArrival,
-                  createdAt,
-                  travelTimeMs,
+              // Find the first target with enough available space (or market)
+              let chosenTarget: Business | null = null;
+              let chosenAmount = 0;
+              for (const target of allTargets) {
+                if (target.type === BusinessType.MARKET) {
+                  chosenTarget = target;
+                  chosenAmount = Math.min(bot.capacity, business.outgoingBuffer.current);
+                  break;
                 }
-                // console.log('Created new delivery:', newDelivery)
-
-                newState.activeDeliveries.push(newDelivery)
-                // console.log('Total active deliveries:', newState.activeDeliveries.length)
+                if (!target.pendingDeliveries) target.pendingDeliveries = [];
+                const pendingAmount = target.pendingDeliveries.reduce((sum, d) => sum + d.resourceAmount, 0);
+                const availableSpace = target.incomingBuffer.capacity - target.incomingBuffer.current - pendingAmount;
+                if (availableSpace >= 1) {
+                  chosenTarget = target;
+                  chosenAmount = Math.min(bot.capacity, business.outgoingBuffer.current, availableSpace);
+                  break;
+                }
               }
+              if (!chosenTarget) return;
+
+              bot.isDelivering = true;
+              bot.targetBusinessId = chosenTarget.id;
+              bot.carryingAmount = chosenAmount;
+              business.outgoingBuffer.current -= chosenAmount;
+
+              if (chosenTarget.type !== BusinessType.MARKET) {
+                if (!chosenTarget.pendingDeliveries) chosenTarget.pendingDeliveries = [];
+                chosenTarget.pendingDeliveries.push({
+                  sourceBusinessId: business.id,
+                  resourceAmount: chosenAmount,
+                  resourceType: business.outputResource
+                });
+              }
+
+              // Create a new active delivery
+              const distance = Math.sqrt(
+                Math.pow(chosenTarget.position.x - business.position.x, 2) +
+                Math.pow(chosenTarget.position.y - business.position.y, 2)
+              );
+              const travelSeconds = (distance / bot.speed) * (10 / 3);
+              const expectedArrival = Date.now() + travelSeconds * 1000;
+              const createdAt = Date.now();
+              const travelTimeMs = travelSeconds * 1000;
+              const newDelivery: ActiveDelivery = {
+                id: generateUniqueId("delivery"),
+                sourceBusinessId: business.id,
+                targetBusinessId: chosenTarget.id,
+                bot: { ...bot },
+                resourceAmount: chosenAmount,
+                resourceType: business.outputResource,
+                expectedArrival,
+                createdAt,
+                travelTimeMs,
+              };
+              newState.activeDeliveries.push(newDelivery);
             }
           })
         })
@@ -282,6 +301,12 @@ export default function TycoonGame() {
             const sourceBusiness = newState.businesses.find((b) => b.id === delivery.sourceBusinessId)
             const targetBusiness = newState.businesses.find((b) => b.id === delivery.targetBusinessId)
             if (sourceBusiness && targetBusiness) {
+              if (!targetBusiness.pendingDeliveries) targetBusiness.pendingDeliveries = [];
+              // Remove the pending delivery for this delivery
+              const pendingIdx = targetBusiness.pendingDeliveries.findIndex(
+                (pd) => pd.sourceBusinessId === sourceBusiness.id && pd.resourceAmount === delivery.resourceAmount && pd.resourceType === delivery.resourceType
+              );
+              if (pendingIdx !== -1) targetBusiness.pendingDeliveries.splice(pendingIdx, 1);
               if (targetBusiness.type === BusinessType.MARKET) {
                 // Selling to market at 50% value
                 const resourceValue = getResourceValue(delivery.resourceType)
@@ -487,15 +512,24 @@ export default function TycoonGame() {
       level: 1,
       incomingBuffer: { current: 0, capacity: 10 },
       outgoingBuffer: { current: 0, capacity: 10 },
-      workers: businessType === BusinessType.RESOURCE_GATHERING ||
+      workers: (businessType === BusinessType.RESOURCE_GATHERING ||
         businessType === BusinessType.QUARRY ||
-        businessType === BusinessType.MINE ?
-        [{ id: generateUniqueId("worker"), gatherRate: 1 / 3 }] : [],
+        businessType === BusinessType.MINE)
+        ? [{ id: generateUniqueId("worker"), gatherRate: 1 / 3 }] : [],
       deliveryBots: [],
       processingTime: 10,
       productionProgress: 0,
       inputResource: getInputResourceForBusinessType(businessType),
-      outputResource: getOutputResourceForBusinessType(businessType)
+      outputResource: getOutputResourceForBusinessType(businessType),
+      pendingDeliveries: [],
+      upgrades: {
+        incomingCapacity: 0,
+        processingTime: 0,
+        outgoingCapacity: 0
+      },
+      gatherProgress: 0,
+      recentProfit: 0,
+      profitDisplayTime: undefined,
     }
 
     console.log('Created new business:', newBusiness)
@@ -750,6 +784,7 @@ export default function TycoonGame() {
         }}
         businesses={gameState.businesses}
       />
+      {/* The market prices panel is intentionally hidden. Remove or comment out its import and usage in GameHUD if it is a separate component. */}
 
       <GameWorld
         businesses={gameState.businesses}

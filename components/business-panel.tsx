@@ -54,7 +54,7 @@ export default function BusinessPanel({
     switch (business.type) {
       case BusinessType.RESOURCE_GATHERING:
         return business.outputResource === ResourceType.WOOD
-          ? "Woodcutter"
+          ? "Wood Cutter Camp"
           : business.outputResource === ResourceType.STONE
             ? "Quarry"
             : "Mine"

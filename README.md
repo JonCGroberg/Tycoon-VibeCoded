@@ -3,7 +3,7 @@
 A web-based tycoon/idle game inspired by Roblox tycoon mechanics. Build, upgrade, and manage a network of resource-gathering and processing businesses to maximize your profits!
 
 ## Features
-- Place and upgrade various business types (Lumber Yard, Quarry, Mine, Plank Mill, Brick Kiln, Smelter, Tool Shop, Market)
+- Place and upgrade various business types (Wood Cutter Camp, Quarry, Mine, Plank Mill, Brick Kiln, Smelter, Tool Shop, Market)
 - Logical progression: unlock advanced businesses by building prerequisites
 - Dynamic market prices for resources
 - Visual feedback for resource needs, production, and errors
@@ -35,7 +35,7 @@ A web-based tycoon/idle game inspired by Roblox tycoon mechanics. Build, upgrade
 - Avoid running out of coins—if you do, it's game over!
 
 ## Business Progression
-- **Lumber Yard, Quarry, Mine**: Gather raw resources.
+- **Wood Cutter Camp, Quarry, Mine**: Gather raw resources.
 - **Plank Mill, Brick Kiln, Smelter**: Process raw resources into goods.
 - **Tool Shop**: Create advanced goods from processed resources.
 - **Market**: Sell any resource for coins at dynamic prices.

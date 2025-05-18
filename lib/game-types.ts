@@ -43,6 +43,12 @@ export interface DeliveryBot {
   carryingAmount: number
 }
 
+export interface PendingDelivery {
+  sourceBusinessId: string
+  resourceAmount: number
+  resourceType: ResourceType
+}
+
 export interface Business {
   id: string
   type: BusinessType
@@ -64,6 +70,7 @@ export interface Business {
     outgoingCapacity: number
   }
   gatherProgress?: number
+  pendingDeliveries?: PendingDelivery[]
 }
 
 export interface GameState {

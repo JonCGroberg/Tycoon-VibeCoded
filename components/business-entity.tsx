@@ -42,7 +42,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
     switch (business.type) {
       case BusinessType.RESOURCE_GATHERING:
         return business.outputResource === ResourceType.WOOD
-          ? "Lumber Yard"
+          ? "Wood Cutter Camp"
           : business.outputResource === ResourceType.STONE
             ? "Quarry"
             : "Mine"

@@ -82,6 +82,7 @@ export default function GameWorld({
       </div>
 
       {/* Market price panel in top right (larger, all business resources) */}
+      {/*
       <div className="absolute top-4 right-4 z-30 bg-white bg-opacity-90 rounded shadow px-6 py-4 border-2 border-yellow-400 flex flex-col items-center min-w-[240px] max-w-xs">
         <div className="text-base font-bold text-yellow-700 mb-2">Market Prices</div>
         {Object.entries(marketPrices)
@@ -93,6 +94,7 @@ export default function GameWorld({
             </div>
           ))}
       </div>
+      */}
 
       {/* Render all businesses */}
       {businesses.map((business) => {
