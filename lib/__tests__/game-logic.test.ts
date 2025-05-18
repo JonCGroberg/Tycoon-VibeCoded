@@ -41,7 +41,7 @@ describe('initializeGameState', () => {
     expect(market.outgoingStorage).toBeDefined()
     expect(market.outgoingStorage.current).toBe(0)
     expect(market.outgoingStorage.capacity).toBe(4)
-    expect(market.processingTime).toBe(0)
+    expect(market.processingTime).toBe(10)
     expect(market.productionProgress).toBe(0)
     expect(market.workers).toEqual([])
     expect(market.shippingTypes).toHaveLength(0)
