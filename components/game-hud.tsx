@@ -2,18 +2,19 @@
 
 import { Button } from "@/components/ui/button"
 import { BusinessType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, Columns4, StoreIcon, CoinsIcon, GemIcon, BoxIcon, PackageIcon, WrenchIcon } from "lucide-react"
+import { TreesIcon as TreeIcon, Columns4, StoreIcon, CoinsIcon, GemIcon, BoxIcon, PackageIcon, WrenchIcon, Building2Icon, Building, BuildingIcon } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 
 interface GameHUDProps {
   coins: number
+  equity: number
   onPlaceBusiness: (type: BusinessType) => void
   flashRed?: boolean
   buildingCosts: Record<BusinessType, number>
   businesses?: { outputResource: string }[]
 }
 
-export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCosts, businesses }: GameHUDProps) {
+export default function GameHUD({ coins, equity, onPlaceBusiness, flashRed, buildingCosts, businesses }: GameHUDProps) {
   // Check if player owns a Plank Mill or Smelter
   const hasPlankMill = businesses?.some(b => b.outputResource === 'PLANKS')
   const hasSmelter = businesses?.some(b => b.outputResource === 'IRON_INGOT')
@@ -23,11 +24,14 @@ export default function GameHUD({ coins, onPlaceBusiness, flashRed, buildingCost
 
   return (
     <div className={`absolute top-4 left-4 z-10 bg-white bg-opacity-90 p-4 rounded-lg shadow-md border border-gray-300 ${flashRed ? 'error-border' : ''}`}>
-      <div className="flex items-center mb-4">
-        <CoinsIcon className="w-6 h-6 text-yellow-500 mr-2" />
-        <span className={`text-xl font-bold transition-colors duration-300 ${flashRed ? 'flash-red shake' : ''}`}>
-          {formatCurrency(coins)}
-        </span>
+      <div className="mb-4">
+        <div className="flex items-center mb-1">
+          <CoinsIcon className="w-6 h-6 text-yellow-500 mr-2" />
+          <span className={`text-xl font-bold transition-colors duration-300 ${flashRed ? 'flash-red shake' : ''}`}>{formatCurrency(coins)}</span>
+        </div>
+        <div className="flex items-center mt-4">
+          <span className="text-xs font-bold text-gray-400">{formatCurrency(equity)} <span className="text-xs text-gray-300">Invested</span></span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-2">

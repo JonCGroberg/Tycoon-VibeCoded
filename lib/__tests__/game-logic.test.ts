@@ -31,10 +31,16 @@ describe('initializeGameState', () => {
     const market = state.businesses.find(b => b.type === BusinessType.MARKET)
     expect(market).toBeDefined()
     if (!market) throw new Error('Market business not found')
+
+    // Test each property individually for better error messages
     expect(market.type).toBe(BusinessType.MARKET)
     expect(market.position).toEqual({ x: 400, y: 100 })
-    expect(market.incomingStorage).toEqual({ current: 0, capacity: Number.POSITIVE_INFINITY })
-    expect(market.outgoingStorage).toEqual({ current: 0, capacity: 0 })
+    expect(market.incomingStorage).toBeDefined()
+    expect(market.incomingStorage.current).toBe(0)
+    expect(market.incomingStorage.capacity).toBe(4)
+    expect(market.outgoingStorage).toBeDefined()
+    expect(market.outgoingStorage.current).toBe(0)
+    expect(market.outgoingStorage.capacity).toBe(4)
     expect(market.processingTime).toBe(0)
     expect(market.productionProgress).toBe(0)
     expect(market.workers).toEqual([])

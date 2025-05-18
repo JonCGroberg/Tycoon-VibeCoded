@@ -1,8 +1,15 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, Columns4, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangleIcon, AlertTriangle } from "lucide-react"
+import { TreesIcon as TreeIcon, Columns4, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangleIcon, AlertTriangle, ShipIcon, PlaneIcon } from "lucide-react"
 import { Alert } from "./ui/alert"
+import { getResourceName } from "./business-panel"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface BusinessEntityProps {
   business: Business
@@ -137,98 +144,137 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
   )
 
   return (
-    <div
-      data-testid="business-entity"
-      className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
-      style={{
-        left: business.position.x - 48,
-        top: business.position.y - 48,
-      }}
-      onClick={onClick}
-    >
-      {/* Business Level - Changed to plain text */}
-      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800">
-        Lvl {business.level}
-      </div>
-
-      <div className="text-sm font-bold mt-2 text-center text-nowrap">{getBusinessName()}</div>
-
-      <div className="mt-2">{getBusinessIcon()}</div>
-
-      {/* Input Buffer Visualization - Left side */}
-      {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
-        <div className="absolute left-0 top-0 w-1 h-full flex flex-col-reverse">
+    <TooltipProvider>
+      <Tooltip delayDuration={0}>
+        <TooltipTrigger asChild>
           <div
-            className={`w-full ${getBufferStatusColor(
-              business.incomingStorage?.current,
-              business.incomingStorage?.capacity,
-            )}`}
-            style={{ height: incomingStorageHeight }}
-          ></div>
-        </div>
-      )}
+            data-testid="business-entity"
+            className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
+            style={{
+              left: business.position.x - 48,
+              top: business.position.y - 48,
+            }}
+            onClick={onClick}
+          >
+            {/* Business Level - Changed to plain text */}
+            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800">
+              Lvl {business.level}
+            </div>
 
-      {/* Output Buffer Visualization - Right side */}
-      {business.type !== BusinessType.MARKET && (
-        <div className="absolute right-0 top-0 w-1 h-full flex flex-col-reverse">
-          <div
-            className={`w-full ${getBufferStatusColor(
-              business.outgoingStorage?.current,
-              business.outgoingStorage?.capacity,
-            )}`}
-            style={{ height: outgoingStorageHeight }}
-          ></div>
-        </div>
-      )}
+            <div className="text-sm font-bold mt-2 text-center text-nowrap">{getBusinessName()}</div>
 
-      {/* shipping */}
-      <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
-        {(() => {
-          const allBots = (business.shippingTypes ?? []).flatMap(st => Array.isArray(st.bots) ? st.bots : []);
-          const available = allBots.filter(bot => bot && bot.isDelivering === false).length;
-          if (allBots.length > 0) {
-            return (
-              <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
-                <TruckIcon className="w-4 h-4 text-gray-700" />
-                <span className="text-xs ml-1">{available}/{allBots.length}</span>
+            <div className="mt-2">{getBusinessIcon()}</div>
+
+            {/* Input Buffer Visualization - Left side */}
+            {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
+              <div className="absolute left-0 top-0 w-1 h-full flex flex-col-reverse">
+                <div
+                  className={`w-full ${getBufferStatusColor(
+                    business.incomingStorage?.current,
+                    business.incomingStorage?.capacity,
+                  )}`}
+                  style={{ height: incomingStorageHeight }}
+                ></div>
               </div>
-            );
-          }
-          return null;
-        })()}
-      </div>
+            )}
 
-      {/* Production progress bar and resource indicators at the top (always visible) */}
-      {business.type !== BusinessType.MARKET && (
-        <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' }}>
-          <div className="flex items-center justify-between w-full space-x-2">
-            {/* Input Resource Indicator*/}
-            <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING ? 'opacity-30' : ''}`}>
-              {getResourceIcon(business.inputResource)}
-              {/* ! badge if starving (red) or requesting (yellow)*/}
-              {business.type !== BusinessType.RESOURCE_GATHERING &&
-                business.incomingStorage.current < business.incomingStorage.capacity && (
-                  <div className="absolute -top-2 -right-2 z-10">
-                    {business.incomingStorage.current === 0 ? (
-                      <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-red-500 rounded-full p-0.5" />
-                    ) : (
-                      <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-yellow-500 rounded-full p-0.5" />
-                    )}
+            {/* Output Buffer Visualization - Right side */}
+            {business.type !== BusinessType.MARKET && (
+              <div className="absolute right-0 top-0 w-1 h-full flex flex-col-reverse">
+                <div
+                  className={`w-full ${getBufferStatusColor(
+                    business.outgoingStorage?.current,
+                    business.outgoingStorage?.capacity,
+                  )}`}
+                  style={{ height: outgoingStorageHeight }}
+                ></div>
+              </div>
+            )}
+
+            {/* shipping */}
+            <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
+              {business.type !== BusinessType.MARKET && business.shippingTypes?.length > 0 && (
+                <div className="relative w-8 h-8">
+                  {business.shippingTypes.map((shippingType, index) => {
+                    const botCount = Array.isArray(shippingType.bots) ? shippingType.bots.length : 0;
+                    const faded = botCount === 0 ? 'opacity-40' : '';
+                    return (
+                      <div
+                        key={shippingType.type}
+                        className={`absolute ${faded}`}
+                        style={{
+                          transform: `translateX(${index * 4}px)`,
+                          zIndex: index
+                        }}
+                      >
+                        {shippingType.type === 'TRUCK' && (
+                          <TruckIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
+                        )}
+                        {shippingType.type === 'BOAT' && (
+                          <ShipIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
+                        )}
+                        {shippingType.type === 'PLANE' && (
+                          <PlaneIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Production progress bar and resource indicators at the top (always visible) */}
+            {business.type !== BusinessType.MARKET && (
+              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' }}>
+                <div className="flex items-center justify-between w-full space-x-2">
+                  {/* Input Resource Indicator*/}
+                  <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING ? 'opacity-30' : ''}`}>
+                    {getResourceIcon(business.inputResource)}
+                    {/* ! badge if input is less than 50% */}
+                    {business.type !== BusinessType.RESOURCE_GATHERING &&
+                      business.incomingStorage.current < 0.5 * business.incomingStorage.capacity && (
+                        <div className="absolute -top-2 -right-2 z-10">
+                          {business.incomingStorage.current === 0 ? (
+                            <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-red-500 rounded-full p-0.5" />
+                          ) : (
+                            <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-yellow-500 rounded-full p-0.5" />
+                          )}
+                        </div>
+                      )}
                   </div>
-                )}
-            </div>
-            {/* Progress bar */}
-            <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
-            </div>
-            {/* Output Resource Indicator - always visible */}
-            <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingStorage.current === 0 ? 'opacity-50' : ''}`}>
-              {getResourceIcon(business.outputResource)}
-            </div>
+                  {/* Progress bar */}
+                  <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
+                  </div>
+                  {/* Output Resource Indicator - always visible */}
+                  <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingStorage.current === 0 ? 'opacity-50' : ''}`}>
+                    {getResourceIcon(business.outputResource)}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
-
-    </div>
+        </TooltipTrigger>
+        {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET &&
+          business.incomingStorage.current < 0.5 * business.incomingStorage.capacity && (
+            <TooltipContent
+              side="top"
+              sideOffset={40}
+              className="bg-white border-2 border-gray-300 shadow-lg px-3 py-2 text-sm font-medium rounded-md"
+            >
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <div className={`w-3 h-3 rounded-full ${getResourceColor(business.inputResource)}`} />
+                  <span className={`${business.incomingStorage.current === 0 ? "text-red-600" : "text-yellow-600"} font-semibold`}>
+                    {business.incomingStorage.current === 0
+                      ? `No ${getResourceName(business.inputResource)} available!`
+                      : `Looking for ${getResourceName(business.inputResource)}!`}
+                  </span>
+                </div>
+              </div>
+            </TooltipContent>
+          )}
+      </Tooltip>
+    </TooltipProvider>
   )
 }

@@ -19,9 +19,9 @@ export function initializeGameState(): GameState {
         id: generateUniqueId("market"),
         type: BusinessType.MARKET,
         position: { x: 400, y: 100 },
-        incomingStorage: { current: 0, capacity: Number.POSITIVE_INFINITY },
-        outgoingStorage: { current: 0, capacity: 0 },
-        processingTime: 0,
+        incomingStorage: { current: 0, capacity: 4 },
+        outgoingStorage: { current: 0, capacity: 4 },
+        processingTime: 10,
         productionProgress: 0,
         workers: [],
         shippingTypes: [],
@@ -30,6 +30,7 @@ export function initializeGameState(): GameState {
         outputResource: ResourceType.NONE,
         recentProfit: 0,
         profitDisplayTime: 0,
+        totalInvested: 0
       },
     ],
     activeDeliveries: [], // Initialize empty array for active deliveries

@@ -22,6 +22,7 @@ import {
   BikeIcon,
   DogIcon,
   MinusIcon,
+  Building2Icon,
 } from "lucide-react"
 import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
 
@@ -137,7 +138,12 @@ export default function BusinessPanel({
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div>
           <h3 className="font-bold text-lg">{getBusinessName(business)}</h3>
-          <div className="text-sm text-gray-600">Level {business.level}</div>
+          <div className="flex items-center text-sm text-gray-600 mt-0.5">
+            <span>Level {business.level}</span>
+            <span className="mx-2">·</span>
+            <span className="font-bold text-gray-400">{formatCurrency(business.totalInvested)}</span>
+            <span className="font-medium text-gray-400 ml-1"> Invested</span>
+          </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <XIcon className="w-4 h-4" />
@@ -268,7 +274,7 @@ export default function BusinessPanel({
                 const inUse = bots.filter(bot => bot.isDelivering).length;
                 const cost = calculateShippingCost(typeConfig.id, total);
                 const canAfford = coins >= cost;
-                const canSell = bots.filter(bot => !bot.isDelivering).length > 0;
+                const canSell = bots.length > 0;
                 const rowDisabled = !canAfford && !canSell;
                 const Icon = typeConfig.icon;
 
@@ -296,7 +302,7 @@ export default function BusinessPanel({
                               variant="outline"
                               size="sm"
                               className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium border-red-400 hover:bg-red-50"
-                              disabled={bots.filter(bot => !bot.isDelivering).length === 0}
+                              disabled={!canSell}
                               onClick={() => onSellShippingType(business.id, typeConfig.id)}
                               title={`Sell for ${formatCurrency(cost / 2)} (50% refund)`}
                             >

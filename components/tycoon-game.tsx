@@ -513,9 +513,9 @@ export default function TycoonGame() {
       type,
       position,
       level: 1,
-      processingTime: 1,
-      incomingStorage: { current: 0, capacity: 10 },
-      outgoingStorage: { current: 0, capacity: 10 },
+      processingTime: 10,
+      incomingStorage: { current: 0, capacity: 4 },
+      outgoingStorage: { current: type === BusinessType.RESOURCE_GATHERING ? 1 : 0, capacity: 4 },
       productionProgress: 0,
       workers: [],
       shippingTypes: type === BusinessType.RESOURCE_GATHERING ? [
@@ -534,8 +534,9 @@ export default function TycoonGame() {
       pendingDeliveries: [],
       recentProfit: 0,
       profitDisplayTime: 0,
-      inputResource: type === BusinessType.RESOURCE_GATHERING ? ResourceType.WOOD : ResourceType.NONE,
-      outputResource: type === BusinessType.RESOURCE_GATHERING ? ResourceType.WOOD : ResourceType.NONE,
+      inputResource: getInputResourceForBusinessType(type),
+      outputResource: getOutputResourceForBusinessType(type),
+      totalInvested: businessCost,
     }
 
     console.log('Created new business:', newBusiness)
@@ -632,6 +633,7 @@ export default function TycoonGame() {
         newState.businesses[businessIndex].shippingTypes.push({ type: shippingTypeId, bots: [newBot] });
       }
       newState.coins -= cost;
+      newState.businesses[businessIndex].totalInvested = (newState.businesses[businessIndex].totalInvested || 0) + cost;
 
       return newState
     })
@@ -645,12 +647,9 @@ export default function TycoonGame() {
       if (businessIndex === -1) return prevState;
       const shippingType = newState.businesses[businessIndex].shippingTypes.find(st => st.type === shippingTypeId);
       if (!shippingType || shippingType.bots.length === 0) return prevState;
-      // Only sell idle bots
-      const idleBotIndex = shippingType.bots.findIndex(bot => !bot.isDelivering);
-      if (idleBotIndex === -1) return prevState;
-      // Refund 50% of the current price (what it would cost to buy the next bot)
+      // Remove the last bot, regardless of isDelivering status
       const refund = Math.floor(calculateShippingCost(shippingTypeId, shippingType.bots.length) * 0.5);
-      shippingType.bots.splice(idleBotIndex, 1);
+      shippingType.bots.pop();
       newState.coins += refund;
       return newState;
     });
@@ -696,6 +695,7 @@ export default function TycoonGame() {
 
       business.level += 1
       newState.coins -= upgradeCost
+      business.totalInvested = (business.totalInvested || 0) + upgradeCost
 
       console.log("Upgrade complete")
       return newState
@@ -758,7 +758,8 @@ export default function TycoonGame() {
     setMaxCoins(initializeGameState().coins)
   }
 
-  const score = maxBuildings * maxLevel * maxCoins
+  // Calculate total equity
+  const equity = gameState.businesses.reduce((sum, b) => sum + (b.totalInvested || 0), 0);
 
   return (
     <div className="w-full h-[100%] relative overflow-hidden">
@@ -774,7 +775,7 @@ export default function TycoonGame() {
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-70">
           <div className="bg-white rounded-lg shadow-lg p-8 flex flex-col items-center">
             <h2 className="text-3xl font-bold text-red-600 mb-4">You Lost!</h2>
-            <p className="mb-2 text-lg">Score: <span className="font-bold">{score}</span></p>
+            <p className="mb-2 text-lg">Score: <span className="font-bold">{equity}</span></p>
             <p className="mb-2 text-lg">Max Buildings: <span className="font-bold">{maxBuildings}</span></p>
             <p className="mb-2 text-lg">Max Level: <span className="font-bold">{maxLevel}</span></p>
             <p className="mb-2 text-lg">Max Coins: <span className="font-bold">{maxCoins}</span></p>
@@ -792,6 +793,7 @@ export default function TycoonGame() {
 
       <GameHUD
         coins={gameState.coins}
+        equity={equity}
         onPlaceBusiness={(type) => setPlacingBusiness(type)}
         flashRed={flashRed}
         buildingCosts={{

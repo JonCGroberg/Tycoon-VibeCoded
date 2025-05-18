@@ -76,6 +76,7 @@ export interface Business {
   }
   gatherProgress?: number
   pendingDeliveries?: PendingDelivery[]
+  totalInvested: number // Track total coins spent on this business
 }
 
 export interface GameState {
