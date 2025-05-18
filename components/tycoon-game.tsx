@@ -15,6 +15,18 @@ import {
   type ActiveDelivery,
 } from "@/lib/game-types"
 import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
+import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
+
+// Helper: all shipping types
+const ALL_SHIPPING_TYPES = [
+  { id: 'walker', baseCost: 10 },
+  { id: 'bicyclist', baseCost: 25 },
+  { id: 'truck', baseCost: 100 },
+  { id: 'semi', baseCost: 200 },
+  { id: 'train', baseCost: 500 },
+  { id: 'plane', baseCost: 800 },
+  { id: 'ship', baseCost: 1000 },
+];
 
 export default function TycoonGame() {
 
@@ -209,11 +221,14 @@ export default function TycoonGame() {
         // Process delivery bots - only start new deliveries if there are no active ones for this bot
         newState.businesses.forEach((business) => {
           if (!business.pendingDeliveries) business.pendingDeliveries = [];
-          business.deliveryBots.forEach((bot, botIdx) => {
-            const isAlreadyDelivering = newState.activeDeliveries.some(
-              (delivery) => delivery.sourceBusinessId === business.id && delivery.bot.id === bot.id,
-            )
-            if (!bot.isDelivering && !isAlreadyDelivering && business.outgoingBuffer.current >= 1) {
+          business.shippingTypes.forEach((shippingType) => {
+            shippingType.bots.forEach((bot) => {
+              if (bot.isDelivering) return;
+              const isAlreadyDelivering = newState.activeDeliveries.some(
+                (delivery) => delivery.sourceBusinessId === business.id && delivery.bot.id === bot.id,
+              );
+              if (isAlreadyDelivering || business.outgoingBuffer.current < 1) return;
+
               // Find all possible targets
               const allTargets = newState.businesses.filter(
                 (b) => b.id !== business.id && b.inputResource === business.outputResource
@@ -275,24 +290,14 @@ export default function TycoonGame() {
                 travelTimeMs,
               };
               newState.activeDeliveries.push(newDelivery);
-            }
+            });
           })
         })
 
         // Process active deliveries: complete those whose expectedArrival has passed
         const now = Date.now()
-        // console.log('Checking deliveries:', {
-        //   activeDeliveries: newState.activeDeliveries.length,
-        //   now: new Date(now).toISOString()
-        // })
         for (let i = newState.activeDeliveries.length - 1; i >= 0; i--) {
           const delivery = newState.activeDeliveries[i]
-          // console.log('Delivery status:', {
-          //   id: delivery.id,
-          //   expectedArrival: new Date(delivery.expectedArrival).toISOString(),
-          //   timeUntilArrival: (delivery.expectedArrival - now) / 1000,
-          //   shouldComplete: delivery.expectedArrival <= now
-          // })
           if (delivery.expectedArrival <= now) {
             const sourceBusiness = newState.businesses.find((b) => b.id === delivery.sourceBusinessId)
             const targetBusiness = newState.businesses.find((b) => b.id === delivery.targetBusinessId)
@@ -332,11 +337,14 @@ export default function TycoonGame() {
                 }
               }
               // Reset bot state in the source business
-              const botIndex = sourceBusiness.deliveryBots.findIndex((b) => b.id === delivery.bot.id)
-              if (botIndex !== -1) {
-                sourceBusiness.deliveryBots[botIndex].isDelivering = false
-                sourceBusiness.deliveryBots[botIndex].targetBusinessId = null
-                sourceBusiness.deliveryBots[botIndex].currentLoad = 0
+              for (const shippingType of sourceBusiness.shippingTypes) {
+                const botIndex = shippingType.bots.findIndex((b) => b.id === delivery.bot.id)
+                if (botIndex !== -1) {
+                  shippingType.bots[botIndex].isDelivering = false
+                  shippingType.bots[botIndex].targetBusinessId = null
+                  shippingType.bots[botIndex].currentLoad = 0
+                  break;
+                }
               }
             }
             // Remove the delivery from active deliveries
@@ -450,9 +458,9 @@ export default function TycoonGame() {
     return Math.floor(base * Math.pow(1.1, n))
   }
 
-  function getBotCost(business: Business): number {
+  function getShippingTypeCost(business: Business): number {
     const base = 100
-    const n = business.deliveryBots.length
+    const n = business.shippingTypes.length
     return Math.floor(base * Math.pow(1.2, n))
   }
 
@@ -506,22 +514,13 @@ export default function TycoonGame() {
       type: businessType,
       position,
       level: 1,
-      incomingBuffer: { current: 0, capacity: 10 },
-      outgoingBuffer: { current: (businessType === BusinessType.RESOURCE_GATHERING ? 1 : 0), capacity: 10 },
+      incomingBuffer: { current: 0, capacity: 4 },
+      outgoingBuffer: { current: (businessType === BusinessType.RESOURCE_GATHERING ? 1 : 0), capacity: 4 },
       workers: (businessType === BusinessType.RESOURCE_GATHERING ||
         businessType === BusinessType.QUARRY ||
         businessType === BusinessType.MINE)
         ? [{ id: generateUniqueId("worker"), gatherRate: 1 / 3 }] : [],
-      deliveryBots: (businessType === BusinessType.RESOURCE_GATHERING)
-        ? [{
-          id: generateUniqueId("bot"),
-          maxLoad: 1,
-          speed: 100,
-          isDelivering: false,
-          targetBusinessId: null,
-          currentLoad: 0,
-        }]
-        : [],
+      shippingTypes: ALL_SHIPPING_TYPES.map(type => ({ type: type.id, bots: [] })),
       processingTime: 10,
       productionProgress: 0,
       inputResource: getInputResourceForBusinessType(businessType),
@@ -601,36 +600,58 @@ export default function TycoonGame() {
     }
   }
 
-  // Hire a delivery bot for a business
-  const handleHireDeliveryBot = (businessId: string) => {
+  // Hire a shipping type for a business
+  const handleHireShippingType = (businessId: string, shippingTypeId: string) => {
     setGameState((prevState) => {
       const newState = { ...prevState }
       const businessIndex = newState.businesses.findIndex((b) => b.id === businessId)
 
       if (businessIndex === -1) return prevState
 
-      const botCost = getBotCost(newState.businesses[businessIndex])
+      const shippingTypeConfig = getShippingTypeConfig(shippingTypeId);
+      const shippingType = newState.businesses[businessIndex].shippingTypes.find(st => st.type === shippingTypeId);
+      const ownedCount = shippingType ? shippingType.bots.length : 0;
+      const cost = calculateShippingCost(shippingTypeId, ownedCount);
 
-      if (newState.coins < botCost) return prevState
+      if (newState.coins < cost) return prevState
 
-      const newBot: DeliveryBot = {
+      const newBot = {
         id: generateUniqueId("bot"),
-        maxLoad: 1,
-        speed: 200,
+        maxLoad: shippingTypeConfig.baseLoad,
+        speed: shippingTypeConfig.baseSpeed,
         isDelivering: false,
         targetBusinessId: null,
         currentLoad: 0,
+      };
+
+      if (shippingType) {
+        shippingType.bots.push(newBot);
+      } else {
+        newState.businesses[businessIndex].shippingTypes.push({ type: shippingTypeId, bots: [newBot] });
       }
-
-      newState.businesses[businessIndex].deliveryBots.push(newBot)
-      newState.coins -= botCost
-
-      // Log the delivery driver count after purchase
-      console.log(`Business ${newState.businesses[businessIndex].id} now has ${newState.businesses[businessIndex].deliveryBots.length} delivery drivers.`)
+      newState.coins -= cost;
 
       return newState
     })
+  }
 
+  // Sell a shipping type for a business
+  const handleSellShippingType = (businessId: string, shippingTypeId: string) => {
+    setGameState((prevState) => {
+      const newState = { ...prevState };
+      const businessIndex = newState.businesses.findIndex((b) => b.id === businessId);
+      if (businessIndex === -1) return prevState;
+      const shippingType = newState.businesses[businessIndex].shippingTypes.find(st => st.type === shippingTypeId);
+      if (!shippingType || shippingType.bots.length === 0) return prevState;
+      // Only sell idle bots
+      const idleBotIndex = shippingType.bots.findIndex(bot => !bot.isDelivering);
+      if (idleBotIndex === -1) return prevState;
+      // Refund 50% of the current price (what it would cost to buy the next bot)
+      const refund = Math.floor(calculateShippingCost(shippingTypeId, shippingType.bots.length) * 0.5);
+      shippingType.bots.splice(idleBotIndex, 1);
+      newState.coins += refund;
+      return newState;
+    });
   }
 
   // Upgrade a business
@@ -738,7 +759,7 @@ export default function TycoonGame() {
   const score = maxBuildings * maxLevel * maxCoins
 
   return (
-    <div className="w-full h-[90vh] relative overflow-hidden">
+    <div className="w-full h-[100%] relative overflow-hidden">
       {/* Persistent Restart Button centered at the bottom */}
       <button
         className="absolute left-1/2 bottom-4 transform -translate-x-1/2 px-4 py-2 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-800 z-20"
@@ -799,11 +820,13 @@ export default function TycoonGame() {
       {selectedBusiness && (
         <BusinessPanel
           business={selectedBusiness}
+          coins={gameState.coins}
           onClose={() => {
             setSelectedBusiness(null)
             setSelectedBusinessId(null)
           }}
-          onHireDeliveryBot={() => handleHireDeliveryBot(selectedBusiness.id)}
+          onHireShippingType={handleHireShippingType}
+          onSellShippingType={handleSellShippingType}
           onUpgrade={handleUpgradeBusiness}
         />
       )}

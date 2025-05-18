@@ -1,10 +1,10 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import BusinessPanel from '../business-panel'
 import { BusinessType, ResourceType, DeliveryBot } from '@/lib/game-types'
-import { getBotCost, getUpgradeCost, getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
+import { getUpgradeCost, getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
 
 // Mock the business data
-const mockDeliveryBots: DeliveryBot[] = [
+const mockBots: DeliveryBot[] = [
     { id: '1', maxLoad: 10, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 },
     { id: '2', maxLoad: 10, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 },
 ]
@@ -19,7 +19,9 @@ const mockBusiness = {
     processingTime: 5,
     productionProgress: 0,
     workers: [],
-    deliveryBots: [mockDeliveryBots[0]],
+    shippingTypes: [
+        { type: 'truck', bots: mockBots },
+    ],
     position: { x: 0, y: 0 },
     recentProfit: 0,
     profitDisplayTime: 0,
@@ -28,7 +30,7 @@ const mockBusiness = {
 
 describe('BusinessPanel', () => {
     const mockOnClose = jest.fn()
-    const mockOnHireDeliveryBot = jest.fn()
+    const mockOnHireShippingType = jest.fn()
     const mockOnUpgrade = jest.fn()
 
     beforeEach(() => {
@@ -38,14 +40,14 @@ describe('BusinessPanel', () => {
     it('renders business panel with correct title', () => {
         render(
             <BusinessPanel
-                business={mockBusiness}
+                business={{ ...mockBusiness, type: BusinessType.RESOURCE_GATHERING, outputResource: ResourceType.WOOD }}
                 onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockOnUpgrade}
-            />
+                onHireShippingType={mockOnHireShippingType}
+                onUpgrade={mockOnUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
+                    throw new Error('Function not implemented.')
+                }} />
         )
-
-        expect(screen.getByText('Wood Cutter Camp')).toBeInTheDocument()
+        expect(screen.getByText('Wood Camp')).toBeInTheDocument()
         expect(screen.getByText('Level 1')).toBeInTheDocument()
     })
 
@@ -54,9 +56,10 @@ describe('BusinessPanel', () => {
             <BusinessPanel
                 business={mockBusiness}
                 onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockOnUpgrade}
-            />
+                onHireShippingType={mockOnHireShippingType}
+                onUpgrade={mockOnUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
+                    throw new Error('Function not implemented.')
+                }} />
         )
 
         const buttons = screen.getAllByRole('button')
@@ -67,42 +70,16 @@ describe('BusinessPanel', () => {
     it('displays correct buffer information', () => {
         render(
             <BusinessPanel
-                business={mockBusiness}
+                business={{ ...mockBusiness, type: BusinessType.PROCESSING, outputResource: ResourceType.PLANKS }}
                 onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockOnUpgrade}
-            />
+                onHireShippingType={mockOnHireShippingType}
+                onUpgrade={mockOnUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
+                    throw new Error('Function not implemented.')
+                }} />
         )
-
         expect(screen.getByText('Incoming Buffer')).toBeInTheDocument()
         expect(screen.getByText('Outgoing Buffer')).toBeInTheDocument()
         expect(screen.getByText('Processing')).toBeInTheDocument()
-    })
-
-    it('shows upgrades tab content when defaultTab is upgrades', async () => {
-        const processingBusiness = {
-            ...mockBusiness,
-            type: BusinessType.PROCESSING,
-            outputResource: ResourceType.PLANKS,
-        }
-        render(
-            <BusinessPanel
-                business={processingBusiness}
-                onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockOnUpgrade}
-                defaultTab="upgrades"
-            />
-        )
-        expect(await screen.findByText('Available Upgrades')).toBeInTheDocument()
-    })
-
-    it('calculates bot cost correctly', () => {
-        const business = {
-            ...mockBusiness,
-            deliveryBots: mockDeliveryBots
-        }
-        expect(getBotCost(business)).toBe(144)
     })
 
     it('calculates upgrade cost correctly', () => {
@@ -117,7 +94,7 @@ describe('BusinessPanel', () => {
         const furnitureBusiness = { ...mockBusiness, type: BusinessType.SHOP, outputResource: ResourceType.FURNITURE };
         const marketBusiness = { ...mockBusiness, type: BusinessType.MARKET };
 
-        expect(getBusinessName(woodBusiness)).toBe('Wood Cutter Camp');
+        expect(getBusinessName(woodBusiness)).toBe('Wood Camp');
         expect(getBusinessName(stoneBusiness)).toBe('Quarry');
         expect(getBusinessName(planksBusiness)).toBe('Plank Mill');
         expect(getBusinessName(furnitureBusiness)).toBe('Furniture Shop');
@@ -147,13 +124,12 @@ describe('BusinessPanel', () => {
             <BusinessPanel
                 business={upgradeBusiness}
                 onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockUpgrade}
-                defaultTab="upgrades"
-            />
+                onHireShippingType={mockOnHireShippingType}
+                onUpgrade={mockUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
+                    throw new Error('Function not implemented.')
+                }} />
         )
-        const upgradeButtons = screen.getAllByRole('button', { name: /upgrade/i })
-        fireEvent.click(upgradeButtons[0])
+        fireEvent.click(screen.getByTestId('upgrade-incoming'))
         expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'incomingCapacity')
     })
 
@@ -168,13 +144,12 @@ describe('BusinessPanel', () => {
             <BusinessPanel
                 business={upgradeBusiness}
                 onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockUpgrade}
-                defaultTab="upgrades"
-            />
+                onHireShippingType={mockOnHireShippingType}
+                onUpgrade={mockUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
+                    throw new Error('Function not implemented.')
+                }} />
         )
-        const upgradeButtons = screen.getAllByRole('button', { name: /upgrade/i })
-        fireEvent.click(upgradeButtons[1])
+        fireEvent.click(screen.getByTestId('upgrade-processing'))
         expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'processingTime')
     })
 
@@ -189,13 +164,12 @@ describe('BusinessPanel', () => {
             <BusinessPanel
                 business={upgradeBusiness}
                 onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockUpgrade}
-                defaultTab="upgrades"
-            />
+                onHireShippingType={mockOnHireShippingType}
+                onUpgrade={mockUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
+                    throw new Error('Function not implemented.')
+                }} />
         )
-        const upgradeButtons = screen.getAllByRole('button', { name: /upgrade/i })
-        fireEvent.click(upgradeButtons[2])
+        fireEvent.click(screen.getByTestId('upgrade-outgoing'))
         expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'outgoingCapacity')
     })
 })

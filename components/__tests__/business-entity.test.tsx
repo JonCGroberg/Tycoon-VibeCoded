@@ -14,7 +14,9 @@ describe('BusinessEntity', () => {
         outgoingBuffer: { current: 0, capacity: 10 },
         productionProgress: 0,
         workers: [],
-        deliveryBots: [],
+        shippingTypes: [
+            { type: 'truck', bots: [] },
+        ],
         recentProfit: 0,
         profitDisplayTime: 0,
         processingTime: 1000
@@ -32,7 +34,7 @@ describe('BusinessEntity', () => {
 
     it('renders the correct business name for resource gathering', () => {
         render(<BusinessEntity {...baseProps} />)
-        expect(screen.getByText('Wood Cutter Camp')).toBeInTheDocument()
+        expect(screen.getByText('Wood Camp')).toBeInTheDocument()
     })
 
     it('renders the correct business name for processing', () => {
@@ -48,7 +50,7 @@ describe('BusinessEntity', () => {
 
     it('calls onClick when clicked', () => {
         render(<BusinessEntity {...baseProps} />)
-        fireEvent.click(screen.getByText('Wood Cutter Camp'))
+        fireEvent.click(screen.getByText('Wood Camp'))
         expect(baseProps.onClick).toHaveBeenCalled()
     })
 

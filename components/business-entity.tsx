@@ -1,7 +1,7 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, Logs, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangleIcon, AlertTriangle } from "lucide-react"
+import { TreesIcon as TreeIcon, Columns4, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangleIcon, AlertTriangle } from "lucide-react"
 import { Alert } from "./ui/alert"
 
 interface BusinessEntityProps {
@@ -17,7 +17,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       case BusinessType.RESOURCE_GATHERING:
         return <TreeIcon className="w-6 h-6 text-green-800" />
       case BusinessType.PROCESSING:
-        return <Logs className="w-6 h-6 text-amber-700" />
+        return <Columns4 className="w-6 h-6 text-amber-700" />
       case BusinessType.SHOP:
         return <StoreIcon className="w-6 h-6 text-blue-700" />
       case BusinessType.MARKET:
@@ -44,7 +44,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
     switch (business.type) {
       case BusinessType.RESOURCE_GATHERING:
         return business.outputResource === ResourceType.WOOD
-          ? "Wood Cutter Camp"
+          ? "Wood Camp"
           : business.outputResource === ResourceType.STONE
             ? "Quarry"
             : "Mine"
@@ -95,7 +95,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
       case ResourceType.IRON_ORE:
         return <BoxIcon className="w-3.5 h-3.5 text-white" />
       case ResourceType.PLANKS:
-        return <Logs className="w-3.5 h-3.5 text-white" />
+        return <Columns4 className="w-3.5 h-3.5 text-white" />
       case ResourceType.BRICKS:
         return <PackageIcon className="w-3.5 h-3.5 text-white" />
       case ResourceType.IRON_INGOT:
@@ -171,14 +171,21 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         </div>
       )}
 
-      {/* delivery drivers */}
+      {/* shipping */}
       <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
-        {business.deliveryBots.length > 0 && (
-          <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
-            <TruckIcon className="w-4 h-4 text-gray-700" />
-            <span className="text-xs ml-1">{business.deliveryBots.filter(bot => !bot.isDelivering).length}/{business.deliveryBots.length}</span>
-          </div>
-        )}
+        {(() => {
+          const allBots = (business.shippingTypes ?? []).flatMap(st => Array.isArray(st.bots) ? st.bots : []);
+          const available = allBots.filter(bot => bot && bot.isDelivering === false).length;
+          if (allBots.length > 0) {
+            return (
+              <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
+                <TruckIcon className="w-4 h-4 text-gray-700" />
+                <span className="text-xs ml-1">{available}/{allBots.length}</span>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {/* Production progress bar and resource indicators at the top (always visible) */}

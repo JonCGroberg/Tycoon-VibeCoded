@@ -24,7 +24,7 @@ export function initializeGameState(): GameState {
         processingTime: 0,
         productionProgress: 0,
         workers: [],
-        deliveryBots: [],
+        shippingTypes: [],
         level: 1,
         inputResource: ResourceType.NONE,
         outputResource: ResourceType.NONE,

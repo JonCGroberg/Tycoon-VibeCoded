@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { type DeliveryBot, ResourceType } from "@/lib/game-types"
 import { TruckIcon } from "lucide-react"
+import { getShippingTypeConfig } from "@/lib/shipping-types"
 
 interface DeliveryBotEntityProps {
   bot: DeliveryBot
@@ -12,6 +13,7 @@ interface DeliveryBotEntityProps {
   onDeliveryComplete: () => void
   deliveryStartTime: number
   deliveryExpectedArrival: number
+  shippingTypeId: string
 }
 
 export default function DeliveryBotEntity({
@@ -22,9 +24,12 @@ export default function DeliveryBotEntity({
   onDeliveryComplete,
   deliveryStartTime,
   deliveryExpectedArrival,
+  shippingTypeId,
 }: DeliveryBotEntityProps) {
   const [position, setPosition] = useState({ x: sourcePosition.x, y: sourcePosition.y })
   const [progress, setProgress] = useState(0)
+  const shippingTypeConfig = getShippingTypeConfig(shippingTypeId);
+  const Icon = shippingTypeConfig.icon;
 
   // Get resource color
   const getResourceColor = (resourceType: ResourceType) => {
@@ -91,7 +96,7 @@ export default function DeliveryBotEntity({
         zIndex: 50,
       }}
     >
-      <TruckIcon className="w-4 h-4 text-gray-700" />
+      <Icon className="w-4 h-4 text-gray-700" />
 
       {/* Resource being carried */}
       <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${getResourceColor(resourceType)}`}></div>

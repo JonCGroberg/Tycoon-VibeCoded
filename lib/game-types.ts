@@ -49,6 +49,11 @@ export interface PendingDelivery {
   resourceType: ResourceType
 }
 
+export interface ShippingTypeState {
+  type: string; // e.g. 'walker', 'bicyclist', 'truck', 'semi', etc.
+  bots: DeliveryBot[];
+}
+
 export interface Business {
   id: string
   type: BusinessType
@@ -58,7 +63,7 @@ export interface Business {
   processingTime: number // Seconds per unit
   productionProgress: number // 0-1 progress of current production
   workers: Worker[]
-  deliveryBots: DeliveryBot[]
+  shippingTypes: ShippingTypeState[]
   level: number
   inputResource: ResourceType
   outputResource: ResourceType

@@ -27,7 +27,7 @@ describe('TycoonGame', () => {
     it('renders the game and initializes with the correct game state', () => {
         render(<TycoonGame />)
         // Check that the initial game state is rendered
-        expect(screen.getByText(/2000/)).toBeInTheDocument()
+        expect(screen.getByText('$2,000')).toBeInTheDocument()
     })
 
     it('initializes market prices for all resource types', () => {
@@ -36,7 +36,7 @@ describe('TycoonGame', () => {
         Object.values(ResourceType).forEach(rt => {
             // Instead of checking for a UI element, verify that the market prices state is initialized
             // For example, check that the initial value is set to 1
-            expect(screen.getByText(/2000/)).toBeInTheDocument()
+            expect(screen.getByText('$2,000')).toBeInTheDocument()
         })
     })
 
@@ -49,7 +49,7 @@ describe('TycoonGame', () => {
         })
         // Check that the game state has been updated
         // For example, check that the coins value has changed or that businesses have been updated
-        expect(screen.getByText(/2000/)).toBeInTheDocument()
+        expect(screen.getByText('$2,000')).toBeInTheDocument()
         jest.useRealTimers()
     })
 })

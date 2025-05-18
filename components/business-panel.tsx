@@ -5,6 +5,7 @@ import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatCurrency } from "@/lib/utils"
 import {
   UserIcon,
   TruckIcon,
@@ -15,12 +16,21 @@ import {
   BoxIcon,
   InfoIcon,
   MoveUpIcon as UpgradeIcon,
+  PlusIcon,
+  PlaneIcon,
+  ShipIcon,
+  BikeIcon,
+  DogIcon,
+  MinusIcon,
 } from "lucide-react"
+import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
 
 interface BusinessPanelProps {
   business: Business
+  coins: number
   onClose: () => void
-  onHireDeliveryBot: (businessId: string) => void
+  onHireShippingType: (businessId: string, shippingTypeId: string) => void
+  onSellShippingType: (businessId: string, shippingTypeId: string) => void
   onUpgrade: (businessId: string, upgradeType: "incomingCapacity" | "processingTime" | "outgoingCapacity") => void
   defaultTab?: string
 }
@@ -31,22 +41,31 @@ export function getWorkerCost(business: Business): number {
   return Math.floor(base * Math.pow(1.1, n))
 }
 
-export function getBotCost(business: Business): number {
-  const base = 100
-  const n = business.deliveryBots.length
-  return Math.floor(base * Math.pow(1.2, n))
-}
-
-export function getUpgradeCost(business: Business): number {
+export function getUpgradeCost(
+  business: Business,
+  upgradeType?: "incomingCapacity" | "processingTime" | "outgoingCapacity"
+): number {
   const base = 50
-  return Math.floor(base * Math.pow(2, business.level - 1))
+  if (!upgradeType) {
+    return Math.floor(base * Math.pow(2, business.level - 1))
+  }
+  if (!business.upgrades) {
+    business.upgrades = {
+      incomingCapacity: 0,
+      processingTime: 0,
+      outgoingCapacity: 0,
+    }
+  }
+  let cost = base
+  cost *= Math.pow(2, business.upgrades[upgradeType])
+  return Math.floor(cost)
 }
 
 export function getBusinessName(business: Business): string {
   switch (business.type) {
     case BusinessType.RESOURCE_GATHERING:
       return business.outputResource === ResourceType.WOOD
-        ? "Wood Cutter Camp"
+        ? "Wood Camp"
         : business.outputResource === ResourceType.STONE
           ? "Quarry"
           : "Mine"
@@ -101,15 +120,20 @@ export function getBufferStatusColor(current: number | null | undefined, capacit
 
 export default function BusinessPanel({
   business,
+  coins,
   onClose,
-  onHireDeliveryBot,
+  onHireShippingType,
+  onSellShippingType,
   onUpgrade,
   defaultTab = "info",
 }: BusinessPanelProps) {
   const [activeTab, setActiveTab] = useState(defaultTab)
 
+  // Real shipping types from business
+  const shippingTypes = business.shippingTypes;
+
   return (
-    <div className="absolute bottom-4 right-4 w-80 bg-white rounded-lg shadow-lg border border-gray-300 z-20">
+    <div className="absolute bottom-4 right-4 w-[28rem] h-[22rem] bg-white rounded-lg shadow-lg border border-gray-300 z-20">
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div>
           <h3 className="font-bold text-lg">{getBusinessName(business)}</h3>
@@ -120,159 +144,186 @@ export default function BusinessPanel({
         </Button>
       </div>
 
-      <Tabs defaultValue={defaultTab} className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2 mx-4 mt-2">
+      <Tabs defaultValue={defaultTab} className="w-full " onValueChange={setActiveTab}>
+        <TabsList className="grid grid-cols-2">
           <TabsTrigger value="info" className="flex items-center">
             <InfoIcon className="w-4 h-4 mr-1" />
             Info
           </TabsTrigger>
-          <TabsTrigger value="upgrades" className="flex items-center">
-            <UpgradeIcon className="w-4 h-4 mr-1" />
-            Upgrades
+          <TabsTrigger value="shipping" className="flex items-center">
+            <TruckIcon className="w-4 h-4 mr-1" />
+            Shipping
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="info" className="p-4 pt-2">
-          {/* Buffers */}
-          <div className="mb-4">
-            <div className="flex items-center mb-1">
-              <PackageIcon className="w-4 h-4 mr-1 text-blue-600" />
-              <span className="text-sm font-medium">Incoming Buffer</span>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-gray-600">
-                {business.type === BusinessType.RESOURCE_GATHERING ? "None" : getResourceName(business.inputResource)}
-              </span>
-              <span
-                className={`text-xs font-medium ${getBufferStatusColor(
-                  business.incomingBuffer?.current ?? 0,
-                  business.incomingBuffer?.capacity ?? 1,
-                )}`}
-              >
-                {(business.incomingBuffer?.current ?? 0).toFixed(1)} / {business.incomingBuffer?.capacity ?? 0}
-              </span>
-            </div>
-            <Progress
-              value={((business.incomingBuffer?.current ?? 0) / (business.incomingBuffer?.capacity ?? 1)) * 100}
-              className="h-2"
-            />
-          </div>
-
-          {/* Processing */}
-          <div className="mb-4">
-            <div className="flex items-center mb-1">
-              <TimerIcon className="w-4 h-4 mr-1 text-amber-600" />
-              <span className="text-sm font-medium">Processing</span>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-gray-600">Time: {(business.processingTime ?? 0).toFixed(1)}s</span>
-              <span className="text-xs font-medium">{(business.productionProgress * 100).toFixed(0)}%</span>
-            </div>
-            <Progress value={(business.productionProgress ?? 0) * 100} className="h-2" />
-          </div>
-
-          {/* Outgoing Buffer */}
-          <div className="mb-4">
-            <div className="flex items-center mb-1">
-              <BoxIcon className="w-4 h-4 mr-1 text-green-600" />
-              <span className="text-sm font-medium">Outgoing Buffer</span>
-            </div>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-gray-600">{getResourceName(business.outputResource)}</span>
-              <span
-                className={`text-xs font-medium ${getBufferStatusColor(
-                  business.outgoingBuffer?.current ?? 0,
-                  business.outgoingBuffer?.capacity ?? 1,
-                )}`}
-              >
-                {(business.outgoingBuffer?.current ?? 0).toFixed(1)} / {business.outgoingBuffer?.capacity ?? 0}
-              </span>
-            </div>
-            <Progress
-              value={((business.outgoingBuffer?.current ?? 0) / (business.outgoingBuffer?.capacity ?? 1)) * 100}
-              className="h-2"
-            />
-          </div>
-
-          {/* Delivery Drivers */}
-          <div className="grid grid-cols-2 gap-4 mt-4 mb-2">
-            <div>
-              <div className="flex items-center mb-2">
-                <TruckIcon className="w-4 h-4 mr-1" />
-                {business.deliveryBots.length === 0 ? (
-                  <span className="text-sm font-medium">Drivers: 0</span>
-                ) : (
-                  <span className="text-sm font-medium">
-                    Drivers: {business.deliveryBots.filter(bot => !bot.isDelivering).length}/{business.deliveryBots.length}
-                  </span>
-                )}
-              </div>
-              <Button variant="outline" size="sm" className="w-full mt-1" onClick={() => onHireDeliveryBot(business.id)}>
-                Hire Driver ({getBotCost(business)})
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="upgrades" className="p-4 pt-2">
-          <div>
-            <div className="flex items-center mb-3">
-              <ArrowUpIcon className="w-4 h-4 mr-1" />
-              <span className="text-sm font-medium">Available Upgrades</span>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm">Input Capacity</span>
+        <div className="overflow-y-auto h-[14rem]">
+          <TabsContent value="info" className="p-4 pt-2">
+            {/* Incoming Buffer with Upgrade */}
+            {business.type !== BusinessType.RESOURCE_GATHERING && (
+              <div className="mb-4">
+                <div className="flex items-center mb-1 justify-between">
+                  <div className="flex items-center">
+                    <PackageIcon className="w-4 h-4 mr-1 text-blue-600" />
+                    <span className="text-sm font-medium">Incoming Buffer</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    data-testid="upgrade-incoming"
+                    className="ml-2 px-2 py-0.5 h-6 text-xs flex items-center gap-1"
+                    onClick={() => onUpgrade(business.id, "incomingCapacity")}
+                  >
+                    <UpgradeIcon className="w-3 h-3" />
+                    {formatCurrency(getUpgradeCost(business, "incomingCapacity"))}
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-gray-600">
-                    Current: {(business.incomingBuffer?.capacity ?? 0).toFixed(0)} units
+                    {getResourceName(business.inputResource)}
+                  </span>
+                  <span
+                    className={`text-xs font-medium ${getBufferStatusColor(
+                      business.incomingBuffer?.current ?? 0,
+                      business.incomingBuffer?.capacity ?? 1,
+                    )}`}
+                  >
+                    {(business.incomingBuffer?.current ?? 0).toFixed(1)} / {business.incomingBuffer?.capacity ?? 0}
                   </span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => onUpgrade(business.id, "incomingCapacity")}
-                >
-                  Upgrade ({getUpgradeCost(business)} coins)
-                </Button>
+                <Progress
+                  value={((business.incomingBuffer?.current ?? 0) / (business.incomingBuffer?.capacity ?? 1)) * 100}
+                  className="h-2"
+                />
               </div>
+            )}
 
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm">Processing Speed</span>
-                  <span className="text-xs text-gray-600">Current: {(business.processingTime ?? 0).toFixed(1)}s</span>
+            {/* Processing with Upgrade */}
+            <div className="mb-4">
+              <div className="flex items-center mb-1 justify-between">
+                <div className="flex items-center">
+                  <TimerIcon className="w-4 h-4 mr-1 text-amber-600" />
+                  <span className="text-sm font-medium">Processing</span>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full"
+                  data-testid="upgrade-processing"
+                  className="ml-2 px-2 py-0.5 h-6 text-xs flex items-center gap-1"
                   onClick={() => onUpgrade(business.id, "processingTime")}
                 >
-                  Upgrade ({getUpgradeCost(business)} coins)
+                  <UpgradeIcon className="w-3 h-3" />
+                  {formatCurrency(getUpgradeCost(business, "processingTime"))}
                 </Button>
               </div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-600">Time: {(business.processingTime ?? 0).toFixed(1)}s</span>
+                <span className="text-xs font-medium">{(business.productionProgress * 100).toFixed(0)}%</span>
+              </div>
+              <Progress value={(business.productionProgress ?? 0) * 100} className="h-2" />
+            </div>
 
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm">Output Capacity</span>
-                  <span className="text-xs text-gray-600">
-                    Current: {(business.outgoingBuffer?.capacity ?? 0).toFixed(0)} units
-                  </span>
+            {/* Outgoing Buffer with Upgrade */}
+            <div className="mb-4">
+              <div className="flex items-center mb-1 justify-between">
+                <div className="flex items-center">
+                  <BoxIcon className="w-4 h-4 mr-1 text-green-600" />
+                  <span className="text-sm font-medium">Outgoing Buffer</span>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full"
+                  data-testid="upgrade-outgoing"
+                  className="ml-2 px-2 py-0.5 h-6 text-xs flex items-center gap-1"
                   onClick={() => onUpgrade(business.id, "outgoingCapacity")}
                 >
-                  Upgrade ({getUpgradeCost(business)} coins)
+                  <UpgradeIcon className="w-3 h-3" />
+                  {formatCurrency(getUpgradeCost(business, "outgoingCapacity"))}
                 </Button>
               </div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-xs text-gray-600">{getResourceName(business.outputResource)}</span>
+                <span
+                  className={`text-xs font-medium ${getBufferStatusColor(
+                    business.outgoingBuffer?.current ?? 0,
+                    business.outgoingBuffer?.capacity ?? 1,
+                  )}`}
+                >
+                  {(business.outgoingBuffer?.current ?? 0).toFixed(1)} / {business.outgoingBuffer?.capacity ?? 0}
+                </span>
+              </div>
+              <Progress
+                value={((business.outgoingBuffer?.current ?? 0) / (business.outgoingBuffer?.capacity ?? 1)) * 100}
+                className="h-2"
+              />
             </div>
-          </div>
-        </TabsContent>
+          </TabsContent>
+
+          <TabsContent value="shipping" className="p-4 pt-2">
+            {/* Shipping Types List */}
+            <ul className="divide-y divide-gray-200">
+              {SHIPPING_TYPES.map(typeConfig => {
+                const shippingType = shippingTypes.find(st => st.type === typeConfig.id) || { type: typeConfig.id, bots: [] };
+                const bots = Array.isArray(shippingType.bots) ? shippingType.bots : [];
+                const total = bots.length;
+                const inUse = bots.filter(bot => bot.isDelivering).length;
+                const cost = calculateShippingCost(typeConfig.id, total);
+                const canAfford = coins >= cost;
+                const canSell = bots.filter(bot => !bot.isDelivering).length > 0;
+                const rowDisabled = !canAfford && !canSell;
+                const Icon = typeConfig.icon;
+
+                return (
+                  <li
+                    key={typeConfig.id}
+                    className={`py-2 px-1 flex gap-4 ${rowDisabled ? 'opacity-50 pointer-events-none select-none' : 'hover:bg-gray-50 cursor-pointer'} transition-colors`}
+                  >
+                    {/* Left: Icon and labels, fixed width */}
+                    <div style={{ width: '40%' }} className="flex flex-col items-start text-left justify-center">
+                      <div className="flex items-center w-full">
+                        <Icon className="w-5 h-5 mr-2 text-gray-700" />
+                        <span className="font-medium text-gray-900 text-xs">{typeConfig.displayName}</span>
+                      </div>
+                      <span className="text-xs text-gray-500 mt-1">{typeConfig.description}</span>
+                    </div>
+                    {/* Right: Utilization, button, progress, fills remaining space */}
+                    <div className="flex flex-col flex-1 min-w-0 justify-center">
+                      <div className="flex flex-col flex-1 min-w-0">
+                        <div className="flex w-full mt-1 gap-2 items-start">
+                          <span className="text-xs text-gray-500 flex-shrink-0 mt-1">{inUse} / {total} In Use</span>
+                          <div className="flex-1" />
+                          <div className="flex flex-row flex-wrap-reverse gap-2 justify-end min-w-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium border-red-400 hover:bg-red-50"
+                              disabled={bots.filter(bot => !bot.isDelivering).length === 0}
+                              onClick={() => onSellShippingType(business.id, typeConfig.id)}
+                              title={`Sell for ${formatCurrency(cost / 2)} (50% refund)`}
+                            >
+                              <MinusIcon className="w-3 h-3 text-red-600" />
+                              <span className="text-red-600">{formatCurrency(cost / 2)}</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium"
+                              disabled={!canAfford}
+                              onClick={() => onHireShippingType(business.id, typeConfig.id)}
+                            >
+                              <span>{formatCurrency(cost)}</span>
+                              <PlusIcon className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        <Progress value={total === 0 ? 0 : (inUse / total) * 100} className="h-2 w-full bg-gray-100 mt-0.5" />
+                      </div>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   )

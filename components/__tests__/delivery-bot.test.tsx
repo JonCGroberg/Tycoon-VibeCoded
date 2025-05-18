@@ -20,6 +20,7 @@ describe('DeliveryBotEntity', () => {
         onDeliveryComplete: jest.fn(),
         deliveryStartTime: Date.now(),
         deliveryExpectedArrival: Date.now() + 1000,
+        shippingTypeId: 'truck',
     }
 
     it('renders the delivery bot icon', () => {
@@ -38,7 +39,7 @@ describe('DeliveryBotEntity', () => {
     })
 
     it('applies the correct resource color', () => {
-        const { container } = render(<DeliveryBotEntity {...baseProps} resourceType={ResourceType.PLANKS} />)
+        const { container } = render(<DeliveryBotEntity {...baseProps} resourceType={ResourceType.PLANKS} shippingTypeId="truck" />)
         // Should have bg-amber-600 for planks
         expect(container.querySelector('.bg-amber-600')).toBeInTheDocument()
     })
@@ -52,6 +53,7 @@ describe('DeliveryBotEntity', () => {
                 onDeliveryComplete={onDeliveryComplete}
                 deliveryStartTime={0}
                 deliveryExpectedArrival={10}
+                shippingTypeId="truck"
             />
         )
         // Fast-forward time in act
