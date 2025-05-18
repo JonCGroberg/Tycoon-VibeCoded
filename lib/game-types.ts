@@ -62,8 +62,8 @@ export interface Business {
   level: number
   inputResource: ResourceType
   outputResource: ResourceType
-  recentProfit?: number // For showing profit indicators
-  profitDisplayTime?: number // Time remaining to display profit
+  recentProfit: number // For showing profit indicators
+  profitDisplayTime: number// Time remaining to display profit
   upgrades?: {
     incomingCapacity: number
     processingTime: number

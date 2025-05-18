@@ -1,7 +1,8 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, Logs, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon } from "lucide-react"
+import { TreesIcon as TreeIcon, Logs, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangleIcon, AlertTriangle } from "lucide-react"
+import { Alert } from "./ui/alert"
 
 interface BusinessEntityProps {
   business: Business
@@ -9,6 +10,7 @@ interface BusinessEntityProps {
 }
 
 export default function BusinessEntity({ business, onClick }: BusinessEntityProps) {
+
   // Get the appropriate icon based on business type
   const getBusinessIcon = () => {
     switch (business.type) {
@@ -112,9 +114,9 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
     const currentValue = current ?? 0
     const capacityValue = capacity ?? 1
     const fillPercentage = (currentValue / capacityValue) * 100
-    if (fillPercentage >= 90) return "bg-red-500" // Bottleneck - nearly full
-    if (fillPercentage >= 70) return "bg-yellow-500" // Warning - getting full
-    if (fillPercentage <= 10 && fillPercentage > 0) return "bg-blue-500" // Low - needs more
+    if (fillPercentage >= 85) return "bg-red-500" // Bottleneck - nearly full
+    if (fillPercentage >= 65) return "bg-yellow-500" // Warning - getting full
+    if (fillPercentage <= 20 && fillPercentage > 0) return "bg-blue-500" // Low - needs more
     return "bg-green-500" // Normal operation
   }
 
@@ -139,13 +141,13 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         Lvl {business.level}
       </div>
 
-      <div className="text-sm font-bold mt-2 text-center">{getBusinessName()}</div>
+      <div className="text-sm font-bold mt-2 text-center text-nowrap">{getBusinessName()}</div>
 
       <div className="mt-2">{getBusinessIcon()}</div>
 
       {/* Input Buffer Visualization - Left side */}
       {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
-        <div className="absolute left-0 top-0 w-2 h-full flex flex-col-reverse">
+        <div className="absolute left-0 top-0 w-1 h-full flex flex-col-reverse">
           <div
             className={`w-full ${getBufferStatusColor(
               business.incomingBuffer?.current,
@@ -158,7 +160,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
 
       {/* Output Buffer Visualization - Right side */}
       {business.type !== BusinessType.MARKET && (
-        <div className="absolute right-0 top-0 w-2 h-full flex flex-col-reverse">
+        <div className="absolute right-0 top-0 w-1 h-full flex flex-col-reverse">
           <div
             className={`w-full ${getBufferStatusColor(
               business.outgoingBuffer?.current,
@@ -169,36 +171,35 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         </div>
       )}
 
-      {/* Show workers and delivery drivers */}
-      <div className="absolute -bottom-3 -left-2 flex space-x-2">
-        {/*
-        {business.workers.length > 0 && (
-          <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
-            <UserIcon className="w-4 h-4 text-gray-700" />
-            <span className="text-sm ml-1">{business.workers.length}</span>
-          </div>
-        )}
-        */}
+      {/* delivery drivers */}
+      {/* <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
         {business.deliveryBots.length > 0 && (
           <div className="bg-white rounded-full p-1.5 border border-gray-400 flex items-center">
             <TruckIcon className="w-4 h-4 text-gray-700" />
-            <span className="text-sm ml-1">{business.deliveryBots.length}</span>
-            <span className="text-xs ml-1 text-gray-500">driver{business.deliveryBots.length > 1 ? 's' : ''}</span>
+            <span className="text-xs ml-1">{business.deliveryBots.filter(bot => !bot.isDelivering).length}/{business.deliveryBots.length}</span>
           </div>
         )}
-      </div>
+      </div> */}
 
-      {/* Production progress bar and resource indicators at the top (always visible, 1.5x wider) */}
+
+      {/* Production progress bar and resource indicators at the top (always visible) */}
       {business.type !== BusinessType.MARKET && (
         <div className="absolute -top-5 left-1/2 transform -translate-x-1/2" style={{ width: '144px' }}>
           <div className="flex items-center justify-between w-full space-x-2">
-            {/* Input Resource Indicator - always visible */}
+            {/* Input Resource Indicator*/}
             <div className={`p-1 w-6 h-6 rounded-full border-2 border-yellow-400 flex items-center justify-center relative ${getResourceColor(business.inputResource)} ${business.type === BusinessType.RESOURCE_GATHERING ? 'opacity-30' : ''}`}>
               {getResourceIcon(business.inputResource)}
-              {/* ! badge if requesting */}
-              {business.type !== BusinessType.RESOURCE_GATHERING && business.incomingBuffer.current < business.incomingBuffer.capacity && (
-                <AlertCircleIcon className="absolute -top-2 -right-2 w-3 h-3 text-yellow-500 animate-pulse" />
-              )}
+              {/* ! badge if starving (red) or requesting (yellow)*/}
+              {business.type !== BusinessType.RESOURCE_GATHERING &&
+                business.incomingBuffer.current < business.incomingBuffer.capacity && (
+                  <div className="absolute -top-2 -right-2 z-10">
+                    {business.incomingBuffer.current === 0 ? (
+                      <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-red-500 rounded-full p-0.5" />
+                    ) : (
+                      <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-yellow-500 rounded-full p-0.5" />
+                    )}
+                  </div>
+                )}
             </div>
             {/* Progress bar */}
             <div className="flex-1 mx-1 h-1.5 bg-gray-300 rounded-full overflow-hidden">
@@ -212,29 +213,6 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         </div>
       )}
 
-      {/* Starvation indicator: show ! if input buffer is empty and business is not resource gathering or market */}
-      {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET &&
-        business.incomingBuffer.current === 0 && (
-          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 flex items-center z-10">
-            <AlertCircleIcon className="w-5 h-5 text-yellow-500 animate-pulse mr-1" />
-            <span className="text-xs font-bold text-yellow-700 bg-white bg-opacity-80 px-1 rounded">
-              Needs {business.inputResource.charAt(0) + business.inputResource.slice(1).toLowerCase()}
-            </span>
-          </div>
-        )}
-
-      {/* Profit indicators */}
-      {business.recentProfit && business.recentProfit > 0 && (
-        <div
-          className="absolute -top-16 left-1/2 transform -translate-x-1/2 text-green-600 font-bold text-base animate-float"
-          style={{
-            animation: "float 2s ease-out forwards",
-            opacity: business.profitDisplayTime ? Math.max(0, 1 - business.profitDisplayTime / 2000) : 1,
-          }}
-        >
-          +{business.recentProfit.toFixed(1)}
-        </div>
-      )}
     </div>
   )
 }

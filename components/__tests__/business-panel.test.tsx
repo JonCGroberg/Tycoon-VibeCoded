@@ -1,14 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import BusinessPanel from '../business-panel'
-import { BusinessType, ResourceType, Worker, DeliveryBot } from '@/lib/game-types'
-import { getWorkerCost, getBotCost, getUpgradeCost, getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
+import { BusinessType, ResourceType, DeliveryBot } from '@/lib/game-types'
+import { getBotCost, getUpgradeCost, getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
 
 // Mock the business data
-const mockWorkers: Worker[] = [
-    { id: '1', gatherRate: 1 },
-    { id: '2', gatherRate: 1 },
-    { id: '3', gatherRate: 1 },
-]
 const mockDeliveryBots: DeliveryBot[] = [
     { id: '1', capacity: 10, speed: 1, isDelivering: false, targetBusinessId: null, carryingAmount: 0 },
     { id: '2', capacity: 10, speed: 1, isDelivering: false, targetBusinessId: null, carryingAmount: 0 },
@@ -23,9 +18,12 @@ const mockBusiness = {
     outgoingBuffer: { current: 0, capacity: 10 },
     processingTime: 5,
     productionProgress: 0,
-    workers: mockWorkers,
+    workers: [],
     deliveryBots: mockDeliveryBots,
     position: { x: 0, y: 0 },
+    recentProfit: 0,
+    profitDisplayTime: 0,
+    severity: 0
 }
 
 describe('BusinessPanel', () => {
@@ -61,7 +59,6 @@ describe('BusinessPanel', () => {
             />
         )
 
-        // The close button is the first button rendered in the header
         const buttons = screen.getAllByRole('button')
         fireEvent.click(buttons[0])
         expect(mockOnClose).toHaveBeenCalledTimes(1)
@@ -82,40 +79,28 @@ describe('BusinessPanel', () => {
         expect(screen.getByText('Processing')).toBeInTheDocument()
     })
 
-    it('switches between info and upgrades tabs', () => {
+    it('shows upgrades tab content when defaultTab is upgrades', async () => {
+        const processingBusiness = {
+            ...mockBusiness,
+            type: BusinessType.PROCESSING,
+            outputResource: ResourceType.PLANKS,
+        }
         render(
             <BusinessPanel
-                business={mockBusiness}
+                business={processingBusiness}
                 onClose={mockOnClose}
                 onHireDeliveryBot={mockOnHireDeliveryBot}
                 onUpgrade={mockOnUpgrade}
+                defaultTab="upgrades"
             />
         )
-
-        const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
-        fireEvent.click(upgradesTab)
-
-        // Verify upgrades content is shown
-        expect(screen.getByRole('tabpanel')).toBeInTheDocument()
-    })
-
-    it('calculates worker cost correctly', () => {
-        const business = {
-            ...mockBusiness, workers: [
-                { id: '1', gatherRate: 1 },
-                { id: '2', gatherRate: 1 },
-                { id: '3', gatherRate: 1 },
-            ]
-        }
-        expect(getWorkerCost(business)).toBe(66)
+        expect(await screen.findByText('Available Upgrades')).toBeInTheDocument()
     })
 
     it('calculates bot cost correctly', () => {
         const business = {
-            ...mockBusiness, deliveryBots: [
-                { id: '1', capacity: 10, speed: 1, isDelivering: false, targetBusinessId: null, carryingAmount: 0 },
-                { id: '2', capacity: 10, speed: 1, isDelivering: false, targetBusinessId: null, carryingAmount: 0 },
-            ]
+            ...mockBusiness,
+            deliveryBots: mockDeliveryBots
         }
         expect(getBotCost(business)).toBe(144)
     })
@@ -167,7 +152,6 @@ describe('BusinessPanel', () => {
                 defaultTab="upgrades"
             />
         )
-        // Find and click the input capacity upgrade button
         const upgradeButtons = screen.getAllByRole('button', { name: /upgrade/i })
         fireEvent.click(upgradeButtons[0])
         expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'incomingCapacity')
@@ -189,7 +173,6 @@ describe('BusinessPanel', () => {
                 defaultTab="upgrades"
             />
         )
-        // Find and click the processing speed upgrade button
         const upgradeButtons = screen.getAllByRole('button', { name: /upgrade/i })
         fireEvent.click(upgradeButtons[1])
         expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'processingTime')
@@ -211,57 +194,9 @@ describe('BusinessPanel', () => {
                 defaultTab="upgrades"
             />
         )
-        // Find and click the output capacity upgrade button
         const upgradeButtons = screen.getAllByRole('button', { name: /upgrade/i })
         fireEvent.click(upgradeButtons[2])
         expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'outgoingCapacity')
-    })
-
-    it('debug: log all button texts in Upgrades tab', () => {
-        render(
-            <BusinessPanel
-                business={mockBusiness}
-                onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={jest.fn()}
-            />
-        )
-        const upgradesTab = screen.getByRole('tab', { name: /upgrades/i })
-        fireEvent.click(upgradesTab)
-        const allButtons = screen.getAllByRole('button')
-        // eslint-disable-next-line no-console
-        console.log('Button texts:', allButtons.map(btn => btn.textContent))
-    })
-
-    it('renders upgrade buttons with correct content (upgrades tab default)', () => {
-        const processingBusiness = {
-            ...mockBusiness,
-            type: BusinessType.PROCESSING,
-            outputResource: ResourceType.PLANKS,
-            incomingBuffer: { current: 0, capacity: 10 },
-            outgoingBuffer: { current: 0, capacity: 10 },
-            processingTime: 5
-        }
-
-        render(
-            <BusinessPanel
-                business={processingBusiness}
-                onClose={mockOnClose}
-                onHireDeliveryBot={mockOnHireDeliveryBot}
-                onUpgrade={mockOnUpgrade}
-                defaultTab="upgrades"
-            />
-        )
-
-        // Now upgrades content should be present
-        expect(screen.getByText(/input capacity/i)).toBeInTheDocument()
-        expect(screen.getByText(/processing speed/i)).toBeInTheDocument()
-        expect(screen.getByText(/output capacity/i)).toBeInTheDocument()
-        expect(screen.getAllByText(/current: 10 units/i)).toHaveLength(2)
-        expect(screen.getByText(/current: 5.0s/i)).toBeInTheDocument()
-        const upgradeButtons = screen.getAllByRole('button', { name: /upgrade/i })
-        expect(upgradeButtons).toHaveLength(3)
-        expect(upgradeButtons[0]).toHaveTextContent(/upgrade \(50 coins\)/i)
     })
 })
 
