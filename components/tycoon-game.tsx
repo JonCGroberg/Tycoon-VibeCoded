@@ -9,13 +9,10 @@ import {
   ResourceType,
   BusinessType,
   type ActiveDelivery,
-<<<<<<< HEAD
   ShippingTypeState,
-=======
-  GameState,
->>>>>>> refs/remotes/origin/Troy
 } from "@/lib/game-types"
 import { initializeGameState, generateUniqueId, getUpgradeCost } from "@/lib/game-logic"
+import type { GameState } from "@/lib/game-types"
 import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
 import { v4 as uuidv4 } from "uuid"
 import dynamic from "next/dynamic"
@@ -609,7 +606,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       // Do not return here
     }
 
-<<<<<<< HEAD
     // Set input/output resources for each business type
     let inputResource = ResourceType.NONE;
     let outputResource = ResourceType.NONE;
@@ -619,28 +615,12 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       inputResource = ResourceType.WOOD;
       outputResource = ResourceType.WOOD;
       shippingTypes = [
-=======
-    const newBusiness: Business = {
-      id: uuidv4(),
-      type,
-      position,
-      level: 1,
-      processingTime: 1,
-      batchSize: 10, // Always set batchSize
-      incomingStorage: { current: 0, capacity: 10 },
-      outgoingStorage: { current: 0, capacity: 10 },
-      productionProgress: 0,
-      workers: type === BusinessType.RESOURCE_GATHERING
-        ? [{ id: uuidv4(), gatherRate: 1 }]
-        : [],
-      shippingTypes: type === BusinessType.RESOURCE_GATHERING ? [
->>>>>>> refs/remotes/origin/Troy
         {
           type: 'walker',
           bots: [{
             id: uuidv4(),
             maxLoad: getShippingTypeConfig('walker').baseLoad,
-            speed: 50,
+            speed: getShippingTypeConfig('walker').baseSpeed,
             isDelivering: false,
             targetBusinessId: null,
             currentLoad: 0,
@@ -675,22 +655,20 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       position,
       level: 1,
       processingTime,
+      batchSize: 10, // Always set batchSize
       incomingStorage: { current: 0, capacity: 10 },
       outgoingStorage: { current: 0, capacity: 10 },
       productionProgress: 0,
-      workers: [],
+      workers: type === BusinessType.RESOURCE_GATHERING
+        ? [{ id: uuidv4(), gatherRate: 1 }]
+        : [],
       shippingTypes,
       pendingDeliveries: [],
       recentProfit: 0,
       profitDisplayTime: 0,
-<<<<<<< HEAD
       inputResource,
       outputResource,
-=======
-      inputResource: getInputResourceForBusinessType(type),
-      outputResource: getOutputResourceForBusinessType(type),
       totalInvested: businessCost,
->>>>>>> refs/remotes/origin/Troy
     }
 
     console.log('Created new business:', newBusiness)
