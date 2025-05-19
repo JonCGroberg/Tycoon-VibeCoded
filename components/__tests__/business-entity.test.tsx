@@ -121,7 +121,7 @@ describe('BusinessEntity', () => {
             type: BusinessType.PROCESSING,
             inputResource: ResourceType.WOOD,
             outputResource: ResourceType.PLANKS,
-            incomingStorage: { current: 1, capacity: 2 }
+            incomingStorage: { current: 0.9, capacity: 2 }
         }
         render(
             <div data-testid="game-world" style={{ position: 'relative', width: 600, height: 600 }}>
