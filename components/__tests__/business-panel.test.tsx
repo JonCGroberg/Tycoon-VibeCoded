@@ -1,7 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import BusinessPanel from '../business-panel'
 import { BusinessType, ResourceType, DeliveryBot, type Business } from '@/lib/game-types'
-import { getUpgradeCost, getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
+import { getUpgradeCost } from '@/lib/game-logic'
+import { getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
 
 // Mock the business data
 const mockBots: DeliveryBot[] = [
@@ -23,6 +24,12 @@ const mockBusiness: Business = {
     outputResource: ResourceType.WOOD,
     recentProfit: 0,
     profitDisplayTime: 0,
+    totalInvested: 0,
+    upgrades: {
+        incomingCapacity: 0,
+        processingTime: 0,
+        outgoingCapacity: 0
+    }
 }
 
 describe('BusinessPanel', () => {
@@ -38,7 +45,7 @@ describe('BusinessPanel', () => {
     it('renders business panel with correct title', () => {
         render(
             <BusinessPanel
-                business={{ ...mockBusiness, type: BusinessType.RESOURCE_GATHERING, outputResource: ResourceType.WOOD }}
+                business={{ ...mockBusiness, type: BusinessType.RESOURCE_GATHERING, outputResource: ResourceType.WOOD, totalInvested: 0 }}
                 onClose={mockOnClose}
                 onHireShippingType={mockOnHireShippingType}
                 onUpgrade={mockOnUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
@@ -47,6 +54,11 @@ describe('BusinessPanel', () => {
         )
         expect(screen.getByText('Wood Camp')).toBeInTheDocument()
         expect(screen.getByText('Level 1')).toBeInTheDocument()
+        const investedLabels = screen.getAllByText((content, node) => {
+            if (!node) return false;
+            return Boolean(node.textContent && node.textContent.match(/\$0\s*Invested/));
+        })
+        expect(investedLabels.length).toBeGreaterThan(0)
     })
 
     it('calls onClose when close button is clicked', () => {
@@ -68,21 +80,56 @@ describe('BusinessPanel', () => {
     it('displays correct buffer information', () => {
         render(
             <BusinessPanel
-                business={{ ...mockBusiness, type: BusinessType.PROCESSING, outputResource: ResourceType.PLANKS }}
+                business={{ ...mockBusiness, totalInvested: 0, type: BusinessType.PROCESSING }}
+                coins={1000}
                 onClose={mockOnClose}
                 onHireShippingType={mockOnHireShippingType}
-                onUpgrade={mockOnUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
-                    throw new Error('Function not implemented.')
-                }} />
+                onSellShippingType={mockOnSellShippingType}
+                onUpgrade={mockOnUpgrade}
+            />
         )
-        expect(screen.getByText('Input Storage')).toBeInTheDocument()
-        expect(screen.getByText('Output Storage')).toBeInTheDocument()
-        expect(screen.getByText('Processing')).toBeInTheDocument()
+        const incomingLabels = screen.getAllByText((content, node) => {
+            return !!node && typeof node.textContent === 'string' && node.textContent.includes('Incoming Storage')
+        })
+        const outgoingLabels = screen.getAllByText((content, node) => {
+            return !!node && typeof node.textContent === 'string' && node.textContent.includes('Outgoing Storage')
+        })
+        expect(incomingLabels.length).toBeGreaterThan(0)
+        expect(outgoingLabels.length).toBeGreaterThan(0)
     })
 
-    it('calculates upgrade cost correctly', () => {
-        const business = { ...mockBusiness, level: 3 }
-        expect(getUpgradeCost(business)).toBe(200)
+    it('calculates upgrade cost correctly (no 1.5x multiplier, independent upgrades)', () => {
+        const business = {
+            ...mockBusiness,
+            level: 3,
+            upgrades: {
+                incomingCapacity: 1,
+                processingTime: 1,
+                outgoingCapacity: 1
+            }
+        }
+        // Each upgrade type is independent: 1st upgrade is 50, 2nd is 50*1.7=85, 3rd is 85*1.7=144.5, etc.
+        expect(getUpgradeCost(business, 'incomingCapacity')).toBe(85) // 50 * 1.7^1
+        expect(getUpgradeCost(business, 'processingTime')).toBe(85)
+        expect(getUpgradeCost(business, 'outgoingCapacity')).toBe(85)
+    })
+
+    it('calculates upgrade cost correctly (first upgrade is 50, then 1.7x)', () => {
+        const business = {
+            ...mockBusiness,
+            level: 3,
+            upgrades: {
+                incomingCapacity: 0,
+                processingTime: 2,
+                outgoingCapacity: 0
+            }
+        }
+        // incomingCapacity: 50 * 1.7^0 = 50
+        // processingTime: 50 * 1.7^2 = 50 * 2.89 = 144.5 -> 144
+        // outgoingCapacity: 50 * 1.7^0 = 50
+        expect(getUpgradeCost(business, 'incomingCapacity')).toBe(50)
+        expect(getUpgradeCost(business, 'processingTime')).toBe(144)
+        expect(getUpgradeCost(business, 'outgoingCapacity')).toBe(50)
     })
 
     it('returns correct business name for different types and resources', () => {
@@ -112,7 +159,6 @@ describe('BusinessPanel', () => {
     });
 
     it('calls onUpgrade for input capacity upgrade', () => {
-        const mockUpgrade = jest.fn()
         const upgradeBusiness = {
             ...mockBusiness,
             type: BusinessType.PROCESSING,
@@ -123,16 +169,19 @@ describe('BusinessPanel', () => {
                 business={upgradeBusiness}
                 onClose={mockOnClose}
                 onHireShippingType={mockOnHireShippingType}
-                onUpgrade={mockUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
-                    throw new Error('Function not implemented.')
-                }} />
+                onUpgrade={mockOnUpgrade}
+                coins={1000}
+                onSellShippingType={mockOnSellShippingType}
+                defaultTab="info"
+            />
         )
+        // Ensure we're on the info tab
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Info')
         fireEvent.click(screen.getByTestId('upgrade-incoming'))
-        expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'incomingCapacity')
+        expect(mockOnUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'incomingCapacity')
     })
 
     it('calls onUpgrade for processing speed upgrade', () => {
-        const mockUpgrade = jest.fn()
         const upgradeBusiness = {
             ...mockBusiness,
             type: BusinessType.PROCESSING,
@@ -143,16 +192,19 @@ describe('BusinessPanel', () => {
                 business={upgradeBusiness}
                 onClose={mockOnClose}
                 onHireShippingType={mockOnHireShippingType}
-                onUpgrade={mockUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
-                    throw new Error('Function not implemented.')
-                }} />
+                onUpgrade={mockOnUpgrade}
+                coins={1000}
+                onSellShippingType={mockOnSellShippingType}
+                defaultTab="info"
+            />
         )
+        // Ensure we're on the info tab
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Info')
         fireEvent.click(screen.getByTestId('upgrade-processing'))
-        expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'processingTime')
+        expect(mockOnUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'processingTime')
     })
 
     it('calls onUpgrade for output capacity upgrade', () => {
-        const mockUpgrade = jest.fn()
         const upgradeBusiness = {
             ...mockBusiness,
             type: BusinessType.PROCESSING,
@@ -163,18 +215,22 @@ describe('BusinessPanel', () => {
                 business={upgradeBusiness}
                 onClose={mockOnClose}
                 onHireShippingType={mockOnHireShippingType}
-                onUpgrade={mockUpgrade} coins={0} onSellShippingType={function (businessId: string, shippingTypeId: string): void {
-                    throw new Error('Function not implemented.')
-                }} />
+                onUpgrade={mockOnUpgrade}
+                coins={1000}
+                onSellShippingType={mockOnSellShippingType}
+                defaultTab="info"
+            />
         )
+        // Ensure we're on the info tab
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Info')
         fireEvent.click(screen.getByTestId('upgrade-outgoing'))
-        expect(mockUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'outgoingCapacity')
+        expect(mockOnUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'outgoingCapacity')
     })
 
     it('displays correct storage information', () => {
         render(
             <BusinessPanel
-                business={mockBusiness}
+                business={{ ...mockBusiness, type: BusinessType.PROCESSING }}
                 coins={1000}
                 onClose={mockOnClose}
                 onHireShippingType={mockOnHireShippingType}
@@ -182,8 +238,8 @@ describe('BusinessPanel', () => {
                 onUpgrade={mockOnUpgrade}
             />
         )
-        expect(screen.getByText('Input Storage')).toBeInTheDocument()
-        expect(screen.getByText('Output Storage')).toBeInTheDocument()
+        expect(screen.getByText('Incoming Storage')).toBeInTheDocument()
+        expect(screen.getByText('Outgoing Storage')).toBeInTheDocument()
     })
 })
 
@@ -191,22 +247,33 @@ describe('getBufferStatusColor', () => {
     it('returns red when fillPercentage >= 90', () => {
         expect(getBufferStatusColor(9, 10)).toBe('text-red-500')
         expect(getBufferStatusColor(90, 100)).toBe('text-red-500')
+        expect(getBufferStatusColor(95, 100)).toBe('text-red-500')
     })
+
     it('returns yellow when 70 <= fillPercentage < 90', () => {
         expect(getBufferStatusColor(7, 10)).toBe('text-yellow-500')
         expect(getBufferStatusColor(75, 100)).toBe('text-yellow-500')
+        expect(getBufferStatusColor(89, 100)).toBe('text-yellow-500')
     })
+
     it('returns blue when 0 < fillPercentage <= 10', () => {
         expect(getBufferStatusColor(1, 10)).toBe('text-blue-500')
         expect(getBufferStatusColor(0.5, 10)).toBe('text-blue-500')
+        expect(getBufferStatusColor(1, 100)).toBe('text-blue-500')
     })
+
     it('returns green for normal operation', () => {
         expect(getBufferStatusColor(5, 10)).toBe('text-green-500')
         expect(getBufferStatusColor(50, 100)).toBe('text-green-500')
+        expect(getBufferStatusColor(69, 100)).toBe('text-green-500')
     })
-    it('handles null/undefined values', () => {
+
+    it('handles edge cases', () => {
+        expect(getBufferStatusColor(0, 0)).toBe('text-green-500')
         expect(getBufferStatusColor(null, null)).toBe('text-green-500')
         expect(getBufferStatusColor(undefined, undefined)).toBe('text-green-500')
+        expect(getBufferStatusColor(0, 10)).toBe('text-green-500')
+        expect(getBufferStatusColor(10, 10)).toBe('text-red-500')
     })
 })
 

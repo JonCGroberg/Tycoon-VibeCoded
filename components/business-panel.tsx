@@ -22,8 +22,10 @@ import {
   BikeIcon,
   DogIcon,
   MinusIcon,
+  Building2Icon,
 } from "lucide-react"
 import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
+import { getUpgradeCost } from "@/lib/game-logic"
 
 interface BusinessPanelProps {
   business: Business
@@ -39,26 +41,6 @@ export function getWorkerCost(business: Business): number {
   const base = 50
   const n = business.workers.length
   return Math.floor(base * Math.pow(1.1, n))
-}
-
-export function getUpgradeCost(
-  business: Business,
-  upgradeType?: "incomingCapacity" | "processingTime" | "outgoingCapacity"
-): number {
-  const base = 50
-  if (!upgradeType) {
-    return Math.floor(base * Math.pow(2, business.level - 1))
-  }
-  if (!business.upgrades) {
-    business.upgrades = {
-      incomingCapacity: 0,
-      processingTime: 0,
-      outgoingCapacity: 0,
-    }
-  }
-  let cost = base
-  cost *= Math.pow(2, business.upgrades[upgradeType])
-  return Math.floor(cost)
 }
 
 export function getBusinessName(business: Business): string {
@@ -137,23 +119,30 @@ export default function BusinessPanel({
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div>
           <h3 className="font-bold text-lg">{getBusinessName(business)}</h3>
-          <div className="text-sm text-gray-600">Level {business.level}</div>
+          <div className="flex items-center text-sm text-gray-600 mt-0.5">
+            <span>Level {business.level}</span>
+            <span className="mx-2">·</span>
+            <span className="font-bold text-gray-400">{formatCurrency(business.totalInvested)}</span>
+            <span className="font-medium text-gray-400 ml-1"> Invested</span>
+          </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <XIcon className="w-4 h-4" />
         </Button>
       </div>
 
-      <Tabs defaultValue={defaultTab} className="w-full " onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2">
+      <Tabs defaultValue={defaultTab} value={activeTab} className="w-full " onValueChange={setActiveTab}>
+        <TabsList className={`grid ${business.type !== BusinessType.MARKET ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <TabsTrigger value="info" className="flex items-center">
             <InfoIcon className="w-4 h-4 mr-1" />
             Info
           </TabsTrigger>
-          <TabsTrigger value="shipping" className="flex items-center">
-            <TruckIcon className="w-4 h-4 mr-1" />
-            Shipping
-          </TabsTrigger>
+          {business.type !== BusinessType.MARKET && (
+            <TabsTrigger value="shipping" className="flex items-center">
+              <TruckIcon className="w-4 h-4 mr-1" />
+              Shipping
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <div className="overflow-y-auto h-[14rem]">
@@ -202,7 +191,7 @@ export default function BusinessPanel({
               <div className="flex items-center mb-1 justify-between">
                 <div className="flex items-center">
                   <TimerIcon className="w-4 h-4 mr-1 text-amber-600" />
-                  <span className="text-sm font-medium">Processing</span>
+                  <span className="text-sm font-medium">Processing Speed</span>
                 </div>
                 <Button
                   variant="outline"
@@ -216,7 +205,7 @@ export default function BusinessPanel({
                 </Button>
               </div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-600">Time: {(business.processingTime ?? 0).toFixed(1)}s</span>
+                <span className="text-xs text-gray-600">Speed: {((60 / (business.processingTime ?? 1)) * (business.batchSize ?? 10)).toFixed(2)} units/min (batch size: {business.batchSize ?? 10})</span>
                 <span className="text-xs font-medium">{(business.productionProgress * 100).toFixed(0)}%</span>
               </div>
               <Progress value={(business.productionProgress ?? 0) * 100} className="h-2" />
@@ -258,71 +247,73 @@ export default function BusinessPanel({
             </div>
           </TabsContent>
 
-          <TabsContent value="shipping" className="p-4 pt-2">
-            {/* Shipping Types List */}
-            <ul className="divide-y divide-gray-200">
-              {SHIPPING_TYPES.map(typeConfig => {
-                const shippingType = shippingTypes.find(st => st.type === typeConfig.id) || { type: typeConfig.id, bots: [] };
-                const bots = Array.isArray(shippingType.bots) ? shippingType.bots : [];
-                const total = bots.length;
-                const inUse = bots.filter(bot => bot.isDelivering).length;
-                const cost = calculateShippingCost(typeConfig.id, total);
-                const canAfford = coins >= cost;
-                const canSell = bots.filter(bot => !bot.isDelivering).length > 0;
-                const rowDisabled = !canAfford && !canSell;
-                const Icon = typeConfig.icon;
+          {business.type !== BusinessType.MARKET && (
+            <TabsContent value="shipping" className="p-4 pt-2">
+              {/* Shipping Types List */}
+              <ul className="divide-y divide-gray-200">
+                {[...SHIPPING_TYPES].sort((a, b) => a.baseCost - b.baseCost).map(typeConfig => {
+                  const shippingType = shippingTypes.find(st => st.type === typeConfig.id) || { type: typeConfig.id, bots: [] };
+                  const bots = Array.isArray(shippingType.bots) ? shippingType.bots : [];
+                  const total = bots.length;
+                  const inUse = bots.filter(bot => bot.isDelivering).length;
+                  const cost = calculateShippingCost(typeConfig.id, total);
+                  const canAfford = coins >= cost;
+                  const canSell = bots.length > 0;
+                  const rowDisabled = !canAfford && !canSell;
+                  const Icon = typeConfig.icon;
 
-                return (
-                  <li
-                    key={typeConfig.id}
-                    className={`py-2 px-1 flex gap-4 ${rowDisabled ? 'opacity-50 pointer-events-none select-none' : 'hover:bg-gray-50 cursor-pointer'} transition-colors`}
-                  >
-                    {/* Left: Icon and labels, fixed width */}
-                    <div style={{ width: '40%' }} className="flex flex-col items-start text-left justify-center">
-                      <div className="flex items-center w-full">
-                        <Icon className="w-5 h-5 mr-2 text-gray-700" />
-                        <span className="font-medium text-gray-900 text-xs">{typeConfig.displayName}</span>
-                      </div>
-                      <span className="text-xs text-gray-500 mt-1">{typeConfig.description}</span>
-                    </div>
-                    {/* Right: Utilization, button, progress, fills remaining space */}
-                    <div className="flex flex-col flex-1 min-w-0 justify-center">
-                      <div className="flex flex-col flex-1 min-w-0">
-                        <div className="flex w-full mt-1 gap-2 items-start">
-                          <span className="text-xs text-gray-500 flex-shrink-0 mt-1">{inUse} / {total} In Use</span>
-                          <div className="flex-1" />
-                          <div className="flex flex-row flex-wrap-reverse gap-1 justify-end min-w-0">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium border-red-400 hover:bg-red-50"
-                              disabled={bots.filter(bot => !bot.isDelivering).length === 0}
-                              onClick={() => onSellShippingType(business.id, typeConfig.id)}
-                              title={`Sell for ${formatCurrency(cost / 2)} (50% refund)`}
-                            >
-                              <MinusIcon className="w-3 h-3 text-red-600" />
-                              <span className="text-red-600">{formatCurrency(cost / 2)}</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium"
-                              disabled={!canAfford}
-                              onClick={() => onHireShippingType(business.id, typeConfig.id)}
-                            >
-                              <span>{formatCurrency(cost)}</span>
-                              <PlusIcon className="w-3 h-3" />
-                            </Button>
-                          </div>
+                  return (
+                    <li
+                      key={typeConfig.id}
+                      className={`py-2 px-1 flex gap-4 ${rowDisabled ? 'opacity-50 pointer-events-none select-none' : 'hover:bg-gray-50 cursor-pointer'} transition-colors`}
+                    >
+                      {/* Left: Icon and labels, fixed width */}
+                      <div style={{ width: '40%' }} className="flex flex-col items-start text-left justify-center">
+                        <div className="flex items-center w-full">
+                          <Icon className="w-5 h-5 mr-2 text-gray-700" />
+                          <span className="font-medium text-gray-900 text-xs">{typeConfig.displayName}</span>
                         </div>
-                        <Progress value={total === 0 ? 0 : (inUse / total) * 100} className="h-2 w-full bg-gray-100 mt-0.5" />
+                        <span className="text-xs text-gray-500 mt-1">{typeConfig.description}</span>
                       </div>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          </TabsContent>
+                      {/* Right: Utilization, button, progress, fills remaining space */}
+                      <div className="flex flex-col flex-1 min-w-0 justify-center">
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <div className="flex w-full mt-1 gap-2 items-start">
+                            <span className="text-xs text-gray-500 flex-shrink-0 mt-1">{inUse} / {total} In Use</span>
+                            <div className="flex-1" />
+                            <div className="flex flex-row flex-wrap-reverse gap-1 justify-end min-w-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium border-red-400 hover:bg-red-50"
+                                disabled={!canSell}
+                                onClick={() => onSellShippingType(business.id, typeConfig.id)}
+                                title={`Sell for ${formatCurrency(cost / 2)} (50% refund)`}
+                              >
+                                <MinusIcon className="w-3 h-3 text-red-600" />
+                                <span className="text-red-600">{formatCurrency(cost / 2)}</span>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium"
+                                disabled={!canAfford}
+                                onClick={() => onHireShippingType(business.id, typeConfig.id)}
+                              >
+                                <span>{formatCurrency(cost)}</span>
+                                <PlusIcon className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </div>
+                          <Progress value={total === 0 ? 0 : (inUse / total) * 100} className="h-2 w-full bg-gray-100 mt-0.5" />
+                        </div>
+                      </div>
+                    </li>
+                  )
+                })}
+              </ul>
+            </TabsContent>
+          )}
         </div>
       </Tabs>
     </div>
