@@ -11,6 +11,7 @@ import {
   ResourceType,
   BusinessType,
   type ActiveDelivery,
+  ShippingTypeState,
 } from "@/lib/game-types"
 import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
 import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
@@ -508,17 +509,15 @@ export default function TycoonGame() {
       return
     }
 
-    const newBusiness: Business = {
-      id: uuidv4(),
-      type,
-      position,
-      level: 1,
-      processingTime: 1,
-      incomingStorage: { current: 0, capacity: 10 },
-      outgoingStorage: { current: 0, capacity: 10 },
-      productionProgress: 0,
-      workers: [],
-      shippingTypes: type === BusinessType.RESOURCE_GATHERING ? [
+    // Set input/output resources for each business type
+    let inputResource = ResourceType.NONE;
+    let outputResource = ResourceType.NONE;
+    let processingTime = 1;
+    let shippingTypes: ShippingTypeState[] = [];
+    if (type === BusinessType.RESOURCE_GATHERING) {
+      inputResource = ResourceType.WOOD;
+      outputResource = ResourceType.WOOD;
+      shippingTypes = [
         {
           type: 'walker',
           bots: [{
@@ -530,12 +529,45 @@ export default function TycoonGame() {
             currentLoad: 0,
           }]
         }
-      ] : [],
+      ];
+    } else if (type === BusinessType.PROCESSING) {
+      inputResource = ResourceType.WOOD;
+      outputResource = ResourceType.PLANKS;
+      processingTime = 1;
+    } else if (type === BusinessType.BRICK_KILN) {
+      inputResource = ResourceType.STONE;
+      outputResource = ResourceType.BRICKS;
+      processingTime = 1;
+    } else if (type === BusinessType.SMELTER) {
+      inputResource = ResourceType.IRON_ORE;
+      outputResource = ResourceType.IRON_INGOT;
+      processingTime = 1;
+    } else if (type === BusinessType.SHOP) {
+      inputResource = ResourceType.PLANKS;
+      outputResource = ResourceType.FURNITURE;
+      processingTime = 1;
+    } else if (type === BusinessType.TOOL_SHOP) {
+      inputResource = ResourceType.IRON_INGOT;
+      outputResource = ResourceType.TOOLS;
+      processingTime = 1;
+    }
+
+    const newBusiness: Business = {
+      id: uuidv4(),
+      type,
+      position,
+      level: 1,
+      processingTime,
+      incomingStorage: { current: 0, capacity: 10 },
+      outgoingStorage: { current: 0, capacity: 10 },
+      productionProgress: 0,
+      workers: [],
+      shippingTypes,
       pendingDeliveries: [],
       recentProfit: 0,
       profitDisplayTime: 0,
-      inputResource: type === BusinessType.RESOURCE_GATHERING ? ResourceType.WOOD : ResourceType.NONE,
-      outputResource: type === BusinessType.RESOURCE_GATHERING ? ResourceType.WOOD : ResourceType.NONE,
+      inputResource,
+      outputResource,
     }
 
     console.log('Created new business:', newBusiness)
