@@ -1,7 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import BusinessPanel from '../business-panel'
 import { BusinessType, ResourceType, DeliveryBot, type Business } from '@/lib/game-types'
-import { getUpgradeCost, getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
+import { getUpgradeCost } from '@/lib/game-logic'
+import { getBusinessName, getResourceName, getBufferStatusColor } from '../business-panel'
 
 // Mock the business data
 const mockBots: DeliveryBot[] = [
@@ -97,20 +98,38 @@ describe('BusinessPanel', () => {
         expect(outgoingLabels.length).toBeGreaterThan(0)
     })
 
-    it('calculates upgrade cost correctly', () => {
+    it('calculates upgrade cost correctly (no 1.5x multiplier, independent upgrades)', () => {
         const business = {
             ...mockBusiness,
             level: 3,
             upgrades: {
                 incomingCapacity: 1,
+                processingTime: 1,
+                outgoingCapacity: 1
+            }
+        }
+        // Each upgrade type is independent: 1st upgrade is 50, 2nd is 50*1.7=85, 3rd is 85*1.7=144.5, etc.
+        expect(getUpgradeCost(business, 'incomingCapacity')).toBe(85) // 50 * 1.7^1
+        expect(getUpgradeCost(business, 'processingTime')).toBe(85)
+        expect(getUpgradeCost(business, 'outgoingCapacity')).toBe(85)
+    })
+
+    it('calculates upgrade cost correctly (first upgrade is 50, then 1.7x)', () => {
+        const business = {
+            ...mockBusiness,
+            level: 3,
+            upgrades: {
+                incomingCapacity: 0,
                 processingTime: 2,
                 outgoingCapacity: 0
             }
         }
-        expect(getUpgradeCost(business)).toBe(200) // Base level upgrade cost
-        expect(getUpgradeCost(business, 'incomingCapacity')).toBe(100) // 50 * 2^1
-        expect(getUpgradeCost(business, 'processingTime')).toBe(200) // 50 * 2^2
-        expect(getUpgradeCost(business, 'outgoingCapacity')).toBe(50) // 50 * 2^0
+        // incomingCapacity: 50 * 1.7^0 = 50
+        // processingTime: 50 * 1.7^2 = 50 * 2.89 = 144.5 -> 144
+        // outgoingCapacity: 50 * 1.7^0 = 50
+        expect(getUpgradeCost(business, 'incomingCapacity')).toBe(50)
+        expect(getUpgradeCost(business, 'processingTime')).toBe(144)
+        expect(getUpgradeCost(business, 'outgoingCapacity')).toBe(50)
     })
 
     it('returns correct business name for different types and resources', () => {
@@ -153,8 +172,11 @@ describe('BusinessPanel', () => {
                 onUpgrade={mockOnUpgrade}
                 coins={1000}
                 onSellShippingType={mockOnSellShippingType}
+                defaultTab="info"
             />
         )
+        // Ensure we're on the info tab
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Info')
         fireEvent.click(screen.getByTestId('upgrade-incoming'))
         expect(mockOnUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'incomingCapacity')
     })
@@ -173,8 +195,11 @@ describe('BusinessPanel', () => {
                 onUpgrade={mockOnUpgrade}
                 coins={1000}
                 onSellShippingType={mockOnSellShippingType}
+                defaultTab="info"
             />
         )
+        // Ensure we're on the info tab
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Info')
         fireEvent.click(screen.getByTestId('upgrade-processing'))
         expect(mockOnUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'processingTime')
     })
@@ -193,8 +218,11 @@ describe('BusinessPanel', () => {
                 onUpgrade={mockOnUpgrade}
                 coins={1000}
                 onSellShippingType={mockOnSellShippingType}
+                defaultTab="info"
             />
         )
+        // Ensure we're on the info tab
+        expect(screen.getByRole('tab', { selected: true })).toHaveTextContent('Info')
         fireEvent.click(screen.getByTestId('upgrade-outgoing'))
         expect(mockOnUpgrade).toHaveBeenCalledWith(upgradeBusiness.id, 'outgoingCapacity')
     })

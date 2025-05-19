@@ -1,7 +1,7 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, Columns4, StoreIcon, UserIcon, TruckIcon, CoinsIcon, AlertCircleIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangleIcon, AlertTriangle, ShipIcon, PlaneIcon } from "lucide-react"
+import { Trees, Columns4, StoreIcon, TruckIcon, CoinsIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangle, ShipIcon, PlaneIcon, BikeIcon, TrainIcon, UserIcon } from "lucide-react"
 import { Alert } from "./ui/alert"
 import { getResourceName } from "./business-panel"
 import {
@@ -10,19 +10,81 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { useState, useEffect, useRef } from "react"
+import React from "react"
 
 interface BusinessEntityProps {
   business: Business
   onClick: () => void
+  onMove?: (businessId: string, newPosition: { x: number; y: number }) => void
 }
 
-export default function BusinessEntity({ business, onClick }: BusinessEntityProps) {
+const BusinessEntity = function BusinessEntity({ business, onClick, onMove }: BusinessEntityProps) {
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const dragTimeout = useRef<NodeJS.Timeout | null>(null)
+  const pendingDrag = useRef(false)
+
+  // Track mouse move and up events globally
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const gameWorld = document.querySelector('[data-testid="game-world"]') as HTMLElement | null;
+      if (!gameWorld) return;
+      const rect = gameWorld.getBoundingClientRect();
+      const newX = e.clientX - rect.left - dragOffset.x;
+      const newY = e.clientY - rect.top - dragOffset.y;
+      if (onMove) {
+        onMove(business.id, { x: newX, y: newY });
+      }
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, dragOffset, onMove, business.id]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!onMove) return;
+    e.stopPropagation();
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    setDragOffset({ x: offsetX, y: offsetY });
+    pendingDrag.current = true;
+    dragTimeout.current = setTimeout(() => {
+      if (pendingDrag.current) {
+        setIsDragging(true);
+      }
+    }, 10);
+    window.addEventListener('mouseup', cancelPendingDrag);
+    window.addEventListener('mousemove', cancelPendingDragOnMove);
+  };
+
+  const cancelPendingDrag = () => {
+    pendingDrag.current = false;
+    if (dragTimeout.current) clearTimeout(dragTimeout.current);
+    window.removeEventListener('mouseup', cancelPendingDrag);
+    window.removeEventListener('mousemove', cancelPendingDragOnMove);
+  };
+
+  const cancelPendingDragOnMove = () => {
+    pendingDrag.current = false;
+    if (dragTimeout.current) clearTimeout(dragTimeout.current);
+    window.removeEventListener('mouseup', cancelPendingDrag);
+    window.removeEventListener('mousemove', cancelPendingDragOnMove);
+  };
 
   // Get the appropriate icon based on business type
   const getBusinessIcon = () => {
     switch (business.type) {
       case BusinessType.RESOURCE_GATHERING:
-        return <TreeIcon className="w-6 h-6 text-green-800" />
+        return <Trees className="w-6 h-6 text-green-800" />
       case BusinessType.PROCESSING:
         return <Columns4 className="w-6 h-6 text-amber-700" />
       case BusinessType.SHOP:
@@ -96,7 +158,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
   const getResourceIcon = (resourceType: ResourceType) => {
     switch (resourceType) {
       case ResourceType.WOOD:
-        return <TreeIcon className="w-3.5 h-3.5 text-white" />
+        return <Trees className="w-3.5 h-3.5 text-white" />
       case ResourceType.STONE:
         return <GemIcon className="w-3.5 h-3.5 text-white" />
       case ResourceType.IRON_ORE:
@@ -149,12 +211,13 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
         <TooltipTrigger asChild>
           <div
             data-testid="business-entity"
-            className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105`}
+            className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105 ${isDragging ? 'opacity-50 ring-2 ring-blue-400' : ''}`}
             style={{
               left: business.position.x - 48,
               top: business.position.y - 48,
             }}
             onClick={onClick}
+            onMouseDown={handleMouseDown}
           >
             {/* Business Level - Changed to plain text */}
             <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800">
@@ -164,6 +227,21 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
             <div className="text-sm font-bold mt-2 text-center text-nowrap">{getBusinessName()}</div>
 
             <div className="mt-2">{getBusinessIcon()}</div>
+
+            {/* Shipping type icons row */}
+            {business.shippingTypes && business.shippingTypes.length > 0 && (
+              <div className="flex flex-row gap-1 mt-1 mb-1">
+                {business.shippingTypes.map((st) => {
+                  try {
+                    const config = require('@/lib/shipping-types').getShippingTypeConfig(st.type)
+                    const Icon = config.icon
+                    return <Icon key={st.type} className="w-5 h-5 text-gray-700" data-testid={`shipping-icon-${st.type}`} />
+                  } catch {
+                    return null
+                  }
+                })}
+              </div>
+            )}
 
             {/* Input Buffer Visualization - Left side */}
             {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
@@ -179,7 +257,7 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
             )}
 
             {/* Output Buffer Visualization - Right side */}
-            {business.type !== BusinessType.MARKET && (
+            {business.outputResource && (
               <div className="absolute right-0 top-0 w-1 h-full flex flex-col-reverse">
                 <div
                   className={`w-full ${getBufferStatusColor(
@@ -190,38 +268,6 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
                 ></div>
               </div>
             )}
-
-            {/* shipping */}
-            <div className="absolute -bottom-3 -left-5 flex space-x-2 text-xs">
-              {business.type !== BusinessType.MARKET && business.shippingTypes?.length > 0 && (
-                <div className="relative w-8 h-8">
-                  {business.shippingTypes.map((shippingType, index) => {
-                    const botCount = Array.isArray(shippingType.bots) ? shippingType.bots.length : 0;
-                    const faded = botCount === 0 ? 'opacity-40' : '';
-                    return (
-                      <div
-                        key={shippingType.type}
-                        className={`absolute ${faded}`}
-                        style={{
-                          transform: `translateX(${index * 4}px)`,
-                          zIndex: index
-                        }}
-                      >
-                        {shippingType.type === 'TRUCK' && (
-                          <TruckIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
-                        )}
-                        {shippingType.type === 'BOAT' && (
-                          <ShipIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
-                        )}
-                        {shippingType.type === 'PLANE' && (
-                          <PlaneIcon className="w-6 h-6 text-gray-700 bg-white rounded-full p-1 border border-gray-400" />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
 
             {/* Production progress bar and resource indicators at the top (always visible) */}
             {business.type !== BusinessType.MARKET && (
@@ -247,34 +293,72 @@ export default function BusinessEntity({ business, onClick }: BusinessEntityProp
                     <div className="h-full bg-blue-500" style={{ width: `${business.productionProgress * 100}%` }}></div>
                   </div>
                   {/* Output Resource Indicator - always visible */}
-                  <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center ${getResourceColor(business.outputResource)} ${business.outgoingStorage.current === 0 ? 'opacity-50' : ''}`}>
+                  <div className={`p-1 w-6 h-6 rounded-full border-2 border-blue-400 flex items-center justify-center relative ${getResourceColor(business.outputResource)} ${business.outgoingStorage.current === 0 ? 'opacity-50' : ''}`}>
                     {getResourceIcon(business.outputResource)}
+                    {/* ! badge if output is nearly full */}
+                    {business.outgoingStorage.current >= 0.85 * business.outgoingStorage.capacity && (
+                      <div className="absolute -top-2 -right-2 z-10">
+                        <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-red-500 rounded-full p-0.5" />
+                      </div>
+                    )}
+                    {business.outgoingStorage.current >= 0.65 * business.outgoingStorage.capacity && business.outgoingStorage.current < 0.85 * business.outgoingStorage.capacity && (
+                      <div className="absolute -top-2 -right-2 z-10">
+                        <AlertTriangle className="w-4 h-4 text-white animate-pulse bg-yellow-500 rounded-full p-0.5" />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             )}
           </div>
         </TooltipTrigger>
-        {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET &&
-          business.incomingStorage.current < 0.5 * business.incomingStorage.capacity && (
-            <TooltipContent
-              side="top"
-              sideOffset={40}
-              className="bg-white border-2 border-gray-300 shadow-lg px-3 py-2 text-sm font-medium rounded-md"
-            >
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <div className={`w-3 h-3 rounded-full ${getResourceColor(business.inputResource)}`} />
-                  <span className={`${business.incomingStorage.current === 0 ? "text-red-600" : "text-yellow-600"} font-semibold`}>
-                    {business.incomingStorage.current === 0
-                      ? `No ${getResourceName(business.inputResource)} available!`
-                      : `Looking for ${getResourceName(business.inputResource)}!`}
-                  </span>
-                </div>
-              </div>
-            </TooltipContent>
+        <TooltipContent side="bottom" sideOffset={8} className="p-3 rounded-lg bg-white/95 shadow-lg flex flex-col items-start z-50">
+          {business.type === BusinessType.MARKET ? (
+            <p className="text-xs text-gray-500">Click to manage, hold to move</p>
+          ) : (
+            <>
+              {/* Needs/Warning message (if any) */}
+              {business.type !== BusinessType.RESOURCE_GATHERING && business.inputResource && (
+                <>
+                  {business.incomingStorage.current === 0 && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`inline-block w-3.5 h-3.5 rounded-full ${getResourceColor(business.inputResource)}`}></span>
+                      <span className="font-normal text-sm text-red-700">Needs {getResourceName(business.inputResource)}!</span>
+                    </div>
+                  )}
+                  {business.incomingStorage.current > 0 &&
+                    business.incomingStorage.current < 0.5 * business.incomingStorage.capacity && (
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`inline-block w-3.5 h-3.5 rounded-full ${getResourceColor(business.inputResource)}`}></span>
+                        <span className="font-normal text-sm text-yellow-700">Looking for {getResourceName(business.inputResource)}!</span>
+                      </div>
+                    )}
+                </>
+              )}
+              {/* Output full/warning message */}
+              {business.outputResource && (
+                <>
+                  {business.outgoingStorage.current >= 0.85 * business.outgoingStorage.capacity && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`inline-block w-3.5 h-3.5 rounded-full ${getResourceColor(business.outputResource)}`}></span>
+                      <span className="font-normal text-sm text-red-700">Output full!</span>
+                    </div>
+                  )}
+                  {business.outgoingStorage.current >= 0.65 * business.outgoingStorage.capacity && business.outgoingStorage.current < 0.85 * business.outgoingStorage.capacity && (
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`inline-block w-3.5 h-3.5 rounded-full ${getResourceColor(business.outputResource)}`}></span>
+                      <span className="font-normal text-sm text-yellow-700">Output getting full!</span>
+                    </div>
+                  )}
+                </>
+              )}
+              <p className="text-xs text-gray-500">Click to manage, hold to move</p>
+            </>
           )}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )
 }
+
+export default React.memo(BusinessEntity)
