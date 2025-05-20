@@ -20,6 +20,7 @@ import { TrophyIcon, HelpCircleIcon } from 'lucide-react'
 import { ACHIEVEMENTS } from './achievements-config'
 import { toast } from '@/components/ui/use-toast'
 import { playSuccessChime, playErrorBeep } from '@/lib/sounds'
+import React from 'react'
 
 const AchievementsPanel = dynamic(() => import("./achievements-panel"), { ssr: false })
 const NotificationToast = dynamic(() => import("./notification-toast"), { ssr: false })
@@ -580,6 +581,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
   // Track which achievement notifications have been shown in this session
   const shownAchievementNotifications = useRef<Set<string>>(new Set())
 
+  // Track number of unlocked achievements (for music unlock)
+  const unlockedAchievements = Object.values(gameState.achievements).filter(Boolean).length;
+  const unlockedSongs = Math.max(1, unlockedAchievements); // 1 at start, increases as achievements are unlocked
+
   // Helper to unlock achievement
   function unlockAchievement(key: string) {
     if (gameState.achievements[key]) return; // Already unlocked, do nothing
@@ -588,6 +593,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       achievements: { ...prev.achievements, [key]: true }
     }))
     showAchievementNotification(key)
+    // Play the newly unlocked song if not all songs are unlocked
+    if (musicControlsRef.current && unlockedSongs > 0) {
+      musicControlsRef.current.playSongAtIndex(unlockedSongs - 1); // Play the newly unlocked song (last in unlocked)
+    }
   }
 
   // Memoize equity calculation
@@ -895,6 +904,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       title: 'Achievement Unlocked!',
       description: achievement.name,
       duration: 5000,
+      className: 'animated-achievement-toast',
     });
     shownAchievementNotifications.current.add(key)
     // Skip to next song on achievement
@@ -1164,7 +1174,32 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       )}
 
       {/* Music Controls in bottom right */}
-      <MusicControls ref={musicControlsRef} audioElement={audioRef.current} />
+      <MusicControls ref={musicControlsRef} audioElement={audioRef.current} unlockedSongs={unlockedSongs} />
     </div>
   )
+}
+
+// Add animated border styles for the toast (move outside component for linter)
+export function AnimatedToastStyles() {
+  return (
+    <style jsx global>{`
+      .animated-achievement-toast {
+        border: 3px solid;
+        border-image: linear-gradient(270deg, #ffb347, #ffcc33, #47eaff, #b347ff, #ffb347) 1;
+        animation: border-animate 3s linear infinite;
+        box-shadow: 0 0 16px 2px #ffe06666;
+        border-radius: 16px !important;
+        position: relative;
+        overflow: hidden;
+      }
+      @keyframes border-animate {
+        0% {
+          border-image-source: linear-gradient(270deg, #ffb347, #ffcc33, #47eaff, #b347ff, #ffb347);
+        }
+        100% {
+          border-image-source: linear-gradient(630deg, #ffb347, #ffcc33, #47eaff, #b347ff, #ffb347);
+        }
+      }
+    `}</style>
+  );
 }
