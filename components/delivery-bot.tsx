@@ -93,7 +93,7 @@ export default function DeliveryBotEntity({
       style={{
         left: position.x - 16,
         top: position.y - 16,
-        zIndex: 50,
+        zIndex: 10,
       }}
     >
       <Icon className="w-4 h-4 text-gray-700" />

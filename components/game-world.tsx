@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState, useRef } from "react"
 import { type Business, BusinessType } from "@/lib/game-types"
@@ -15,9 +15,10 @@ interface GameWorldProps {
   onSelectBusiness: (business: Business) => void
   onDeliveryComplete: (deliveryId: string) => void
   marketPrices: Record<string, { value: number; target: number }>
+  onMoveBusiness?: (businessId: string, newPosition: { x: number; y: number }) => void
 }
 
-export default function GameWorld({
+const GameWorld = function GameWorld({
   businesses,
   placingBusiness,
   activeDeliveries,
@@ -25,6 +26,7 @@ export default function GameWorld({
   onSelectBusiness,
   onDeliveryComplete,
   marketPrices,
+  onMoveBusiness,
 }: GameWorldProps) {
   const worldRef = useRef<HTMLDivElement>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -98,10 +100,14 @@ export default function GameWorld({
       */}
 
       {/* Render all businesses */}
-      {businesses.map((business) => {
-        // Remove market panel above the market entity
-        return <BusinessEntity key={business.id} business={business} onClick={() => onSelectBusiness(business)} />
-      })}
+      {businesses.map((business) => (
+        <BusinessEntity
+          key={business.id}
+          business={business}
+          onClick={() => onSelectBusiness(business)}
+          onMove={onMoveBusiness}
+        />
+      ))}
 
       {/* Render active deliveries */}
       {activeDeliveries.map((delivery) => {
@@ -152,3 +158,5 @@ export default function GameWorld({
     </div>
   )
 }
+
+export default React.memo(GameWorld)

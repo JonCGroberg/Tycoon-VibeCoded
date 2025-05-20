@@ -61,6 +61,7 @@ export interface Business {
   incomingStorage: Storage
   outgoingStorage: Storage
   processingTime: number // Seconds per unit
+  batchSize?: number // Units produced per tick (default 1, but now 10)
   productionProgress: number // 0-1 progress of current production
   workers: Worker[]
   shippingTypes: ShippingTypeState[]
@@ -83,6 +84,7 @@ export interface GameState {
   coins: number
   businesses: Business[]
   activeDeliveries: ActiveDelivery[]
+  achievements: { [key: string]: boolean }
 }
 
 export interface ActiveDelivery {
