@@ -228,21 +228,6 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove }: Bu
 
             <div className="mt-2">{getBusinessIcon()}</div>
 
-            {/* Shipping type icons row */}
-            {business.shippingTypes && business.shippingTypes.length > 0 && (
-              <div className="flex flex-row gap-1 mt-1 mb-1">
-                {business.shippingTypes.map((st) => {
-                  try {
-                    const config = require('@/lib/shipping-types').getShippingTypeConfig(st.type)
-                    const Icon = config.icon
-                    return <Icon key={st.type} className="w-5 h-5 text-gray-700" data-testid={`shipping-icon-${st.type}`} />
-                  } catch {
-                    return null
-                  }
-                })}
-              </div>
-            )}
-
             {/* Input Buffer Visualization - Left side */}
             {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
               <div className="absolute left-0 top-0 w-1 h-full flex flex-col-reverse">

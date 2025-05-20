@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
 - Project uses Shadcn, Jest, pnpm, tailwind, next, and react
@@ -18,3 +18,4 @@ alwaysApply: true
 - Use puppeteer for browser automation and end-to-end testing where applicable
 - Use sequential thinking tools for complex problem-solving, planning, and analysis
 - If UI test failures cannot be solved with Jest/RTL, use Puppeteer to debug and verify UI issues
+- Dont stop untill done
