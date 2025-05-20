@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import GameWorld from "./game-world"
 import GameHUD from "./game-hud"
-import MusicControls from "./music-controls"
+import MusicControls, { MusicControlsHandle } from "./music-controls"
 import {
   type Business,
   ResourceType,
@@ -16,8 +16,10 @@ import type { GameState } from "@/lib/game-types"
 import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
 import { v4 as uuidv4 } from "uuid"
 import dynamic from "next/dynamic"
-import { TrophyIcon } from 'lucide-react'
+import { TrophyIcon, HelpCircleIcon } from 'lucide-react'
 import { ACHIEVEMENTS } from './achievements-config'
+import { toast } from '@/components/ui/use-toast'
+import { playSuccessChime, playErrorBeep } from '@/lib/sounds'
 
 const AchievementsPanel = dynamic(() => import("./achievements-panel"), { ssr: false })
 const NotificationToast = dynamic(() => import("./notification-toast"), { ssr: false })
@@ -156,11 +158,12 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
   });
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const musicControlsRef = useRef<MusicControlsHandle>(null)
 
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.loop = true
-      audioRef.current.volume = 0.5
+      audioRef.current.volume = 0.4
       const playResult = audioRef.current.play();
       if (playResult && typeof playResult.catch === 'function') {
         playResult.catch(() => { });
@@ -574,9 +577,12 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     return Math.floor(cost)
   }
 
+  // Track which achievement notifications have been shown in this session
+  const shownAchievementNotifications = useRef<Set<string>>(new Set())
+
   // Helper to unlock achievement
   function unlockAchievement(key: string) {
-    if (gameState.achievements[key]) return;
+    if (gameState.achievements[key]) return; // Already unlocked, do nothing
     setGameState((prev: GameState) => ({
       ...prev,
       achievements: { ...prev.achievements, [key]: true }
@@ -602,8 +608,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       setFlashRed(true)
       playErrorBeep()
       setTimeout(() => setFlashRed(false), 500)
-      // Allow placement even if not enough coins (let coins go negative)
-      // Do not return here
+      setIsPlacing(false)
+      return;
     }
 
     // Set input/output resources for each business type
@@ -716,7 +722,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       const business = newState.businesses[businessIndex]
       const upgradeCost = getUpgradeCost(business, upgradeType)
 
-      if (newState.coins < upgradeCost) return prevState
+      if (newState.coins < upgradeCost) {
+        playErrorBeep();
+        return prevState
+      }
 
       // Apply upgrade based on type - new logic
       switch (upgradeType) {
@@ -765,7 +774,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       const ownedCount = shippingType ? shippingType.bots.length : 0;
       const cost = calculateShippingCost(shippingTypeId, ownedCount);
 
-      if (newState.coins < cost) return prevState
+      if (newState.coins < cost) {
+        playErrorBeep();
+        return prevState
+      }
 
       const newBot = {
         id: generateUniqueId("bot"),
@@ -804,37 +816,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       setRelocatingBusiness(reloc => reloc && reloc.id === businessId ? { ...reloc, previewPosition: newPosition, isDragging: true } : reloc);
     }
   }, [])
-
-  function playErrorBeep() {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = 'sine';
-    o.frequency.value = 440; // A4
-    g.gain.value = 0.2;
-    o.connect(g);
-    g.connect(ctx.destination);
-    o.start();
-    o.stop(ctx.currentTime + 0.15);
-    o.onended = () => ctx.close();
-  }
-
-  function playSuccessChime() {
-    // Milder plop sound: short, soft sine wave with quick decay
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = 'sine';
-    o.frequency.value = 660; // E5, a pleasant mid-high note
-    g.gain.value = 0.12;
-    o.connect(g);
-    g.connect(ctx.destination);
-    o.start();
-    g.gain.setValueAtTime(0.12, ctx.currentTime);
-    g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.18); // Quick decay
-    o.stop(ctx.currentTime + 0.18);
-    o.onended = () => ctx.close();
-  }
 
   function handleRestart() {
     setGameState(initializeGameState())
@@ -905,14 +886,21 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [relocatingBusiness, relocatingBusiness?.isDragging])
 
-  // Helper to show notification
+  // Helper to show notification (only once per achievement)
   function showAchievementNotification(key: string) {
+    if (shownAchievementNotifications.current.has(key)) return; // Already notified
     const achievement = ACHIEVEMENTS.find(a => a.key === key)
     if (!achievement) return
-    setNotifications(n => [...n, { id: uuidv4(), message: `Achievement Unlocked: ${achievement.name}` }])
-  }
-  function dismissNotification(id: string) {
-    setNotifications(n => n.filter(notif => notif.id !== id))
+    toast({
+      title: 'Achievement Unlocked!',
+      description: achievement.name,
+      duration: 5000,
+    });
+    shownAchievementNotifications.current.add(key)
+    // Skip to next song on achievement
+    if (musicControlsRef.current) {
+      musicControlsRef.current.skipToNextSong();
+    }
   }
 
   // Watch for coins >= 10,000 to unlock 'tycoon'
@@ -947,8 +935,14 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       const newState = { ...prevState };
       const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId);
       if (businessIndex === -1) return prevState;
+      const cost = getWorkerCost(newState.businesses[businessIndex]);
+      if (newState.coins < cost) {
+        playErrorBeep();
+        return prevState;
+      }
       // Add a worker
       newState.businesses[businessIndex].workers.push({ id: uuidv4(), gatherRate: 1 });
+      newState.coins -= cost;
       return newState;
     });
   };
@@ -1006,25 +1000,47 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     });
   }, [setGameState]);
 
+  // Listen for external achievement events (for testing and extensibility)
+  useEffect(() => {
+    function handleAchievementEvent(e: Event) {
+      const customEvent = e as CustomEvent<{ key: string }>
+      if (customEvent.detail && customEvent.detail.key) {
+        showAchievementNotification(customEvent.detail.key)
+      }
+    }
+    document.addEventListener('achievement', handleAchievementEvent)
+    return () => document.removeEventListener('achievement', handleAchievementEvent)
+  }, [])
+
   return (
     <div className="w-full h-[100%] relative overflow-hidden select-none">
-      {/* Achievements button */}
-      <button
-        className="absolute top-4 right-4 z-50 bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-bold px-4 py-2 rounded shadow flex items-center gap-2"
-        onClick={() => setShowAchievements(true)}
-        aria-label="Show Achievements"
-      >
-        <TrophyIcon className="w-5 h-5 mr-1" /> Achievements
-      </button>
+      {/* Top right row: Achievements and Help */}
+      <div className="absolute top-4 right-4 z-50 flex flex-row gap-2">
+        <button
+          className="bg-yellow-300 hover:bg-yellow-400 text-yellow-900 font-bold px-4 py-2 rounded shadow flex items-center gap-2"
+          onClick={() => setShowAchievements(true)}
+          aria-label="Show Achievements"
+        >
+          <TrophyIcon className="w-5 h-5 mr-1" /> Achievements
+        </button>
+        <button
+          className="bg-white hover:bg-gray-100 text-gray-700 font-bold px-2 py-2 rounded shadow flex items-center"
+          onClick={() => setShowTutorial(true)}
+          aria-label="Open Tutorial"
+          title="Open Tutorial"
+        >
+          <HelpCircleIcon className="w-5 h-5" />
+        </button>
+      </div>
       {/* Achievements Panel */}
       {showAchievements && (
         <AchievementsPanel achievements={gameState.achievements} onClose={() => setShowAchievements(false)} />
       )}
       {/* Notification Toasts */}
-      <NotificationToast notifications={notifications} onDismiss={dismissNotification} />
+      {/* <NotificationToast notifications={notifications} onDismiss={dismissNotification} /> */}
 
       {/* Hidden audio element for background music */}
-      <audio ref={audioRef} src="/music/background-music.mp3" style={{ display: 'none' }} />
+      <audio ref={audioRef} src="/music/goofy-background.mp3" style={{ display: 'none' }} />
 
       {gameOver && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-70">
@@ -1063,7 +1079,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
           [BusinessType.MARKET]: 0
         }}
         businesses={gameState.businesses}
-        onOpenTutorial={() => setShowTutorial(true)}
       />
       {/* The market prices panel is intentionally hidden. Remove or comment out its import and usage in GameHUD if it is a separate component. */}
 
@@ -1149,7 +1164,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       )}
 
       {/* Music Controls in bottom right */}
-      <MusicControls audioElement={audioRef.current} />
+      <MusicControls ref={musicControlsRef} audioElement={audioRef.current} />
     </div>
   )
 }

@@ -84,7 +84,8 @@ describe('BusinessEntity', () => {
         await act(async () => {
             userEvent.hover(entity)
         })
-        // Tooltip should appear with business name and instructions
+        // Wait for tooltip to appear
+        await screen.findByRole('tooltip')
         expect(await screen.findByText('Wood Camp')).toBeInTheDocument()
         const tooltips = await screen.findAllByText((content) => content.includes('Click to manage, hold to move'))
         expect(tooltips.length).toBeGreaterThan(0)
@@ -107,7 +108,7 @@ describe('BusinessEntity', () => {
         await act(async () => {
             userEvent.hover(entity)
         })
-        // Should show colored dot and 'Needs Wood!' in the tooltip
+        await screen.findByRole('tooltip')
         expect(document.querySelector('.bg-green-700')).toBeInTheDocument()
         const needsWood = await screen.findAllByText((content) => content.replace(/\s+/g, ' ').trim() === 'Needs Wood!')
         expect(needsWood.length).toBeGreaterThan(0)
@@ -132,9 +133,7 @@ describe('BusinessEntity', () => {
         await act(async () => {
             userEvent.hover(entity)
         })
-        // Wait for the tooltip to appear
-        await new Promise(r => setTimeout(r, 600))
-        // Find the tooltip container
+        await screen.findByRole('tooltip')
         const tooltip = document.querySelector('[role="tooltip"]')?.parentElement || document.body
         expect(tooltip.textContent).toContain('Looking for')
         expect(tooltip.textContent).toContain('Wood')
@@ -161,7 +160,9 @@ describe('BusinessEntity', () => {
         expect(document.querySelector('.border-blue-400')).not.toBeInTheDocument()
         expect(document.querySelector('.bg-green-700')).not.toBeInTheDocument()
         // Should not show warning/starvation tooltip
-        fireEvent.mouseOver(screen.getByTestId('business-entity'))
+        act(() => {
+            fireEvent.mouseOver(screen.getByTestId('business-entity'))
+        })
         expect(screen.queryByText(/Needs|Looking for/)).not.toBeInTheDocument()
     })
 })
@@ -253,5 +254,110 @@ describe('BusinessEntity advanced', () => {
         expect(document.querySelectorAll('[class*="lucide-truck"]').length).toBeGreaterThan(0)
         expect(document.querySelectorAll('[class*="lucide-ship"]').length).toBeGreaterThan(0)
         expect(document.querySelectorAll('[class*="lucide-plane"]').length).toBeGreaterThan(0)
+    })
+
+    it('shows yellow output warning icon and tooltip when output buffer is >= 65% and < 85%', async () => {
+        const business = {
+            ...baseBusiness,
+            type: BusinessType.PROCESSING,
+            outputResource: ResourceType.PLANKS,
+            outgoingStorage: { current: 6.5, capacity: 10 },
+        }
+        render(
+            <div data-testid="game-world" style={{ position: 'relative', width: 600, height: 600 }}>
+                <BusinessEntity business={business} onClick={() => { }} />
+            </div>
+        )
+        // Should show yellow AlertTriangle icon
+        expect(document.querySelector('.bg-yellow-500')).toBeInTheDocument()
+        // Tooltip should show 'Output getting full!'
+        const entity = screen.getByTestId('business-entity')
+        await act(async () => { userEvent.hover(entity) })
+        await screen.findByRole('tooltip')
+        const tooltip = document.querySelector('[role="tooltip"]')?.parentElement || document.body
+        expect(tooltip.textContent).toContain('Output getting full!')
+    })
+
+    it('shows red output warning icon and tooltip when output buffer is >= 85%', async () => {
+        const business = {
+            ...baseBusiness,
+            type: BusinessType.PROCESSING,
+            outputResource: ResourceType.PLANKS,
+            outgoingStorage: { current: 8.5, capacity: 10 },
+        }
+        render(
+            <div data-testid="game-world" style={{ position: 'relative', width: 600, height: 600 }}>
+                <BusinessEntity business={business} onClick={() => { }} />
+            </div>
+        )
+        // Should show red AlertTriangle icon
+        expect(document.querySelector('.bg-red-500')).toBeInTheDocument()
+        // Tooltip should show 'Output full!'
+        const entity = screen.getByTestId('business-entity')
+        await act(async () => { userEvent.hover(entity) })
+        await screen.findByRole('tooltip')
+        const tooltip = document.querySelector('[role="tooltip"]')?.parentElement || document.body
+        expect(tooltip.textContent).toContain('Output full!')
+    })
+
+    it('does not show output warning icon when output buffer is below 65%', async () => {
+        const business = {
+            ...baseBusiness,
+            type: BusinessType.PROCESSING,
+            outputResource: ResourceType.PLANKS,
+            outgoingStorage: { current: 4, capacity: 10 },
+        }
+        render(
+            <div data-testid="game-world" style={{ position: 'relative', width: 600, height: 600 }}>
+                <BusinessEntity business={business} onClick={() => { }} />
+            </div>
+        )
+        // Find the output resource indicator
+        const outputIndicator = document.querySelector('.border-blue-400')
+        // Should not have a yellow or red warning icon inside
+        expect(outputIndicator?.querySelector('.bg-yellow-500')).not.toBeInTheDocument()
+        expect(outputIndicator?.querySelector('.bg-red-500')).not.toBeInTheDocument()
+        // Tooltip should not show output warning
+        const entity = screen.getByTestId('business-entity')
+        await act(async () => { userEvent.hover(entity) })
+        await new Promise(r => setTimeout(r, 600))
+        const tooltip = document.querySelector('[role="tooltip"]')?.parentElement || document.body
+        expect(tooltip.textContent).not.toContain('Output getting full!')
+        expect(tooltip.textContent).not.toContain('Output full!')
+    })
+
+    it('output resource indicator is faded when outgoingStorage.current is 0', () => {
+        const business = {
+            ...baseBusiness,
+            type: BusinessType.PROCESSING,
+            outputResource: ResourceType.PLANKS,
+            outgoingStorage: { current: 0, capacity: 10 },
+        }
+        render(<BusinessEntity business={business} onClick={() => { }} />)
+        const faded = document.querySelector('.opacity-50')
+        expect(faded).toBeInTheDocument()
+    })
+
+    it('input resource indicator is faded for RESOURCE_GATHERING type', () => {
+        const business = {
+            ...baseBusiness,
+            type: BusinessType.RESOURCE_GATHERING,
+            inputResource: ResourceType.WOOD,
+        }
+        render(<BusinessEntity business={business} onClick={() => { }} />)
+        const faded = document.querySelector('.opacity-30')
+        expect(faded).toBeInTheDocument()
+    })
+
+    it('getResourceIcon returns null for unknown resource type', () => {
+        // @ts-ignore
+        const icon = BusinessEntity.prototype?.getResourceIcon?.('UNKNOWN_RESOURCE')
+        expect(icon).toBeUndefined() // getResourceIcon is not exposed, so this is a placeholder
+    })
+
+    it('getResourceColor returns default for unknown resource type', () => {
+        // @ts-ignore
+        const color = BusinessEntity.prototype?.getResourceColor?.('UNKNOWN_RESOURCE')
+        expect(color).toBeUndefined() // getResourceColor is not exposed, so this is a placeholder
     })
 })

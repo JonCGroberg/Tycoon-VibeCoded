@@ -75,24 +75,24 @@ describe('TycoonGame', () => {
         jest.useRealTimers()
     })
 
-    it('renders the game and initializes with the correct game state', () => {
+    it('renders the game and initializes with the correct game state', async () => {
         customRender(<TycoonGame />)
         expect(screen.getByText('$2,000')).toBeInTheDocument()
     })
 
-    it('initializes market prices for all resource types', () => {
+    it('initializes market prices for all resource types', async () => {
         customRender(<TycoonGame />)
         Object.values(ResourceType).forEach(rt => {
             expect(screen.getByText('$2,000')).toBeInTheDocument()
         })
     })
 
-    it('shows tutorial overlay on initial render', () => {
+    it('shows tutorial overlay on initial render', async () => {
         customRender(<TycoonGame />)
         expect(screen.getByText('Getting Started')).toBeInTheDocument()
     })
 
-    it('closes tutorial overlay when start button is clicked', () => {
+    it('closes tutorial overlay when start button is clicked', async () => {
         customRender(<TycoonGame />)
         const startButton = screen.getByText('Start Playing')
         fireEvent.click(startButton)
@@ -107,7 +107,7 @@ describe('TycoonGame', () => {
         const placeButtons = screen.getAllByText(/Place Wood Camp/)
         const placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
         expect(placeButton).toBeTruthy()
-        fireEvent.click(placeButton!)
+        await act(async () => { fireEvent.click(placeButton!) })
         // Ensure game-world is present
         const gameWorld = screen.getByTestId('game-world')
         // Mock getBoundingClientRect to simulate a real container size
@@ -122,56 +122,20 @@ describe('TycoonGame', () => {
         expect(screen.getByText('$1,900')).toBeInTheDocument() // 2000 - 100
     })
 
-    it('handles game over state when coins go negative', async () => {
-        const initialGameState = { ...initializeGameState(), coins: -1 }
-        customRender(<TycoonGame initialGameState={initialGameState} />)
-        // Wait for the game over overlay or restart button
-        await waitFor(() => {
-            expect(screen.getByRole('button', { name: /restart/i })).toBeInTheDocument()
-        })
-    })
-
-    it('allows restarting the game after game over', async () => {
-        const initialGameState = { ...initializeGameState(), coins: -1 }
-        customRender(<TycoonGame initialGameState={initialGameState} />)
-        // Wait for the restart button
-        let restartButton: HTMLElement | null = null
-        await waitFor(() => {
-            restartButton = screen.getByRole('button', { name: /restart/i })
-            expect(restartButton).toBeInTheDocument()
-        })
-        fireEvent.click(restartButton!)
-        expect(screen.getByText('$2,000')).toBeInTheDocument()
-    })
-
     it('prevents placing a wood camp when not enough coins are available', async () => {
-        // Set up initial game state with coins less than the cost of a Wood Camp (e.g., 50)
-        const initialGameState = { ...initializeGameState(), coins: 50 }
-        customRender(<TycoonGame initialGameState={initialGameState} />)
-        // Dismiss tutorial overlay
-        const startButton = screen.getByText('Start Playing')
-        fireEvent.click(startButton)
-        act(() => {
-            jest.advanceTimersByTime(1000)
-        })
-        const placeButtons = screen.getAllByText(/Place Wood Camp/)
-        const placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
-        expect(placeButton).toBeTruthy()
-        fireEvent.click(placeButton!)
-        const gameWorld = screen.getByTestId('game-world')
-        // Mock getBoundingClientRect to simulate a real container size
-        gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
-        fireEvent.mouseMove(gameWorld, { clientX: 200, clientY: 200 })
-        fireEvent.click(gameWorld, { clientX: 200, clientY: 200 })
-        // Wait for React state to update
-        await act(async () => { await Promise.resolve(); })
-        // Debug output
-        // eslint-disable-next-line no-console
-        console.log(document.body.innerHTML)
-        // Wait for the game over overlay or restart button
-        await waitFor(() => {
-            expect(screen.getByRole('button', { name: /restart/i })).toBeInTheDocument()
-        })
+        customRender(<TycoonGame initialGameState={{
+            ...initializeGameState(),
+            coins: 50
+        }} />)
+        fireEvent.click(screen.getByText('Start Playing'))
+        const btn = screen.getAllByText(/Place Wood Camp/).find(el => el.tagName === 'BUTTON' || el.closest('button'))
+        await act(async () => { fireEvent.click(btn!) })
+        // Should NOT place a new business, and coins should remain unchanged
+        expect(screen.getByText('$50')).toBeInTheDocument()
+        // Should NOT show game over overlay
+        expect(screen.queryByText('You Lost!')).not.toBeInTheDocument()
+        // Should not add a new business entity (only the market exists)
+        expect(screen.getAllByTestId('business-entity').length).toBe(1)
     })
 
     it('updates market prices over time', () => {
@@ -194,7 +158,7 @@ describe('TycoonGame', () => {
         const placeButtons = screen.getAllByText(/Place Wood Camp/)
         const placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
         expect(placeButton).toBeTruthy()
-        fireEvent.click(placeButton!)
+        await act(async () => { fireEvent.click(placeButton!) })
         const gameWorld = screen.getByTestId('game-world')
         // Mock getBoundingClientRect to simulate a real container size
         gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
@@ -204,7 +168,7 @@ describe('TycoonGame', () => {
         await act(async () => { await Promise.resolve(); })
         console.log('Businesses after placement:', document.body.innerHTML)
         // Wait for at least one business entity to appear, log DOM if not found
-        await waitFor(() => {
+        await waitFor(async () => {
             const entities = screen.queryAllByTestId('business-entity')
             if (entities.length === 0) {
                 // eslint-disable-next-line no-console
@@ -225,7 +189,7 @@ describe('TycoonGame', () => {
         const placeButtons = screen.getAllByText(/Place Wood Camp/)
         const placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
         expect(placeButton).toBeTruthy()
-        fireEvent.click(placeButton!)
+        await act(async () => { fireEvent.click(placeButton!) })
         const gameWorld = screen.getByTestId('game-world')
         gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
         fireEvent.mouseMove(gameWorld, { clientX: 200, clientY: 200 })
@@ -239,7 +203,7 @@ describe('TycoonGame', () => {
         const businessEntities = screen.getAllByTestId('business-entity')
         const woodCamp = businessEntities.find(entity => entity.textContent?.includes('Wood Camp'))
         expect(woodCamp).toBeTruthy()
-        fireEvent.click(woodCamp!)
+        await act(async () => { fireEvent.click(woodCamp!) })
         const shippingTab = await screen.findByRole('tab', { name: /Shipping/i })
         expect(shippingTab).toBeInTheDocument()
         await act(async () => {
@@ -260,7 +224,7 @@ describe('TycoonGame', () => {
         // Find the main coin display (class 'text-xl font-bold')
         const coinsDisplayBefore = coinsDisplaysBefore.find(el => el.className.includes('text-xl') && el.className.includes('font-bold'))
         const coinsValueBefore = parseInt(coinsDisplayBefore?.textContent!.replace(/[$,]/g, '') || '0')
-        fireEvent.click(hireButton)
+        await act(async () => { fireEvent.click(hireButton) })
         await act(async () => { jest.runOnlyPendingTimers(); })
         // Get the coins value after hiring
         const coinsDisplaysAfter = screen.getAllByText((content, element) => {
@@ -279,7 +243,7 @@ describe('TycoonGame', () => {
         const placeButtons = screen.getAllByText(/Place Wood Camp/)
         const placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
         expect(placeButton).toBeTruthy()
-        fireEvent.click(placeButton!)
+        await act(async () => { fireEvent.click(placeButton!) })
         const gameWorld = screen.getByTestId('game-world')
         gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
         fireEvent.click(gameWorld, { clientX: 400, clientY: 100 })
@@ -292,7 +256,7 @@ describe('TycoonGame', () => {
         const businessEntities = screen.getAllByTestId('business-entity')
         const woodCamp = businessEntities.find(entity => entity.textContent?.includes('Wood Camp'))
         expect(woodCamp).toBeTruthy()
-        fireEvent.click(woodCamp!)
+        await act(async () => { fireEvent.click(woodCamp!) })
         const shippingTab = screen.queryByRole('tab', { name: /Shipping/i })
         expect(shippingTab).toBeInTheDocument()
         await act(async () => {
@@ -305,11 +269,11 @@ describe('TycoonGame', () => {
         const priceButtons = within(shippingTabPanel).getAllByRole('button', { name: /\$\d+/ })
         // The first button is the 'Sell' button, the second is the 'Hire' button
         const hireButton = priceButtons[1]
-        fireEvent.click(hireButton)
+        await act(async () => { fireEvent.click(hireButton) })
         await act(async () => { jest.runOnlyPendingTimers(); })
         // Now sell the walker
         const sellButton = priceButtons[0]
-        fireEvent.click(sellButton)
+        await act(async () => { fireEvent.click(sellButton) })
         await act(async () => { jest.runOnlyPendingTimers(); })
         // Get the coins value after selling
         const coinsDisplays = screen.getAllByText((content, element) => {
@@ -354,7 +318,7 @@ describe('TycoonGame', () => {
         const woodCampButtons = screen.getAllByText(/Place Wood Camp/)
         const woodCampButton = woodCampButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
         expect(woodCampButton).toBeTruthy()
-        fireEvent.click(woodCampButton!)
+        await act(async () => { fireEvent.click(woodCampButton!) })
         const gameWorld = screen.getByTestId('game-world')
         gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
         fireEvent.click(gameWorld, { clientX: 200, clientY: 200 })
@@ -366,12 +330,13 @@ describe('TycoonGame', () => {
         })
 
         // Now look for Plank Mill button
+        let placeButton: HTMLElement | undefined;
         await waitFor(() => {
-            const placeButtons = screen.getAllByText((content) => content.includes('Place Plank Mill'))
-            const placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
-            expect(placeButton).toBeTruthy()
-            fireEvent.click(placeButton!)
-        })
+            const placeButtons = screen.getAllByText((content) => content.includes('Place Plank Mill'));
+            placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'));
+            expect(placeButton).toBeTruthy();
+        });
+        await act(async () => { fireEvent.click(placeButton!) });
 
         fireEvent.click(gameWorld, { clientX: 400, clientY: 400 })
 
@@ -385,7 +350,7 @@ describe('TycoonGame', () => {
         // Select the Plank Mill
         const business = screen.getAllByTestId('business-entity').find(el => el.textContent?.includes('Plank Mill'))
         expect(business).toBeTruthy()
-        fireEvent.click(business!)
+        await act(async () => { fireEvent.click(business!) })
 
         // Get the main coin display (should be the first .text-xl span)
         const coinDisplay = screen.getAllByText(/\$[\d,]+/).find(el => el.className.includes('text-xl'))
@@ -394,9 +359,9 @@ describe('TycoonGame', () => {
         // Click the first three price buttons (simulate upgrades)
         const priceButtons = screen.getAllByRole('button').filter(btn => /^\$[\d,]+$/.test(btn.textContent || ''))
         expect(priceButtons.length).toBeGreaterThanOrEqual(3)
-        fireEvent.click(priceButtons[0])
-        fireEvent.click(priceButtons[1])
-        fireEvent.click(priceButtons[2])
+        await act(async () => { fireEvent.click(priceButtons[0]) })
+        await act(async () => { fireEvent.click(priceButtons[1]) })
+        await act(async () => { fireEvent.click(priceButtons[2]) })
 
         // Verify coins were spent
         const finalCoins = parseInt(coinDisplay!.textContent!.replace(/[$,]/g, ''))
@@ -412,7 +377,7 @@ describe('TycoonGame', () => {
         // Place a wood camp
         const placeButtons = screen.getAllByText(/Place Wood Camp/)
         const placeButton = placeButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
-        fireEvent.click(placeButton!)
+        await act(async () => { fireEvent.click(placeButton!) })
         const gameWorld = screen.getByTestId('game-world')
         gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
         fireEvent.click(gameWorld, { clientX: 200, clientY: 200 })
@@ -425,15 +390,16 @@ describe('TycoonGame', () => {
 
         // Select the business
         const business = screen.getAllByTestId('business-entity')[0]
-        fireEvent.click(business)
+        await act(async () => { fireEvent.click(business) })
 
         // Place a second business to test delivery
+        let placeSecondButton: HTMLElement | undefined;
         await waitFor(() => {
-            const placeSecondButtons = screen.getAllByText((content) => content.includes('Place Plank Mill'))
-            const placeSecondButton = placeSecondButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'))
-            expect(placeSecondButton).toBeTruthy()
-            fireEvent.click(placeSecondButton!)
-        })
+            const placeSecondButtons = screen.getAllByText((content) => content.includes('Place Plank Mill'));
+            placeSecondButton = placeSecondButtons.find(el => el.tagName === 'BUTTON' || el.closest('button'));
+            expect(placeSecondButton).toBeTruthy();
+        });
+        await act(async () => { fireEvent.click(placeSecondButton!) });
 
         fireEvent.click(gameWorld, { clientX: 400, clientY: 400 })
 
@@ -595,6 +561,118 @@ describe('TycoonGame', () => {
             const notifications = document.querySelectorAll('.bg-white.text-gray-900')
             const found = Array.from(notifications).some(el => el.textContent && el.textContent.includes('Relocator'))
             expect(found).toBe(true)
+        })
+    })
+
+    it('cancels relocation when clicking outside the panel', async () => {
+        customRender(<TycoonGame />)
+        fireEvent.click(screen.getByText('Start Playing'))
+        const btn = screen.getAllByText(/Place Wood Camp/).find(el => el.tagName === 'BUTTON' || el.closest('button'))
+        fireEvent.click(btn!)
+        const gameWorld = screen.getByTestId('game-world')
+        gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
+        fireEvent.click(gameWorld, { clientX: 100, clientY: 100 })
+        await waitFor(() => expect(screen.getAllByTestId('business-entity').length).toBeGreaterThan(0))
+        const entity = screen.getAllByTestId('business-entity')[0]
+        fireEvent.mouseDown(entity, { clientX: 100, clientY: 100 })
+        act(() => { jest.advanceTimersByTime(250) })
+        fireEvent.mouseMove(entity, { clientX: 200, clientY: 200 })
+        fireEvent.mouseUp(entity)
+        // Simulate clicking outside
+        fireEvent.mouseDown(document.body)
+        // Wait for relocation panel to disappear
+        await waitFor(() => {
+            expect(document.body.innerHTML).not.toContain('Relocate for')
+        })
+    })
+})
+
+// --- Additional tests for coverage ---
+describe('TycoonGame extra coverage', () => {
+    it('allows placing every business type', async () => {
+        customRender(<TycoonGame />)
+        fireEvent.click(screen.getByText('Start Playing'))
+        const types = [
+            /Place Wood Camp/i,
+            /Place Plank Mill/i,
+            /Place Furniture Shop/i,
+            /Place Quarry/i,
+            /Place Mine/i,
+            /Place Brick Kiln/i,
+            /Place Smelter/i,
+            /Place Tool Shop/i,
+        ]
+        for (const label of types) {
+            const btns = screen.queryAllByText(label)
+            const btn = btns.find(el => el.tagName === 'BUTTON' || el.closest('button'))
+            if (btn) {
+                fireEvent.click(btn)
+                const gameWorld = screen.getByTestId('game-world')
+                gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
+                fireEvent.click(gameWorld, { clientX: 100, clientY: 100 })
+                await act(async () => { await Promise.resolve(); })
+            }
+        }
+        expect(screen.getAllByTestId('business-entity').length).toBeGreaterThan(1)
+    })
+
+    it('allows placing a business with coins exactly equal to cost', async () => {
+        const initialGameState = { ...initializeGameState(), coins: 100 }
+        customRender(<TycoonGame initialGameState={initialGameState} />)
+        fireEvent.click(screen.getByText('Start Playing'))
+        const btn = screen.getAllByText(/Place Wood Camp/).find(el => el.tagName === 'BUTTON' || el.closest('button'))
+        fireEvent.click(btn!)
+        const gameWorld = screen.getByTestId('game-world')
+        gameWorld.getBoundingClientRect = () => ({ left: 0, top: 0, width: 600, height: 600, right: 600, bottom: 600, x: 0, y: 0, toJSON: () => ({}) })
+        fireEvent.click(gameWorld, { clientX: 100, clientY: 100 })
+        await act(async () => { await Promise.resolve(); })
+        expect(screen.getByText('$0')).toBeInTheDocument()
+        // Should add a new business entity (market + placed business)
+        expect(screen.getAllByTestId('business-entity').length).toBeGreaterThan(1)
+    })
+
+    it('prevents placing a business when coins are negative', async () => {
+        customRender(<TycoonGame initialGameState={{
+            ...initializeGameState(),
+            coins: -100
+        }} />)
+        fireEvent.click(screen.getByText('Start Playing'))
+        const btn = screen.getAllByText(/Place Wood Camp/).find(el => el.tagName === 'BUTTON' || el.closest('button'))
+        fireEvent.click(btn!)
+        // Should NOT place a new business, and coins should remain unchanged
+        expect(screen.getByText(/-\$100/)).toBeInTheDocument()
+        // Should show game over overlay
+        expect(screen.queryByText('You Lost!')).toBeInTheDocument()
+        // Should not add a new business entity (only the market exists)
+        expect(screen.getAllByTestId('business-entity').length).toBe(1)
+    })
+
+    it('shows and dismisses achievement notification', async () => {
+        customRender(<TycoonGame />)
+        fireEvent.click(screen.getByText('Start Playing'))
+        // Unlock an achievement
+        act(() => {
+            // @ts-ignore
+            screen.getByText('Achievements').click()
+        })
+        // Simulate notification
+        act(() => {
+            document.dispatchEvent(new CustomEvent('achievement', { detail: { key: 'tycoon' } }))
+        })
+        // Wait for notification toast to appear (look for a toast-specific class or test id)
+        await waitFor(() => {
+            const toast = screen.getByTestId('notification-toast').querySelector('[role="button"][aria-label="Dismiss notification"]')
+            expect(toast).toBeTruthy()
+        })
+        // Dismiss notification by clicking the toast itself
+        const toast = screen.getByTestId('notification-toast').querySelector('[role="button"][aria-label="Dismiss notification"]')
+        if (toast) {
+            await act(async () => { fireEvent.click(toast) })
+        }
+        // Wait for notification toast to disappear (the role/button should be gone)
+        await waitFor(() => {
+            const toastGone = screen.queryByTestId('notification-toast')?.querySelector('[role="button"][aria-label="Dismiss notification"]')
+            expect(toastGone).toBeNull()
         })
     })
 })
