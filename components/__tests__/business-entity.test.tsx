@@ -165,6 +165,14 @@ describe('BusinessEntity', () => {
         })
         expect(screen.queryByText(/Needs|Looking for/)).not.toBeInTheDocument()
     })
+
+    it('applies highlight class when selected', () => {
+        const { container } = render(<BusinessEntity {...baseProps} selected={true} />)
+        const entity = container.querySelector('[data-testid="business-entity"]')
+        expect(entity).toHaveClass('ring-4')
+        expect(entity).toHaveClass('ring-indigo-500')
+        expect(entity).toHaveClass('z-20')
+    })
 })
 
 describe('BusinessEntity advanced', () => {
