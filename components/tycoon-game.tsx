@@ -580,6 +580,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
 
   // Track which achievement notifications have been shown in this session
   const shownAchievementNotifications = useRef<Set<string>>(new Set())
+  // Track pending achievement notifications to show after render
+  const pendingAchievementNotifications = useRef<Set<string>>(new Set())
 
   // Track number of unlocked achievements (for music unlock)
   const unlockedAchievements = Object.values(gameState.achievements).filter(Boolean).length;
@@ -592,7 +594,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       ...prev,
       achievements: { ...prev.achievements, [key]: true }
     }))
-    showAchievementNotification(key)
+    // Instead of showing notification here, queue it for useEffect
+    pendingAchievementNotifications.current.add(key)
     // Play the newly unlocked song if not all songs are unlocked
     if (musicControlsRef.current && unlockedSongs > 0) {
       musicControlsRef.current.playSongAtIndex(unlockedSongs - 1); // Play the newly unlocked song (last in unlocked)
@@ -912,6 +915,16 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       musicControlsRef.current.skipToNextSong();
     }
   }
+
+  // Show achievement notifications after render if any are pending
+  useEffect(() => {
+    if (pendingAchievementNotifications.current.size > 0) {
+      for (const key of pendingAchievementNotifications.current) {
+        showAchievementNotification(key)
+      }
+      pendingAchievementNotifications.current.clear()
+    }
+  })
 
   // Watch for coins >= 10,000 to unlock 'tycoon'
   useEffect(() => {

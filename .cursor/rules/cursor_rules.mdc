@@ -3,7 +3,6 @@ description: Guidelines for creating and maintaining Cursor rules to ensure cons
 globs: .cursor/rules/*.mdc
 alwaysApply: true
 ---
-
 - **Required Rule Structure:**
   ```markdown
   ---
@@ -27,7 +26,7 @@ alwaysApply: true
   ```typescript
   // ✅ DO: Show good examples
   const goodExample = true;
-  
+
   // ❌ DON'T: Show anti-patterns
   const badExample = false;
   ```
@@ -50,4 +49,39 @@ alwaysApply: true
   - Keep descriptions concise
   - Include both DO and DON'T examples
   - Reference actual code over theoretical examples
-  - Use consistent formatting across rules 
+  - Use consistent formatting across rules
+
+- **Handle GitHub Issues via Branching and Pull Requests**
+  - **Each issue must be addressed in a dedicated branch**
+    - Branch name should match the issue number or a clear slug (e.g., `issue-123-fix-typo`)
+    - Example: `git checkout -b issue-42-fix-login`
+  - **Pull requests must target the `dev` branch**
+    - Do not merge directly to `main` or other branches
+    - Example: Open PR from `issue-42-fix-login` → `dev`
+  - **Pull request title and description should reference the issue**
+    - Example: `Fix login bug (#42)`
+  - **Enable auto-deletion of branches after PR merge**
+    - This should be set in repository settings: `Automatically delete head branches`
+    - Example: After merging PR #42, branch `issue-42-fix-login` is deleted automatically
+  - **No direct commits to `dev` or `main` allowed for issue resolution**
+  - **Cross-reference:** See [project.mdc](mdc:.cursor/rules/project.mdc) for CI/CD and automation requirements
+  - **DO:**
+    ```shell
+    # Create a branch for the issue
+    git checkout -b issue-101-add-feature
+    # Push and open PR to dev
+    git push origin issue-101-add-feature
+    # Open PR: base=dev, compare=issue-101-add-feature
+    ```
+  - **DON'T:**
+    ```shell
+    # Commit directly to dev or main
+    git checkout dev
+    git commit -am "Fix issue #101"
+    git push origin dev
+    ```
+  - **Best Practices:**
+    - Keep branches focused on a single issue
+    - Reference the issue in all related PRs
+    - Ensure branch auto-deletion is enabled in repo settings
+    - Use clear, descriptive branch names

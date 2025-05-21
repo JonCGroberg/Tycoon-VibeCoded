@@ -26,15 +26,32 @@ export interface MusicControlsHandle {
 }
 
 const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(function MusicControls({ audioElement, unlockedSongs }, ref) {
+    // Persist currentIndex and isPlaying in localStorage to survive re-renders
+    function getInitialIndex() {
+        const stored = window?.localStorage?.getItem('musicCurrentIndex');
+        return stored !== null ? parseInt(stored, 10) : -1;
+    }
+    function getInitialPlaying() {
+        const stored = window?.localStorage?.getItem('musicIsPlaying');
+        return stored !== null ? stored === 'true' : false;
+    }
     const [volume, setVolume] = useState(0.4)
     const [isMuted, setIsMuted] = useState(false)
-    const [isPlaying, setIsPlaying] = useState(false)
-    const [currentIndex, setCurrentIndex] = useState(-1)
+    const [isPlaying, setIsPlaying] = useState(typeof window !== 'undefined' ? getInitialPlaying() : false)
+    const [currentIndex, setCurrentIndex] = useState(typeof window !== 'undefined' ? getInitialIndex() : -1)
     const availableSongs = SONGS.slice(0, unlockedSongs)
     const selectedSong = currentIndex >= 0 ? availableSongs[currentIndex]?.file : undefined
     const [showVolume, setShowVolume] = useState(false)
     const volumeBtnRef = useRef<HTMLButtonElement>(null)
     const prevUnlockedSongsRef = useRef(unlockedSongs);
+
+    // Persist currentIndex and isPlaying to localStorage
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem('musicCurrentIndex', String(currentIndex))
+            window.localStorage.setItem('musicIsPlaying', String(isPlaying))
+        }
+    }, [currentIndex, isPlaying])
 
     useImperativeHandle(ref, () => ({
         skipToNextSong: () => {
@@ -55,6 +72,7 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
     }), [availableSongs.length])
 
     useEffect(() => {
+        // Only update currentIndex if unlockedSongs increased
         if (unlockedSongs > prevUnlockedSongsRef.current) {
             setCurrentIndex(unlockedSongs - 1);
             setIsPlaying(true);
@@ -86,13 +104,6 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
             }
         }
     }, [volume, isMuted, audioElement, selectedSong, isPlaying])
-
-    useEffect(() => {
-        if (unlockedSongs > 0) {
-            setCurrentIndex(0);
-            setIsPlaying(true);
-        }
-    }, []);
 
     const handleVolumeChange = (value: number[]) => {
         setVolume(value[0])

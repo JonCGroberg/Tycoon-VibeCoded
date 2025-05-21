@@ -7,7 +7,7 @@ alwaysApply: true
 
 - Always run pnpm test after finishing any set of code changes
 - Dont ask to run commands, just run them
-- Test coverage should be 85%
+- Test coverage should be 95%
 
 - All tests, builds, and automation must be executed via MCP servers, not just locally
 - CI/CD and task management should use MCP commands and MCP infrastructure
