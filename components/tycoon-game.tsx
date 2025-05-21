@@ -591,10 +591,21 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
 
   // Track number of unlocked achievements (for music unlock)
   const unlockedAchievements = Object.values(gameState.achievements).filter(Boolean).length;
-  const unlockedSongs = Math.max(1, unlockedAchievements); // 1 at start, increases as achievements are unlocked
+  const unlockedSongs = Math.max(1, unlockedAchievements + 1); // Always at least 1 song unlocked for UI
 
   // New: Track pending song index to play after render
   const [pendingSongIndex, setPendingSongIndex] = useState<number | null>(null);
+
+  // Track previous unlockedAchievements count
+  const prevUnlockedAchievements = useRef(unlockedAchievements);
+
+  useEffect(() => {
+    if (unlockedAchievements > prevUnlockedAchievements.current) {
+      // Play the song at index = unlockedAchievements (ith achievement → song[i])
+      setPendingSongIndex(unlockedAchievements);
+    }
+    prevUnlockedAchievements.current = unlockedAchievements;
+  }, [unlockedAchievements]);
 
   // Helper to unlock achievement
   function unlockAchievement(key: string) {
@@ -605,10 +616,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     }))
     // Instead of showing notification here, queue it for useEffect
     pendingAchievementNotifications.current.add(key)
-    // Play the newly unlocked song if not all songs are unlocked
-    if (unlockedSongs > 0) {
-      setPendingSongIndex(unlockedSongs - 1); // Defer play to useEffect
-    }
   }
 
   // Memoize equity calculation
