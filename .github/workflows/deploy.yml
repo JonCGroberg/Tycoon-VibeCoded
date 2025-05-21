@@ -14,14 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8 # or your project's pnpm version
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8 # or your project's pnpm version
 
       - run: pnpm install
 

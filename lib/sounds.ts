@@ -1,7 +1,7 @@
 // Shared sound effects for the game
 
 export function playAchievementChime() {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext)();
   const notes = [698.46, 880, 1046.5, 1174.66]; // F5, A5, C6, D6 (Fmaj7, higher and brighter)
   const now = ctx.currentTime;
   notes.forEach((freq, i) => {
@@ -22,7 +22,7 @@ export function playAchievementChime() {
 
 // Future: move these here too
 export function playSuccessChime() {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext)();
   const notes = [220, 261.63, 329.63]; // A3, C4, E4 (A major chord, two octaves lower)
   const now = ctx.currentTime;
   notes.forEach((freq, i) => {
@@ -42,7 +42,7 @@ export function playSuccessChime() {
 }
 
 export function playErrorBeep() {
-  const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+  const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext)();
   const o = ctx.createOscillator();
   const g = ctx.createGain();
   o.type = 'sine';

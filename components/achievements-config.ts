@@ -5,7 +5,6 @@ import {
   WrenchIcon,
   TruckIcon,
   ShoppingCartIcon,
-  UserIcon,
   BotIcon,
   MoveIcon,
   TrophyIcon,

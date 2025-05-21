@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { type DeliveryBot, ResourceType } from "@/lib/game-types"
-import { TruckIcon } from "lucide-react"
 import { getShippingTypeConfig } from "@/lib/shipping-types"
 
 interface DeliveryBotEntityProps {
@@ -11,13 +10,9 @@ interface DeliveryBotEntityProps {
   targetPosition: { x: number; y: number }
   resourceType: ResourceType
   onDeliveryComplete: () => void
-<<<<<<< HEAD
-  expectedArrival: number
-=======
   deliveryStartTime: number
   deliveryExpectedArrival: number
-  shippingTypeId: string
->>>>>>> main
+  shippingTypeId?: string
 }
 
 export default function DeliveryBotEntity({
@@ -26,22 +21,11 @@ export default function DeliveryBotEntity({
   targetPosition,
   resourceType,
   onDeliveryComplete,
-<<<<<<< HEAD
-  expectedArrival,
-}: DeliveryBotEntityProps) {
-  const [position, setPosition] = useState({ x: sourcePosition.x, y: sourcePosition.y })
-  const [progress, setProgress] = useState(0)
-  const duration = expectedArrival - Date.now()
-=======
   deliveryStartTime,
   deliveryExpectedArrival,
   shippingTypeId,
 }: DeliveryBotEntityProps) {
   const [position, setPosition] = useState({ x: sourcePosition.x, y: sourcePosition.y })
-  const [progress, setProgress] = useState(0)
-  const shippingTypeConfig = getShippingTypeConfig(shippingTypeId);
-  const Icon = shippingTypeConfig.icon;
->>>>>>> main
 
   // Get resource color
   const getResourceColor = (resourceType: ResourceType) => {
@@ -67,34 +51,27 @@ export default function DeliveryBotEntity({
     }
   }
 
-  useEffect(() => {
-<<<<<<< HEAD
-    // Only start animation if the bot is actively delivering
-    if (!bot.isDelivering) {
-      setPosition({ x: sourcePosition.x, y: sourcePosition.y });
-      setProgress(0);
-      return;
+  // Select icon based on shippingTypeId using SHIPPING_TYPES config
+  let IconComponent: React.ElementType | null = null;
+  if (shippingTypeId) {
+    try {
+      IconComponent = getShippingTypeConfig(shippingTypeId).icon;
+    } catch {
+      IconComponent = null;
     }
+  }
 
-    const startTime = Date.now()
-=======
-    const now = Date.now()
-    // Calculate the remaining time for this delivery
-    const totalDuration = Math.max(100, deliveryExpectedArrival - deliveryStartTime)
-    const startTime = deliveryStartTime
->>>>>>> main
-
+  useEffect(() => {
     const animateDelivery = () => {
       const currentTime = Date.now()
-      const elapsed = currentTime - startTime
-      const newProgress = Math.min(1, elapsed / totalDuration)
+      const elapsed = currentTime - deliveryStartTime
+      const newProgress = Math.min(1, elapsed / Math.max(100, deliveryExpectedArrival - deliveryStartTime))
 
       // Linear interpolation between source and target
       const newX = sourcePosition.x + (targetPosition.x - sourcePosition.x) * newProgress
       const newY = sourcePosition.y + (targetPosition.y - sourcePosition.y) * newProgress
 
       setPosition({ x: newX, y: newY })
-      setProgress(newProgress)
 
       if (newProgress < 1) {
         requestAnimationFrame(animateDelivery)
@@ -108,11 +85,7 @@ export default function DeliveryBotEntity({
     return () => {
       // Cleanup if needed
     }
-<<<<<<< HEAD
-  }, [sourcePosition, targetPosition, duration, onDeliveryComplete, bot.isDelivering])
-=======
   }, [sourcePosition, targetPosition, deliveryExpectedArrival, deliveryStartTime, onDeliveryComplete])
->>>>>>> main
 
   return (
     <div
@@ -123,11 +96,10 @@ export default function DeliveryBotEntity({
         zIndex: 10,
       }}
     >
-      <Icon className="w-4 h-4 text-gray-700" />
-
+      {/* Delivery vehicle icon */}
+      {IconComponent && <IconComponent className={`lucide-${shippingTypeId} w-5 h-5`} />}
       {/* Resource being carried */}
       <div className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${getResourceColor(resourceType)}`}></div>
-
       {/* Amount being carried */}
       {bot.currentLoad > 0 && (
         <div className="absolute -bottom-2 text-xs font-bold bg-white px-1 rounded-full border border-gray-300">

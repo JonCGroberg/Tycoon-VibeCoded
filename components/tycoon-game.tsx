@@ -11,13 +11,9 @@ import {
   type ActiveDelivery,
   ShippingTypeState,
 } from "@/lib/game-types"
-<<<<<<< HEAD
 import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
-import { getBusinessData } from "@/lib/business-data"
-=======
-import { initializeGameState, generateUniqueId, getUpgradeCost } from "@/lib/game-logic"
 import type { GameState } from "@/lib/game-types"
-import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
+import { getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
 import { v4 as uuidv4 } from "uuid"
 import dynamic from "next/dynamic"
 import { TrophyIcon, HelpCircleIcon } from 'lucide-react'
@@ -25,69 +21,10 @@ import { ACHIEVEMENTS } from './achievements-config'
 import { toast } from '@/components/ui/use-toast'
 import { playSuccessChime, playErrorBeep } from '@/lib/sounds'
 import React from 'react'
->>>>>>> main
 
 const AchievementsPanel = dynamic(() => import("./achievements-panel"), { ssr: false })
-const NotificationToast = dynamic(() => import("./notification-toast"), { ssr: false })
 const BusinessPanel = dynamic(() => import("./business-panel"), { ssr: false })
 const TutorialOverlay = dynamic(() => import("./tutorial-overlay"), { ssr: false })
-
-// Helper: all shipping types
-const ALL_SHIPPING_TYPES = [
-  { id: 'walker', baseCost: 10 },
-  { id: 'bicyclist', baseCost: 25 },
-  { id: 'truck', baseCost: 100 },
-  { id: 'semi', baseCost: 200 },
-  { id: 'train', baseCost: 500 },
-  { id: 'plane', baseCost: 800 },
-  { id: 'ship', baseCost: 1000 },
-];
-
-// Helper functions to determine input/output resources based on business type
-function getInputResourceForBusinessType(businessType: BusinessType): ResourceType {
-  switch (businessType) {
-    case BusinessType.RESOURCE_GATHERING:
-      return ResourceType.NONE
-    case BusinessType.PROCESSING:
-      return ResourceType.WOOD // Default for Plank Mill, will override for others
-    case BusinessType.SHOP:
-      return ResourceType.PLANKS // Default for Furniture Shop, will override for others
-    case BusinessType.QUARRY:
-      return ResourceType.NONE
-    case BusinessType.MINE:
-      return ResourceType.NONE
-    case BusinessType.BRICK_KILN:
-      return ResourceType.STONE
-    case BusinessType.SMELTER:
-      return ResourceType.IRON_ORE
-    case BusinessType.TOOL_SHOP:
-      return ResourceType.IRON_INGOT
-    default:
-      return ResourceType.NONE
-  }
-}
-function getOutputResourceForBusinessType(businessType: BusinessType): ResourceType {
-  switch (businessType) {
-    case BusinessType.RESOURCE_GATHERING:
-      return ResourceType.WOOD // Default for Woodcutter, will override for others
-    case BusinessType.PROCESSING:
-      return ResourceType.PLANKS // Default for Plank Mill, will override for others
-    case BusinessType.SHOP:
-      return ResourceType.FURNITURE // Default for Furniture Shop, will override for others
-    case BusinessType.QUARRY:
-      return ResourceType.STONE
-    case BusinessType.MINE:
-      return ResourceType.IRON_ORE
-    case BusinessType.BRICK_KILN:
-      return ResourceType.BRICKS
-    case BusinessType.SMELTER:
-      return ResourceType.IRON_INGOT
-    case BusinessType.TOOL_SHOP:
-      return ResourceType.TOOLS
-    default:
-      return ResourceType.NONE
-  }
-}
 
 // Local Notification type (matches notification-toast.tsx)
 export interface Notification {
@@ -95,7 +32,7 @@ export interface Notification {
   message: string
 }
 
-export default function TycoonGame({ initialGameState }: { initialGameState?: any } = {}) {
+export default function TycoonGame({ initialGameState }: { initialGameState?: GameState } = {}) {
   // Hydration flag to avoid SSR/client mismatch
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
@@ -121,121 +58,24 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     isDragging: boolean;
   } | null>(null);
   const [showAchievements, setShowAchievements] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
-
-  // Dynamic market prices state
-  const [marketPrices, setMarketPrices] = useState(() => {
-    const prices: Record<ResourceType, { value: number; target: number }> = {
-      [ResourceType.NONE]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.WOOD]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.STONE]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.IRON_ORE]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.PLANKS]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.BRICKS]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.IRON_INGOT]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.FURNITURE]: {
-        value: 0,
-        target: 0
-      },
-      [ResourceType.TOOLS]: {
-        value: 0,
-        target: 0
-      }
-    };
-    Object.values(ResourceType).forEach(rt => {
-      prices[rt] = { value: 1, target: 1 };
-    });
-    return prices;
-  });
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const musicControlsRef = useRef<MusicControlsHandle>(null)
 
   useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.loop = true
-      audioRef.current.volume = 0.4
-      const playResult = audioRef.current.play();
+    const audio = audioRef.current;
+    if (audio) {
+      audio.loop = true;
+      audio.volume = 0.4;
+      const playResult = audio.play();
       if (playResult && typeof playResult.catch === 'function') {
         playResult.catch(() => { });
       }
     }
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (audio) {
+        audio.pause();
       }
-    }
-  }, []);
-
-  // Update market prices every 15 seconds, interpolate toward target
-  useEffect(() => {
-    const baseValues: Record<ResourceType, number> = {
-      [ResourceType.WOOD]: 1,
-      [ResourceType.STONE]: 1.5,
-      [ResourceType.IRON_ORE]: 2,
-      [ResourceType.NONE]: 0,
-      [ResourceType.PLANKS]: 0,
-      [ResourceType.BRICKS]: 0,
-      [ResourceType.IRON_INGOT]: 0,
-      [ResourceType.FURNITURE]: 0,
-      [ResourceType.TOOLS]: 0
-    };
-    let interval: NodeJS.Timeout;
-    let timeout: NodeJS.Timeout;
-    function pickNewTargets() {
-      setMarketPrices(prices => {
-        const newPrices = { ...prices };
-        Object.keys(prices).forEach(rt => {
-          const base = baseValues[rt as ResourceType] || 1;
-          newPrices[rt as ResourceType] = {
-            ...newPrices[rt as ResourceType],
-            target: base * (0.5 + Math.random() * 1.5)
-          };
-        });
-        return newPrices;
-      });
-    }
-    pickNewTargets();
-    timeout = setInterval(pickNewTargets, 15000);
-    // Debounce market price interpolation to 400ms for performance
-    interval = setInterval(() => {
-      setMarketPrices(prices => {
-        const newPrices = { ...prices };
-        Object.keys(prices).forEach(rt => {
-          const p = prices[rt as ResourceType];
-          // Interpolate toward target
-          newPrices[rt as ResourceType] = {
-            ...p,
-            value: p.value + (p.target - p.value) * 0.05
-          };
-        });
-        return newPrices;
-      });
-    }, 400);
-    return () => {
-      clearInterval(interval);
-      clearInterval(timeout);
     };
   }, []);
 
@@ -267,35 +107,19 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
   }, [gameState])
 
   // Handle delivery completion
-  const handleDeliveryComplete = (deliveryId: string) => {
+  const handleDeliveryComplete = () => {
     // No-op: delivery completion is now handled in the game tick based on expectedArrival
   }
 
   // Game tick - update resources, workers, bots every 400ms (was 200ms)
   useEffect(() => {
     const gameLoop = setInterval(() => {
-      setGameState((prevState: any) => {
+      setGameState((prevState: GameState) => {
         // Create a deep copy of the state to avoid mutation
         const newState = JSON.parse(JSON.stringify(prevState)) as GameState
 
         // Process worker gathering
         newState.businesses.forEach((business) => {
-<<<<<<< HEAD
-          if (business.type === BusinessType.RESOURCE_GATHERING ||
-            business.type === BusinessType.QUARRY ||
-            business.type === BusinessType.MINE) {
-            // Each worker gathers 1 unit every 3 seconds
-            if (!business.gatherProgress) business.gatherProgress = 0
-            business.gatherProgress += business.workers.length * (1 / 3)
-            const wholeUnits = Math.floor(business.gatherProgress)
-            if (wholeUnits > 0) {
-              // Check if there's space in the incoming buffer
-              const addAmount = Math.min(wholeUnits, business.incomingBuffer.capacity - business.incomingBuffer.current)
-              business.incomingBuffer.current += addAmount
-              business.gatherProgress -= addAmount
-              // Pay worker wages: 0.25 coins per unit gathered
-              newState.coins -= addAmount * 0.25
-=======
           const batchSize = business.batchSize ?? 10;
           if (business.type === BusinessType.RESOURCE_GATHERING) {
             // For gathering, just produce directly to output if space
@@ -305,7 +129,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
                 business.outgoingStorage.current += batchSize
                 business.productionProgress = 0
               }
->>>>>>> main
             }
           } else {
             // For other businesses, require input buffer
@@ -354,7 +177,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
 
               // Find the first target that can accept the full delivery (storage + pending)
               let chosenTarget: Business | null = null;
-              let chosenAmount = Math.min(bot.maxLoad, business.outgoingStorage.current);
+              const chosenAmount = Math.min(bot.maxLoad, business.outgoingStorage.current);
               for (const target of allTargets) {
                 if (target.type === BusinessType.MARKET) {
                   chosenTarget = target;
@@ -397,7 +220,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
                 id: generateUniqueId("delivery"),
                 sourceBusinessId: business.id,
                 targetBusinessId: chosenTarget.id,
-                bot: { ...bot },
+                bot: { ...bot, shippingTypeId: shippingType.type },
                 resourceAmount: chosenAmount,
                 resourceType: business.outputResource,
                 expectedArrival,
@@ -475,40 +298,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     return () => clearInterval(gameLoop)
   }, [])
 
-  // Helper function to find the best delivery target
-  function findBestDeliveryTarget(sourceBusiness: Business, allBusinesses: Business[]): Business | null {
-    // Find all possible targets: businesses that need this resource and the market
-    const potentialTargets = allBusinesses.filter(
-      (business) =>
-        business.id !== sourceBusiness.id &&
-        business.inputResource === sourceBusiness.outputResource &&
-        business.incomingStorage.current < business.incomingStorage.capacity,
-    )
-    const market = allBusinesses.find((business) => business.type === BusinessType.MARKET)
-
-    // Calculate profit/value for each target
-    let bestTarget: Business | null = null
-    let bestValue = -Infinity
-    // Check businesses
-    for (const business of potentialTargets) {
-      // Value is the static resource value (could be improved to use downstream market value)
-      const value = getResourceValue(sourceBusiness.outputResource)
-      if (value > bestValue) {
-        bestValue = value
-        bestTarget = business
-      }
-    }
-    // Check market
-    if (market) {
-      const marketValue = marketPrices[sourceBusiness.outputResource]?.value || getResourceValue(sourceBusiness.outputResource)
-      if (marketValue > bestValue) {
-        bestValue = marketValue
-        bestTarget = market
-      }
-    }
-    return bestTarget
-  }
-
   // Helper function to get resource value
   function getResourceValue(resourceType: ResourceType): number {
     // Base values for raw resources
@@ -552,12 +341,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
   }
 
   // New cost formulas
-  function getBuildingCost(businessType: BusinessType): number {
-<<<<<<< HEAD
-    const data = getBusinessData(businessType)
-    const count = gameState.businesses.filter(b => b.type === businessType).length
-    return Math.floor(data.baseCost * Math.pow(1.3, count))
-=======
+  const getBuildingCost = useCallback((businessType: BusinessType): number => {
     const baseCosts: Record<BusinessType, number> = {
       [BusinessType.RESOURCE_GATHERING]: 100,
       [BusinessType.QUARRY]: 120,
@@ -571,62 +355,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     }
     const count = gameState.businesses.filter((b: { type: BusinessType }) => b.type === businessType).length
     return Math.floor(baseCosts[businessType] * Math.pow(1.3, count))
->>>>>>> main
-  }
+  }, [gameState.businesses])
 
-  function getWorkerCost(business: Business): number {
-    const base = 50
-    const n = business.workers.length
-    return Math.floor(base * Math.pow(1.1, n))
-  }
-
-  function getShippingTypeCost(business: Business): number {
-    const base = 100
-    const n = business.shippingTypes.length
-    return Math.floor(base * Math.pow(1.2, n))
-  }
-
-  function getUpgradeCost(business: Business, upgradeType?: "incomingCapacity" | "processingTime" | "outgoingCapacity"): number {
-    const base = 50
-    // Track upgrades per type on the business object
-    if (!business.upgrades) {
-      business.upgrades = {
-        incomingCapacity: 0,
-        processingTime: 0,
-        outgoingCapacity: 0
-      }
-    }
-    // If no upgradeType is provided, fallback to old logic
-    if (!upgradeType) {
-      return Math.floor(base * Math.pow(2, business.level - 1))
-    }
-    // Cost is 2x for the current upgrade type, 1.5x for each other type not yet upgraded
-    let cost = base
-    cost *= Math.pow(2, business.upgrades[upgradeType])
-    const otherTypes: Array<"incomingCapacity" | "processingTime" | "outgoingCapacity"> = ["incomingCapacity", "processingTime", "outgoingCapacity"].filter(t => t !== upgradeType) as any
-    otherTypes.forEach(type => {
-      if (business.upgrades && business.upgrades[type] === 0) {
-        cost *= 1.5
-      }
-    })
-    return Math.floor(cost)
-  }
-
-<<<<<<< HEAD
-  // Helper functions to determine input/output resources based on business type
-  function getInputResourceForBusinessType(businessType: BusinessType): ResourceType {
-    const data = getBusinessData(businessType)
-    return data.inputResource as ResourceType
-  }
-
-  function getOutputResourceForBusinessType(businessType: BusinessType): ResourceType {
-    const data = getBusinessData(businessType)
-    return data.outputResource as ResourceType
-  }
-
-  // Place a new business on the game world
-  const handlePlaceBusiness = (businessType: BusinessType, position: { x: number; y: number }) => {
-=======
   // Track which achievement notifications have been shown in this session
   const shownAchievementNotifications = useRef<Set<string>>(new Set())
   // Track pending achievement notifications to show after render
@@ -636,22 +366,20 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
   const unlockedAchievements = Object.values(gameState.achievements).filter(Boolean).length;
   const unlockedSongs = Math.max(1, unlockedAchievements + 1); // Always at least 1 song unlocked for UI
 
-  // New: Track pending song index to play after render
-  const [pendingSongIndex, setPendingSongIndex] = useState<number | null>(null);
-
   // Track previous unlockedAchievements count
   const prevUnlockedAchievements = useRef(unlockedAchievements);
 
   useEffect(() => {
     if (unlockedAchievements > prevUnlockedAchievements.current) {
       // Play the song at index = unlockedAchievements (ith achievement → song[i])
-      setPendingSongIndex(unlockedAchievements);
+      // setPendingSongIndex(unlockedAchievements);
     }
     prevUnlockedAchievements.current = unlockedAchievements;
   }, [unlockedAchievements]);
 
   // Helper to unlock achievement
-  function unlockAchievement(key: string) {
+  const unlockAchievement = useCallback((key: string) => {
+    console.log('unlockAchievement called with key:', key)
     if (gameState.achievements[key]) return; // Already unlocked, do nothing
     setGameState((prev: GameState) => ({
       ...prev,
@@ -659,14 +387,13 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     }))
     // Instead of showing notification here, queue it for useEffect
     pendingAchievementNotifications.current.add(key)
-  }
+  }, [gameState.achievements, setGameState])
 
   // Memoize equity calculation
-  const equity = useMemo(() => gameState.businesses.reduce((sum: any, b: { totalInvested: any }) => sum + (b.totalInvested || 0), 0), [gameState.businesses]);
+  const equity = useMemo(() => gameState.businesses.reduce((sum: number, b: Business) => sum + (b.totalInvested || 0), 0), [gameState.businesses]);
 
   // Memoize event handlers
   const handlePlaceBusiness = useCallback((type: BusinessType, position: { x: number; y: number }) => {
->>>>>>> main
     if (isPlacing) return // Prevent multiple placements
     setIsPlacing(true)
 
@@ -727,22 +454,11 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       processingTime = 1;
     }
 
-    const data = getBusinessData(businessType)
     const newBusiness: Business = {
       id: uuidv4(),
       type,
       position,
       level: 1,
-<<<<<<< HEAD
-      incomingBuffer: { current: 0, capacity: data.buffer.incoming.initialCapacity },
-      outgoingBuffer: { current: 0, capacity: data.buffer.outgoing.initialCapacity },
-      workers: data.workers.initial > 0 ? [{ id: generateUniqueId("worker"), gatherRate: data.workers.gatherRate || 1 / 3 }] : [],
-      deliveryBots: [],
-      processingTime: data.processingTime,
-      productionProgress: 0,
-      inputResource: data.inputResource as ResourceType,
-      outputResource: data.outputResource as ResourceType
-=======
       processingTime,
       batchSize: 10, // Always set batchSize
       incomingStorage: { current: 0, capacity: 10 },
@@ -758,7 +474,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       inputResource,
       outputResource,
       totalInvested: businessCost,
->>>>>>> main
     }
 
     console.log('Created new business:', newBusiness)
@@ -767,11 +482,11 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       const newBusinesses = [...prev.businesses, newBusiness]
       const newCoins = prev.coins - businessCost
       // Unlock 'firstBusiness' if this is the first non-market business
-      if (prev.businesses.filter((b: any) => b.type !== BusinessType.MARKET).length === 0) {
+      if (prev.businesses.filter((b: Business) => b.type !== BusinessType.MARKET).length === 0) {
         unlockAchievement('firstBusiness')
       }
       // Unlock 'industrialist' if 10+ businesses
-      if (newBusinesses.filter((b: any) => b.type !== BusinessType.MARKET).length >= 10) {
+      if (newBusinesses.filter((b: Business) => b.type !== BusinessType.MARKET).length >= 10) {
         unlockAchievement('industrialist')
       }
       playSuccessChime()
@@ -784,62 +499,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
 
     setIsPlacing(false)
     setPlacingBusiness(null)
-  }, [isPlacing, gameState.coins, setIsPlacing, setPlacingBusiness])
+  }, [isPlacing, gameState.coins, setIsPlacing, setPlacingBusiness, getBuildingCost, unlockAchievement])
 
-<<<<<<< HEAD
-  // Hire a delivery bot for a business
-  const handleHireDeliveryBot = useCallback((businessId: string) => {
-    const transactionId = Date.now();
-    console.log('Hiring bot attempt:', { businessId, transactionId });
-
-    setGameState((prevState) => {
-      // Check if this business already has a pending hire
-      const business = prevState.businesses.find(b => b.id === businessId);
-      if (!business) return prevState;
-
-      // Check if we can afford it
-      const botCost = getBotCost(business);
-      if (prevState.coins < botCost) return prevState;
-
-      // Create new bot
-      const newBot: DeliveryBot = {
-        id: generateUniqueId("bot"),
-        capacity: 25,
-        speed: 200,
-        isDelivering: false,
-        targetBusinessId: null,
-        carryingAmount: 0,
-      };
-
-      // Create new state with the bot added
-      const newState = {
-        ...prevState,
-        coins: prevState.coins - botCost,
-        businesses: prevState.businesses.map(b => {
-          if (b.id === businessId) {
-            return {
-              ...b,
-              deliveryBots: [...b.deliveryBots, newBot]
-            };
-          }
-          return b;
-        })
-      };
-
-      console.log(`Business ${businessId} now has ${newState.businesses.find(b => b.id === businessId)?.deliveryBots.length} delivery drivers.`);
-      return newState;
-    });
-  }, []);
-
-  // Upgrade a business
-  const handleUpgradeBusiness = (
-    businessId: string,
-    upgradeType: "incomingCapacity" | "processingTime" | "outgoingCapacity",
-  ) => {
-    setGameState((prevState) => {
-      const newState = { ...prevState }
-      const businessIndex = newState.businesses.findIndex((b) => b.id === businessId)
-=======
   const handleSelectBusiness = useCallback((business: Business) => {
     if (business.type === BusinessType.MARKET) {
       setSelectedBusiness(null)
@@ -851,10 +512,34 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
   }, [])
 
   const handleUpgradeBusiness = useCallback((businessId: string, upgradeType: "incomingCapacity" | "processingTime" | "outgoingCapacity") => {
-    setGameState((prevState: any) => {
+    function getUpgradeCost(business: Business, upgradeType?: "incomingCapacity" | "processingTime" | "outgoingCapacity"): number {
+      const base = 50
+      // Track upgrades per type on the business object
+      if (!business.upgrades) {
+        business.upgrades = {
+          incomingCapacity: 0,
+          processingTime: 0,
+          outgoingCapacity: 0
+        }
+      }
+      // If no upgradeType is provided, fallback to old logic
+      if (!upgradeType) {
+        return Math.floor(base * Math.pow(2, business.level - 1))
+      }
+      // Cost is 2x for the current upgrade type, 1.5x for each other type not yet upgraded
+      let cost = base
+      cost *= Math.pow(2, business.upgrades[upgradeType])
+      const otherTypes: Array<"incomingCapacity" | "processingTime" | "outgoingCapacity"> = ["incomingCapacity", "processingTime", "outgoingCapacity"].filter(t => t !== upgradeType) as Array<"incomingCapacity" | "processingTime" | "outgoingCapacity">;
+      otherTypes.forEach(type => {
+        if (business.upgrades && business.upgrades[type] === 0) {
+          cost *= 1.5
+        }
+      })
+      return Math.floor(cost)
+    }
+    setGameState((prevState: GameState) => {
       const newState = { ...prevState }
       const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId)
->>>>>>> main
 
       if (businessIndex === -1) return prevState
 
@@ -899,10 +584,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       console.log("Upgrade complete")
       return newState
     })
-  }, [setGameState])
+  }, [setGameState, unlockAchievement])
 
   const handleHireShippingType = useCallback((businessId: string, shippingTypeId: string) => {
-    setGameState((prevState: any) => {
+    setGameState((prevState: GameState) => {
       const newState = { ...prevState }
       const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId)
 
@@ -954,7 +639,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       // Update preview position
       setRelocatingBusiness(reloc => reloc && reloc.id === businessId ? { ...reloc, previewPosition: newPosition, isDragging: true } : reloc);
     }
-  }, [])
+  }, [relocatingBusiness, gameState.businesses, setRelocatingBusiness])
 
   function handleRestart() {
     setGameState(initializeGameState())
@@ -993,10 +678,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       setRelocatingBusiness(null);
       return;
     }
-    setGameState((prev: { coins: number; businesses: any[] }) => ({
+    setGameState((prev: GameState) => ({
       ...prev,
       coins: prev.coins - cost,
-      businesses: prev.businesses.map((business: { id: string }) =>
+      businesses: prev.businesses.map((business: Business) =>
         business.id === relocatingBusiness.id
           ? { ...business, position: relocatingBusiness.previewPosition }
           : business
@@ -1058,7 +743,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     if (gameState.coins >= 10000) {
       unlockAchievement('tycoon')
     }
-  }, [gameState.coins])
+  }, [gameState.coins, unlockAchievement])
 
   // Track deliveries and market profit for achievements
   const [deliveryCount, setDeliveryCount] = useState(0)
@@ -1074,101 +759,20 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     if (marketProfit >= 5000) {
       unlockAchievement('marketMogul')
     }
-  }, [deliveryCount, marketProfit])
+  }, [deliveryCount, marketProfit, unlockAchievement])
 
-  // Track game start time for fastTycoon achievement
-  const gameStartTimeRef = useRef<number>(Date.now());
-
-  // Hire a worker for a business (add this function if not present)
-  const handleHireWorker = (businessId: string) => {
-    setGameState((prevState: any) => {
-      const newState = { ...prevState };
-      const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId);
-      if (businessIndex === -1) return prevState;
-      const cost = getWorkerCost(newState.businesses[businessIndex]);
-      if (newState.coins < cost) {
-        playErrorBeep();
-        return prevState;
-      }
-      // Add a worker
-      newState.businesses[businessIndex].workers.push({ id: uuidv4(), gatherRate: 1 });
-      newState.coins -= cost;
-      return newState;
-    });
-  };
-
-  // Add logic to unlock 'shippingMaster' when player owns 5+ shipping bots
+  // Add after other useEffects, before the return statement
   useEffect(() => {
-    const totalBots = gameState.businesses.reduce((sum: number, b: any) => sum + (b.shippingTypes?.reduce((s: number, st: any) => s + (st.bots?.length || 0), 0) || 0), 0);
-    if (totalBots >= 5) {
-      unlockAchievement('shippingMaster');
-    }
-  }, [gameState.businesses]);
-
-  // Add logic to unlock 'maxedOut' when any business reaches level 10
-  useEffect(() => {
-    const hasMaxed = gameState.businesses.some((b: any) => b.level >= 10);
-    if (hasMaxed) {
-      unlockAchievement('maxedOut');
-    }
-  }, [gameState.businesses]);
-
-  // Watch for coins >= 10,000 to unlock 'tycoon' and 'fastTycoon'
-  useEffect(() => {
-    if (gameState.coins >= 10000) {
-      unlockAchievement('tycoon');
-      // Check if under 10 minutes since game start
-      const elapsed = Date.now() - gameStartTimeRef.current;
-      if (elapsed < 10 * 60 * 1000) {
-        unlockAchievement('fastTycoon');
+    function handleAchievementEvent(e: CustomEvent) {
+      if (e.detail && e.detail.key) {
+        unlockAchievement(e.detail.key);
       }
     }
-  }, [gameState.coins]);
-
-  // No-op for onSellShippingType (not used in this context)
-  const handleSellShippingType = useCallback((businessId: string, shippingTypeId: string) => {
-    setGameState((prevState: any) => {
-      const newState = { ...prevState };
-      const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId);
-      if (businessIndex === -1) return prevState;
-      const business = newState.businesses[businessIndex];
-      const shippingType = business.shippingTypes.find((st: { type: string }) => st.type === shippingTypeId);
-      if (!shippingType || !Array.isArray(shippingType.bots) || shippingType.bots.length === 0) return prevState;
-      // Only sell if at least one bot is not delivering (optional: could allow selling any)
-      const botIndex = shippingType.bots.findIndex((bot: any) => !bot.isDelivering);
-      // If all are delivering, just remove the last one
-      const removeIndex = botIndex !== -1 ? botIndex : shippingType.bots.length - 1;
-      // Calculate refund BEFORE removing
-      const cost = calculateShippingCost(shippingTypeId, shippingType.bots.length);
-      shippingType.bots.splice(removeIndex, 1);
-      newState.coins += Math.floor(cost / 2);
-      // Optionally, remove the shippingType if no bots left
-      if (shippingType.bots.length === 0) {
-        business.shippingTypes = business.shippingTypes.filter((st: { type: string }) => st.type !== shippingTypeId);
-      }
-      return newState;
-    });
-  }, [setGameState]);
-
-  // Listen for external achievement events (for testing and extensibility)
-  useEffect(() => {
-    function handleAchievementEvent(e: Event) {
-      const customEvent = e as CustomEvent<{ key: string }>
-      if (customEvent.detail && customEvent.detail.key) {
-        showAchievementNotification(customEvent.detail.key)
-      }
-    }
-    document.addEventListener('achievement', handleAchievementEvent)
-    return () => document.removeEventListener('achievement', handleAchievementEvent)
-  }, [])
-
-  // After render, if pendingSongIndex is set, play the song and reset
-  useEffect(() => {
-    if (pendingSongIndex !== null && musicControlsRef.current) {
-      musicControlsRef.current.playSongAtIndex(pendingSongIndex);
-      setPendingSongIndex(null);
-    }
-  }, [pendingSongIndex]);
+    document.addEventListener('achievement', handleAchievementEvent as EventListener);
+    return () => {
+      document.removeEventListener('achievement', handleAchievementEvent as EventListener);
+    };
+  }, [unlockAchievement]);
 
   // Only render after hydration to avoid SSR/client mismatch
   if (!hydrated) return null;
@@ -1197,8 +801,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       {showAchievements && (
         <AchievementsPanel achievements={gameState.achievements} onClose={() => setShowAchievements(false)} />
       )}
-      {/* Notification Toasts */}
-      {/* <NotificationToast notifications={notifications} onDismiss={dismissNotification} /> */}
 
       {/* Hidden audio element for background music */}
       <audio ref={audioRef} src="/music/goofy-background.mp3" style={{ display: 'none' }} />
@@ -1221,7 +823,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
         </div>
       )}
 
-      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} gameState={gameState} />}
+      {showTutorial && <TutorialOverlay onClose={() => setShowTutorial(false)} />}
 
       <GameHUD
         coins={gameState.coins}
@@ -1240,8 +842,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
           [BusinessType.MARKET]: 0
         }}
         businesses={gameState.businesses}
+      // TODO: Use marketPrices for dynamic pricing display in the future
       />
-      {/* The market prices panel is intentionally hidden. Remove or comment out its import and usage in GameHUD if it is a separate component. */}
 
       <GameWorld
         businesses={gameState.businesses}
@@ -1250,8 +852,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
         onPlaceBusiness={gameOver || relocatingBusiness ? () => { } : handlePlaceBusiness}
         onSelectBusiness={relocatingBusiness ? () => { } : handleSelectBusiness}
         onDeliveryComplete={handleDeliveryComplete}
-        marketPrices={marketPrices}
         onMoveBusiness={relocatingBusiness ? handleMoveBusiness : handleMoveBusiness}
+        selectedBusinessId={selectedBusinessId}
       />
 
       {selectedBusiness && (
@@ -1263,7 +865,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
             setSelectedBusinessId(null)
           }}
           onHireShippingType={handleHireShippingType}
-          onSellShippingType={handleSellShippingType}
           onUpgrade={handleUpgradeBusiness}
           defaultTab="shipping"
         />
@@ -1325,7 +926,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       )}
 
       {/* Music Controls in bottom right */}
-      <MusicControls ref={musicControlsRef} audioElement={audioRef.current} unlockedSongs={unlockedSongs} />
+      <MusicControls ref={musicControlsRef} unlockedSongs={unlockedSongs} />
     </div>
   )
 }

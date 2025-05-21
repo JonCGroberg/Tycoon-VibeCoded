@@ -3,20 +3,19 @@
 import React from "react"
 
 import { useState, useRef } from "react"
-import { type Business, BusinessType } from "@/lib/game-types"
-import { getBusinessData } from "@/lib/business-data"
+import { type Business, BusinessType, type ActiveDelivery } from "@/lib/game-types"
 import BusinessEntity from "./business-entity"
 import DeliveryBotEntity from "./delivery-bot"
 
 interface GameWorldProps {
   businesses: Business[]
   placingBusiness: BusinessType | null
-  activeDeliveries: any[]
+  activeDeliveries: ActiveDelivery[]
   onPlaceBusiness: (type: BusinessType, position: { x: number; y: number }) => void
   onSelectBusiness: (business: Business) => void
   onDeliveryComplete: (deliveryId: string) => void
-  marketPrices: Record<string, { value: number; target: number }>
   onMoveBusiness?: (businessId: string, newPosition: { x: number; y: number }) => void
+  selectedBusinessId?: string | null
 }
 
 const GameWorld = function GameWorld({
@@ -26,8 +25,8 @@ const GameWorld = function GameWorld({
   onPlaceBusiness,
   onSelectBusiness,
   onDeliveryComplete,
-  marketPrices,
   onMoveBusiness,
+  selectedBusinessId,
 }: GameWorldProps) {
   const worldRef = useRef<HTMLDivElement>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -47,11 +46,12 @@ const GameWorld = function GameWorld({
   // Handle click to place business
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent event bubbling
-    if (placingBusiness && worldRef.current) {
-      const rect = worldRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      onPlaceBusiness(placingBusiness, { x, y })
+    if (placingBusiness) {
+      console.log('Click detected:', {
+        placingBusiness,
+        timestamp: Date.now()
+      })
+      onPlaceBusiness(placingBusiness, mousePosition)
     }
   }
 
@@ -106,6 +106,7 @@ const GameWorld = function GameWorld({
           business={business}
           onClick={() => onSelectBusiness(business)}
           onMove={onMoveBusiness}
+          selected={selectedBusinessId === business.id}
         />
       ))}
 
@@ -115,17 +116,6 @@ const GameWorld = function GameWorld({
         const targetBusiness = businesses.find((b) => b.id === delivery.targetBusinessId)
         if (!sourceBusiness || !targetBusiness) return null
 
-<<<<<<< HEAD
-        // Only render the bot if it's actively delivering
-        if (!delivery.bot.isDelivering) return null
-=======
-        // Find the shipping type ID for this bot
-        const shippingType = sourceBusiness.shippingTypes.find(st =>
-          st.bots.some(bot => bot.id === delivery.bot.id)
-        );
-        const shippingTypeId = shippingType?.type || 'walker'; // Fallback to walker if not found
->>>>>>> main
-
         return (
           <DeliveryBotEntity
             key={delivery.id}
@@ -134,13 +124,9 @@ const GameWorld = function GameWorld({
             targetPosition={targetBusiness.position}
             resourceType={delivery.resourceType}
             onDeliveryComplete={() => onDeliveryComplete(delivery.id)}
-<<<<<<< HEAD
-            expectedArrival={delivery.expectedArrival}
-=======
             deliveryStartTime={delivery.createdAt}
             deliveryExpectedArrival={delivery.expectedArrival}
-            shippingTypeId={shippingTypeId}
->>>>>>> main
+            shippingTypeId={delivery.bot.shippingTypeId}
           />
         )
       })}
@@ -156,15 +142,11 @@ const GameWorld = function GameWorld({
           }}
         >
           <div className="text-sm text-center text-white font-bold mt-2">
-<<<<<<< HEAD
-            {getBusinessData(placingBusiness).name}
-=======
             {placingBusiness === BusinessType.RESOURCE_GATHERING
               ? "Wood Camp"
               : placingBusiness === BusinessType.PROCESSING
                 ? "Plank Mill"
                 : "Furniture Shop"}
->>>>>>> main
           </div>
         </div>
       )}
