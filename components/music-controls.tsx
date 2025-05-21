@@ -28,6 +28,7 @@ export interface MusicControlsHandle {
 const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(function MusicControls({ audioElement, unlockedSongs }, ref) {
     // Hydration flag to avoid SSR/client mismatch
     const [hydrated, setHydrated] = useState(false);
+    const didInit = useRef(false);
     useEffect(() => {
         setHydrated(true);
     }, []);
@@ -42,6 +43,9 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
     const [showVolume, setShowVolume] = useState(false)
     const volumeBtnRef = useRef<HTMLButtonElement>(null)
     const prevUnlockedSongsRef = useRef(unlockedSongs);
+    const fadeTimeout = useRef<NodeJS.Timeout | null>(null);
+    const fadeStep = 0.04; // seconds
+    const fadeDuration = 0.4; // seconds
 
     // Persist currentIndex and isPlaying in localStorage to survive re-renders
     function getInitialIndex() {
@@ -53,34 +57,89 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
         return stored !== null ? stored === 'true' : false;
     }
 
+    // On first hydration, set from localStorage, else do nothing
     useEffect(() => {
-        setIsPlaying(getInitialPlaying());
-        setCurrentIndex(getInitialIndex());
+        if (hydrated && !didInit.current) {
+            const idx = getInitialIndex();
+            const playing = getInitialPlaying();
+            setCurrentIndex(idx);
+            setIsPlaying(playing);
+            didInit.current = true;
+        }
     }, [hydrated]);
+
+    // Auto-play first song by default if localStorage is empty
+    useEffect(() => {
+        if (hydrated && didInit.current && unlockedSongs > 0 && currentIndex === -1) {
+            setCurrentIndex(0);
+            setIsPlaying(true);
+        }
+    }, [hydrated, unlockedSongs, currentIndex]);
+
+    // Fade transition helper
+    function fadeToSong(newIndex: number) {
+        if (!audioElement) {
+            setCurrentIndex(newIndex);
+            setIsPlaying(true);
+            return;
+        }
+        let startVol = audioElement.volume;
+        let step = fadeStep;
+        let steps = Math.ceil(fadeDuration / step);
+        let i = 0;
+        // Fade out
+        function fadeOut() {
+            if (!audioElement) return;
+            i++;
+            audioElement.volume = Math.max(0, startVol * (1 - i / steps));
+            if (i < steps) {
+                fadeTimeout.current = setTimeout(fadeOut, step * 1000);
+            } else {
+                if (!audioElement) return;
+                audioElement.volume = 0;
+                setCurrentIndex(newIndex);
+                setIsPlaying(true);
+                setTimeout(fadeIn, 50); // let React update src
+            }
+        }
+        // Fade in
+        function fadeIn() {
+            if (!audioElement) return;
+            let j = 0;
+            function stepIn() {
+                if (!audioElement) return;
+                j++;
+                audioElement.volume = Math.min(volume, volume * (j / steps));
+                if (j < steps) {
+                    fadeTimeout.current = setTimeout(stepIn, step * 1000);
+                } else {
+                    if (!audioElement) return;
+                    audioElement.volume = volume;
+                }
+            }
+            stepIn();
+        }
+        fadeOut();
+    }
 
     useImperativeHandle(ref, () => ({
         skipToNextSong: () => {
             if (availableSongs.length > 0) {
-                setCurrentIndex((prev) => {
-                    if (prev === -1) return 0;
-                    return (prev + 1) % availableSongs.length;
-                })
-                setIsPlaying(true)
+                let nextIndex = (currentIndex === -1) ? 0 : (currentIndex + 1) % availableSongs.length;
+                fadeToSong(nextIndex);
             }
         },
         playSongAtIndex: (index: number) => {
             if (availableSongs.length > 0) {
-                setCurrentIndex(Math.max(0, Math.min(index, availableSongs.length - 1)))
-                setIsPlaying(true)
+                fadeToSong(Math.max(0, Math.min(index, availableSongs.length - 1)));
             }
         }
-    }), [availableSongs.length])
+    }), [availableSongs.length, currentIndex, audioElement, volume])
 
     useEffect(() => {
         // Only update currentIndex if unlockedSongs increased
         if (unlockedSongs > prevUnlockedSongsRef.current) {
-            setCurrentIndex(unlockedSongs - 1);
-            setIsPlaying(true);
+            fadeToSong(unlockedSongs - 1);
         } else if (unlockedSongs === 0 && currentIndex !== -1) {
             setCurrentIndex(-1);
             setIsPlaying(false);
