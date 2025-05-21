@@ -593,6 +593,9 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
   const unlockedAchievements = Object.values(gameState.achievements).filter(Boolean).length;
   const unlockedSongs = Math.max(1, unlockedAchievements); // 1 at start, increases as achievements are unlocked
 
+  // New: Track pending song index to play after render
+  const [pendingSongIndex, setPendingSongIndex] = useState<number | null>(null);
+
   // Helper to unlock achievement
   function unlockAchievement(key: string) {
     if (gameState.achievements[key]) return; // Already unlocked, do nothing
@@ -603,8 +606,8 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     // Instead of showing notification here, queue it for useEffect
     pendingAchievementNotifications.current.add(key)
     // Play the newly unlocked song if not all songs are unlocked
-    if (musicControlsRef.current && unlockedSongs > 0) {
-      musicControlsRef.current.playSongAtIndex(unlockedSongs - 1); // Play the newly unlocked song (last in unlocked)
+    if (unlockedSongs > 0) {
+      setPendingSongIndex(unlockedSongs - 1); // Defer play to useEffect
     }
   }
 
@@ -1040,6 +1043,14 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     document.addEventListener('achievement', handleAchievementEvent)
     return () => document.removeEventListener('achievement', handleAchievementEvent)
   }, [])
+
+  // After render, if pendingSongIndex is set, play the song and reset
+  useEffect(() => {
+    if (pendingSongIndex !== null && musicControlsRef.current) {
+      musicControlsRef.current.playSongAtIndex(pendingSongIndex);
+      setPendingSongIndex(null);
+    }
+  }, [pendingSongIndex]);
 
   // Only render after hydration to avoid SSR/client mismatch
   if (!hydrated) return null;
