@@ -9,7 +9,20 @@ export interface Notification {
 
 // Play a chime sound (pleasant arpeggio, lower and softer)
 function playAchievementChime() {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (typeof window === 'undefined' || process.env.NODE_ENV === 'test') {
+        // No-op in SSR or test environments
+        return;
+    }
+    const AudioContextCtor = typeof window.AudioContext === 'function'
+        ? window.AudioContext
+        : typeof window !== 'undefined' && typeof ((window as unknown) as { webkitAudioContext?: typeof window.AudioContext }).webkitAudioContext === 'function'
+            ? ((window as unknown) as { webkitAudioContext: typeof window.AudioContext }).webkitAudioContext
+            : null;
+    if (typeof AudioContextCtor !== 'function') {
+        // No-op if no valid AudioContext constructor
+        return;
+    }
+    const ctx = new AudioContextCtor();
     const notes = [698.46, 880, 1046.5, 1174.66]; // F5, A5, C6, D6 (Fmaj7, higher and brighter)
     const now = ctx.currentTime;
     notes.forEach((freq, i) => {
@@ -39,7 +52,7 @@ const NotificationToast = function NotificationToast({ notifications, onDismiss 
     // Play chime on new achievement notification
     const prevAchievementCount = React.useRef(0)
     useEffect(() => {
-        const achievementCount = notifications.filter(n => n.message.startsWith('Achievement Unlocked:')).length;
+        const achievementCount = notifications.filter(n => typeof n.message === 'string' && n.message.startsWith('Achievement Unlocked:')).length;
         if (achievementCount > prevAchievementCount.current) {
             playAchievementChime();
         }
@@ -47,14 +60,23 @@ const NotificationToast = function NotificationToast({ notifications, onDismiss 
     }, [notifications])
 
     const isBrowser = typeof window !== 'undefined'
-    const showConfetti = notifications.some(n => n.message.startsWith('Achievement Unlocked:'))
+    const showConfetti = notifications.some(n => typeof n.message === 'string' && n.message.startsWith('Achievement Unlocked:'))
     return (
         <div className="fixed top-4 right-4 z-[100] flex flex-col gap-2" data-testid="notification-toast">
             {isBrowser && showConfetti && <Confetti width={800} height={400} numberOfPieces={500} recycle={false} style={{ pointerEvents: 'none', position: 'absolute', top: 0, right: 0, zIndex: 200 }} />}
-            {notifications.map(n => {
+            {notifications.map((n) => {
+                // Defensive: skip if message is not a string
+                if (typeof n.message !== 'string') {
+                    return (
+                        <div key={n.id} data-testid="toast" className="notification-toast">
+                            <div className="text-sm font-semibold">Notification</div>
+                            <div className="text-sm opacity-90">No message</div>
+                        </div>
+                    )
+                }
                 // If achievement, parse key and show funName/icon
                 let funName = null, IconComponent = null
-                if (n.message.startsWith('Achievement Unlocked:')) {
+                if (typeof n.message === 'string' && n.message.startsWith('Achievement Unlocked:')) {
                     const name = n.message.replace('Achievement Unlocked: ', '').trim()
                     const achievement = ACHIEVEMENTS.find(a => a.name === name)
                     if (achievement) {
@@ -92,4 +114,10 @@ const NotificationToast = function NotificationToast({ notifications, onDismiss 
     )
 }
 
-export default React.memo(NotificationToast)
+NotificationToast.displayName = 'NotificationToast'
+
+const MemoizedNotificationToast = React.memo(NotificationToast)
+MemoizedNotificationToast.displayName = 'NotificationToast'
+export default MemoizedNotificationToast
+
+export { playAchievementChime }

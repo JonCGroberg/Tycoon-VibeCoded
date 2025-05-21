@@ -1,12 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react"
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { Volume2, VolumeX, SkipBack, SkipForward, Play, Pause } from "lucide-react"
 
 interface MusicControlsProps {
-    audioElement: HTMLAudioElement | null
     unlockedSongs: number
 }
 
@@ -25,7 +24,7 @@ export interface MusicControlsHandle {
     playSongAtIndex: (index: number) => void
 }
 
-const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(function MusicControls({ audioElement, unlockedSongs }, ref) {
+const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(function MusicControls({ unlockedSongs }, ref) {
     // Hydration flag to avoid SSR/client mismatch
     const [hydrated, setHydrated] = useState(false);
     const didInit = useRef(false);
@@ -46,6 +45,9 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
     const fadeTimeout = useRef<NodeJS.Timeout | null>(null);
     const fadeStep = 0.04; // seconds
     const fadeDuration = 0.4; // seconds
+
+    // Use a local ref for the audio element
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Persist currentIndex and isPlaying in localStorage to survive re-renders
     function getInitialIndex() {
@@ -72,31 +74,32 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
     useEffect(() => {
         if (hydrated && didInit.current && unlockedSongs > 0 && currentIndex === -1) {
             setCurrentIndex(0);
-            setIsPlaying(true);
         }
     }, [hydrated, unlockedSongs, currentIndex]);
 
     // Fade transition helper
-    function fadeToSong(newIndex: number) {
-        if (!audioElement) {
+    const fadeToSong = useCallback((newIndex: number) => {
+        if (!audioRef.current) {
             setCurrentIndex(newIndex);
             setIsPlaying(true);
             return;
         }
-        let startVol = audioElement.volume;
-        let step = fadeStep;
-        let steps = Math.ceil(fadeDuration / step);
+        const startVol = audioRef.current.volume;
+        const step = fadeStep;
+        const steps = Math.ceil(fadeDuration / step);
         let i = 0;
+        // Capture the latest volume value
+        const targetVolume = volume;
         // Fade out
         function fadeOut() {
-            if (!audioElement) return;
+            if (!audioRef.current) return;
             i++;
-            audioElement.volume = Math.max(0, startVol * (1 - i / steps));
+            audioRef.current.volume = Math.max(0, startVol * (1 - i / steps));
             if (i < steps) {
                 fadeTimeout.current = setTimeout(fadeOut, step * 1000);
             } else {
-                if (!audioElement) return;
-                audioElement.volume = 0;
+                if (!audioRef.current) return;
+                audioRef.current.volume = 0;
                 setCurrentIndex(newIndex);
                 setIsPlaying(true);
                 setTimeout(fadeIn, 50); // let React update src
@@ -104,28 +107,35 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
         }
         // Fade in
         function fadeIn() {
-            if (!audioElement) return;
+            if (!audioRef.current) return;
             let j = 0;
             function stepIn() {
-                if (!audioElement) return;
+                if (!audioRef.current) return;
                 j++;
-                audioElement.volume = Math.min(volume, volume * (j / steps));
+                audioRef.current.volume = Math.min(targetVolume, targetVolume * (j / steps));
                 if (j < steps) {
                     fadeTimeout.current = setTimeout(stepIn, step * 1000);
                 } else {
-                    if (!audioElement) return;
-                    audioElement.volume = volume;
+                    if (!audioRef.current) return;
+                    audioRef.current.volume = targetVolume;
                 }
             }
             stepIn();
         }
         fadeOut();
-    }
+    }, [volume, fadeStep, fadeDuration]);
+
+    // Cleanup fadeTimeout on unmount
+    useEffect(() => {
+        return () => {
+            if (fadeTimeout.current) clearTimeout(fadeTimeout.current);
+        };
+    }, []);
 
     useImperativeHandle(ref, () => ({
         skipToNextSong: () => {
             if (availableSongs.length > 0) {
-                let nextIndex = (currentIndex === -1) ? 0 : (currentIndex + 1) % availableSongs.length;
+                const nextIndex = (currentIndex === -1) ? 0 : (currentIndex + 1) % availableSongs.length;
                 fadeToSong(nextIndex);
             }
         },
@@ -134,7 +144,7 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
                 fadeToSong(Math.max(0, Math.min(index, availableSongs.length - 1)));
             }
         }
-    }), [availableSongs.length, currentIndex, audioElement, volume])
+    }), [availableSongs.length, currentIndex, fadeToSong]);
 
     useEffect(() => {
         // Only update currentIndex if unlockedSongs increased
@@ -147,35 +157,31 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
             setCurrentIndex(unlockedSongs - 1);
         }
         prevUnlockedSongsRef.current = unlockedSongs;
-    }, [unlockedSongs]);
+    }, [unlockedSongs, fadeToSong, currentIndex]);
 
     useEffect(() => {
-        if (audioElement) {
-            audioElement.volume = volume
-            audioElement.muted = isMuted
+        if (audioRef.current) {
+            audioRef.current.volume = volume
+            audioRef.current.muted = isMuted
             if (selectedSong) {
-                if (audioElement.src !== window.location.origin + selectedSong) {
-                    audioElement.src = selectedSong
-                    if (isPlaying) audioElement.play().catch(() => { })
+                if (audioRef.current.src !== window.location.origin + selectedSong) {
+                    audioRef.current.src = selectedSong
+                    if (isPlaying) audioRef.current.play().catch(() => { })
                 }
                 if (isPlaying) {
-                    audioElement.play().catch(() => { })
+                    audioRef.current.play().catch(() => { })
                 } else {
-                    audioElement.pause()
+                    audioRef.current.pause()
                 }
             } else {
-                audioElement.pause()
+                audioRef.current.pause()
             }
         }
-    }, [volume, isMuted, audioElement, selectedSong, isPlaying])
+    }, [volume, isMuted, selectedSong, isPlaying, currentIndex, fadeToSong]);
 
     const handleVolumeChange = (value: number[]) => {
         setVolume(value[0])
         setIsMuted(value[0] === 0)
-    }
-
-    const toggleMute = () => {
-        setIsMuted(!isMuted)
     }
 
     const handlePrev = () => {
@@ -202,6 +208,17 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
     const handleCloseVolume = (e: React.FocusEvent<HTMLDivElement>) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) {
             setShowVolume(false)
+        }
+    }
+
+    // Add a handler for when the song ends
+    function handleSongEnd() {
+        if (availableSongs.length > 1) {
+            // Logic for skipping to next song
+            const nextIndex = (currentIndex === -1) ? 0 : (currentIndex + 1) % availableSongs.length;
+            fadeToSong(nextIndex);
+        } else {
+            setIsPlaying(false); // Stop if only one song
         }
     }
 
@@ -244,6 +261,12 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
                     </div>
                 )}
             </div>
+            <audio
+                ref={audioRef}
+                src={selectedSong}
+                autoPlay={isPlaying}
+                onEnded={handleSongEnd}
+            />
         </div>
     )
 })

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { BusinessType } from "@/lib/game-types"
-import { TreesIcon as TreeIcon, Columns4, StoreIcon, CoinsIcon, GemIcon, BoxIcon, PackageIcon, WrenchIcon, Building2Icon, Building, BuildingIcon, HelpCircleIcon } from "lucide-react"
+import { TreesIcon as TreeIcon, Columns4, StoreIcon, CoinsIcon, BoxIcon, PackageIcon, WrenchIcon } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 
 interface GameHUDProps {

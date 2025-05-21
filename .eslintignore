@@ -1,0 +1,10 @@
+components/ui/**
+components/__tests__/**
+**/*.test.tsx
+**/*.test.ts
+**/*.test.js
+**/*.test.jsx
+next.config.mjs
+jest.config.js
+tailwind.config.ts
+postcss.config.mjs

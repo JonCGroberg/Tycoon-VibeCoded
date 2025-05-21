@@ -30,7 +30,7 @@ export function Toaster() {
       const timeout = setTimeout(() => setShowConfetti(false), 2200)
       return () => clearTimeout(timeout)
     }
-  }, [toasts.length])
+  }, [toasts.length, toasts])
 
   return (
     <ToastProvider>

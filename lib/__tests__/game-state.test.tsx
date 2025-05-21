@@ -16,7 +16,7 @@ describe('GameStateProvider', () => {
         function BadChild() {
             try {
                 useGameState()
-            } catch (e) {
+            } catch {
                 return <div data-testid="error">error</div>
             }
             return null

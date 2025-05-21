@@ -337,14 +337,71 @@ describe('BusinessEntity advanced', () => {
     })
 
     it('getResourceIcon returns null for unknown resource type', () => {
-        // @ts-ignore
+        // @ts-ignore - This ignore is required because the test intentionally triggers a type error for coverage
         const icon = BusinessEntity.prototype?.getResourceIcon?.('UNKNOWN_RESOURCE')
         expect(icon).toBeUndefined() // getResourceIcon is not exposed, so this is a placeholder
     })
 
     it('getResourceColor returns default for unknown resource type', () => {
-        // @ts-ignore
+        // @ts-ignore - This ignore is required because the test intentionally triggers a type error for coverage
         const color = BusinessEntity.prototype?.getResourceColor?.('UNKNOWN_RESOURCE')
         expect(color).toBeUndefined() // getResourceColor is not exposed, so this is a placeholder
+    })
+})
+
+describe('BusinessEntity icon/color/name/resource branches', () => {
+    const baseBusiness = {
+        id: 'b1',
+        type: BusinessType.RESOURCE_GATHERING,
+        position: { x: 0, y: 0 },
+        level: 1,
+        processingTime: 1,
+        batchSize: 10,
+        incomingStorage: { current: 0, capacity: 10 },
+        outgoingStorage: { current: 0, capacity: 10 },
+        productionProgress: 0,
+        workers: [],
+        shippingTypes: [],
+        pendingDeliveries: [],
+        recentProfit: 0,
+        profitDisplayTime: 0,
+        inputResource: ResourceType.WOOD,
+        outputResource: ResourceType.WOOD,
+        totalInvested: 0,
+    }
+    it('renders RESOURCE_GATHERING (WOOD)', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.RESOURCE_GATHERING, outputResource: ResourceType.WOOD }} onClick={() => { }} />)
+    })
+    it('renders RESOURCE_GATHERING (STONE)', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.RESOURCE_GATHERING, outputResource: ResourceType.STONE }} onClick={() => { }} />)
+    })
+    it('renders PROCESSING (PLANKS)', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.PROCESSING, outputResource: ResourceType.PLANKS }} onClick={() => { }} />)
+    })
+    it('renders PROCESSING (BRICKS)', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.PROCESSING, outputResource: ResourceType.BRICKS }} onClick={() => { }} />)
+    })
+    it('renders PROCESSING (IRON_INGOT)', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.PROCESSING, outputResource: ResourceType.IRON_INGOT }} onClick={() => { }} />)
+    })
+    it('renders SHOP (FURNITURE)', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.SHOP, outputResource: ResourceType.FURNITURE }} onClick={() => { }} />)
+    })
+    it('renders SHOP (TOOLS)', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.SHOP, outputResource: ResourceType.TOOLS }} onClick={() => { }} />)
+    })
+    it('renders MARKET', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: BusinessType.MARKET }} onClick={() => { }} />)
+    })
+    it('renders unknown business type', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, type: 'UNKNOWN' as any }} onClick={() => { }} />)
+    })
+    it('renders unknown resource type', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, inputResource: 'UNKNOWN' as any, outputResource: 'UNKNOWN' as any }} onClick={() => { }} />)
+    })
+    it('buffer status color and height edge cases', () => {
+        render(<BusinessEntity business={{ ...baseBusiness, incomingStorage: { current: 9, capacity: 10 }, outgoingStorage: { current: 0, capacity: 10 } }} onClick={() => { }} />)
+        render(<BusinessEntity business={{ ...baseBusiness, incomingStorage: { current: 7, capacity: 10 }, outgoingStorage: { current: 2, capacity: 10 } }} onClick={() => { }} />)
+        render(<BusinessEntity business={{ ...baseBusiness, incomingStorage: { current: 1, capacity: 10 }, outgoingStorage: { current: 10, capacity: 10 } }} onClick={() => { }} />)
     })
 })

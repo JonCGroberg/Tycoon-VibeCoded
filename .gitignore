@@ -1,53 +1,76 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
-/node_modules
+# Node dependencies
+/node_modules/
 
-# next.js
+# Next.js build output
 /.next/
 /out/
 
-# production
-/build
+# Production build
+/build/
 
-# debug
+# pnpm
+.pnpm-debug.log*
+.pnpm-store/
+
+# Logs
+logs/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+dev-debug.log
 
-# env files
+# Test output and coverage
+coverage/
+junit.xml
+jest-results.json
+test-output.txt
+
+# Env files
 .env*
 
-# vercel
-.vercel
+# Vercel
+.vercel/
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# coverage
-coverage/
-
-# Added by Claude Task Master
-# Logs
-logs
-*.log
-dev-debug.log
-# Dependency directories
-node_modules/
-# Environment variables
-.env
 # Editor directories and files
-.idea
-.vscode
+.idea/
+.vscode/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
 # OS specific
 .DS_Store
+Thumbs.db
+
 # Task files
+/tasks/
 tasks.json
-tasks/ 
+
+# Misc
+*.bak
+*.tmp
+
+# Ignore public build artifacts (optional, if generated)
+/public/music/
+/public/tutorial/
+
+# Ignore cache
+.cache/
+
+# Ignore static cache (Next.js)
+/.next/cache/
+
+# Ignore SWC cache
+.swc/
+
+# Ignore any local config overrides
+*.local.*

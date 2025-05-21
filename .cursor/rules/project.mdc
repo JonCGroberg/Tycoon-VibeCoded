@@ -5,7 +5,7 @@ alwaysApply: true
 ---
 - Project uses Shadcn, Jest, pnpm, tailwind, next, and react
 
-- Always run pnpm test after finishing any set of code changes
+- Always run pnpm test after finishing any set of code changes, then follow with pnpm lint
 - Dont ask to run commands, just run them
 - Test coverage should be 95%
 

@@ -7,9 +7,6 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { formatCurrency } from "@/lib/utils"
 import {
-  UserIcon,
-  TruckIcon,
-  ArrowUpIcon,
   XIcon,
   PackageIcon,
   TimerIcon,
@@ -17,14 +14,10 @@ import {
   InfoIcon,
   MoveUpIcon as UpgradeIcon,
   PlusIcon,
-  PlaneIcon,
-  ShipIcon,
-  BikeIcon,
-  DogIcon,
   MinusIcon,
-  Building2Icon,
+  TruckIcon,
 } from "lucide-react"
-import { SHIPPING_TYPES, getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
+import { SHIPPING_TYPES, calculateShippingCost } from "@/lib/shipping-types"
 import { getUpgradeCost } from "@/lib/game-logic"
 
 interface BusinessPanelProps {
@@ -32,7 +25,7 @@ interface BusinessPanelProps {
   coins: number
   onClose: () => void
   onHireShippingType: (businessId: string, shippingTypeId: string) => void
-  onSellShippingType: (businessId: string, shippingTypeId: string) => void
+  onSellShippingType?: (businessId: string, shippingTypeId: string) => void
   onUpgrade: (businessId: string, upgradeType: "incomingCapacity" | "processingTime" | "outgoingCapacity") => void
   defaultTab?: string
 }
@@ -287,7 +280,7 @@ export default function BusinessPanel({
                                 size="sm"
                                 className="flex items-center gap-1 px-2 py-0.5 h-6 text-xs font-medium border-red-400 hover:bg-red-50"
                                 disabled={!canSell}
-                                onClick={() => onSellShippingType(business.id, typeConfig.id)}
+                                onClick={() => onSellShippingType?.(business.id, typeConfig.id)}
                                 title={`Sell for ${formatCurrency(cost / 2)} (50% refund)`}
                               >
                                 <MinusIcon className="w-3 h-3 text-red-600" />

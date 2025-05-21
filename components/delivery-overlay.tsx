@@ -7,10 +7,9 @@ import { TruckIcon, PackageIcon, CoinsIcon } from "lucide-react"
 interface DeliveryOverlayProps {
     onClose: () => void
     gameState: GameState
-    onUpdateGameState: (newState: GameState) => void
 }
 
-export function DeliveryOverlay({ onClose, gameState, onUpdateGameState }: DeliveryOverlayProps) {
+export function DeliveryOverlay({ onClose, gameState }: DeliveryOverlayProps) {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-[100] flex items-center justify-center p-4">
             <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full mx-auto p-6">

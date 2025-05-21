@@ -1,14 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { TreesIcon as TreeIcon, UserIcon, TimerIcon, TruckIcon, CoinsIcon } from "lucide-react"
+import { TreesIcon as TreeIcon, TimerIcon, TruckIcon, CoinsIcon } from "lucide-react"
 
 interface TutorialOverlayProps {
   onClose: () => void
-  gameState: any // Accept the game state as a prop
 }
 
-export default function TutorialOverlay({ onClose, gameState }: TutorialOverlayProps) {
+export default function TutorialOverlay({ onClose }: TutorialOverlayProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-lg max-w-4xl w-full mx-auto p-6 flex flex-col">
@@ -63,6 +62,7 @@ export default function TutorialOverlay({ onClose, gameState }: TutorialOverlayP
           </div>
           <div className="flex flex-col items-center justify-center min-w-[280px]">
             <h3 className="text-lg font-bold mb-2 text-center">How a Business Works</h3>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/tutorial/Tutorial.png" alt="Tutorial Diagram" className="max-w-[260px] w-full h-auto rounded-md border border-gray-200 shadow" />
           </div>
         </div>

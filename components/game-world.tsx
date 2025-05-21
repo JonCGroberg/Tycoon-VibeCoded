@@ -3,18 +3,17 @@
 import React from "react"
 
 import { useState, useRef } from "react"
-import { type Business, BusinessType } from "@/lib/game-types"
+import { type Business, BusinessType, type ActiveDelivery } from "@/lib/game-types"
 import BusinessEntity from "./business-entity"
 import DeliveryBotEntity from "./delivery-bot"
 
 interface GameWorldProps {
   businesses: Business[]
   placingBusiness: BusinessType | null
-  activeDeliveries: any[]
+  activeDeliveries: ActiveDelivery[]
   onPlaceBusiness: (type: BusinessType, position: { x: number; y: number }) => void
   onSelectBusiness: (business: Business) => void
   onDeliveryComplete: (deliveryId: string) => void
-  marketPrices: Record<string, { value: number; target: number }>
   onMoveBusiness?: (businessId: string, newPosition: { x: number; y: number }) => void
 }
 
@@ -25,7 +24,6 @@ const GameWorld = function GameWorld({
   onPlaceBusiness,
   onSelectBusiness,
   onDeliveryComplete,
-  marketPrices,
   onMoveBusiness,
 }: GameWorldProps) {
   const worldRef = useRef<HTMLDivElement>(null)
@@ -115,12 +113,6 @@ const GameWorld = function GameWorld({
         const targetBusiness = businesses.find((b) => b.id === delivery.targetBusinessId)
         if (!sourceBusiness || !targetBusiness) return null
 
-        // Find the shipping type ID for this bot
-        const shippingType = sourceBusiness.shippingTypes.find(st =>
-          st.bots.some(bot => bot.id === delivery.bot.id)
-        );
-        const shippingTypeId = shippingType?.type || 'walker'; // Fallback to walker if not found
-
         return (
           <DeliveryBotEntity
             key={delivery.id}
@@ -131,7 +123,7 @@ const GameWorld = function GameWorld({
             onDeliveryComplete={() => onDeliveryComplete(delivery.id)}
             deliveryStartTime={delivery.createdAt}
             deliveryExpectedArrival={delivery.expectedArrival}
-            shippingTypeId={shippingTypeId}
+            shippingTypeId={delivery.bot.shippingTypeId}
           />
         )
       })}

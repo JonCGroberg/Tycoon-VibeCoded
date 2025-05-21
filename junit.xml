@@ -1,181 +1,120 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="74" failures="2" errors="0" time="5.234">
-  <testsuite name="generateUniqueId" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="0.591" tests="5">
-    <testcase classname="generateUniqueId generates unique IDs with the given prefix" name="generateUniqueId generates unique IDs with the given prefix" time="0.015">
+<testsuites name="jest tests" tests="104" failures="1" errors="0" time="2.427">
+  <testsuite name="generateUniqueId" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="0.309" tests="5">
+    <testcase classname="generateUniqueId generates unique IDs with the given prefix" name="generateUniqueId generates unique IDs with the given prefix" time="0.005">
     </testcase>
-    <testcase classname="generateUniqueId IDs contain a random string" name="generateUniqueId IDs contain a random string" time="0.002">
+    <testcase classname="generateUniqueId IDs contain a random string" name="generateUniqueId IDs contain a random string" time="0">
     </testcase>
     <testcase classname="initializeGameState returns a valid initial game state" name="initializeGameState returns a valid initial game state" time="0.001">
     </testcase>
-    <testcase classname="initializeGameState initializes a market business with correct properties" name="initializeGameState initializes a market business with correct properties" time="0.016">
+    <testcase classname="initializeGameState initializes a market business with correct properties" name="initializeGameState initializes a market business with correct properties" time="0.004">
     </testcase>
-    <testcase classname="initializeGameState initializes achievements with all keys set to false" name="initializeGameState initializes achievements with all keys set to false" time="0.002">
+    <testcase classname="initializeGameState initializes achievements with all keys set to false" name="initializeGameState initializes achievements with all keys set to false" time="0.003">
     </testcase>
   </testsuite>
-  <testsuite name="calculateEquity" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="0.693" tests="3">
-    <testcase classname="calculateEquity returns 0 for empty businesses" name="calculateEquity returns 0 for empty businesses" time="0.004">
+  <testsuite name="DeliveryBotEntity" errors="0" failures="1" skipped="0" timestamp="2025-05-21T15:20:25" time="0.464" tests="5">
+    <testcase classname="DeliveryBotEntity renders the delivery bot icon" name="DeliveryBotEntity renders the delivery bot icon" time="0.017">
+      <failure>Error: expect(received).toBeInTheDocument()
+
+received value must be an HTMLElement or an SVGElement.
+Received has value: null
+    at __EXTERNAL_MATCHER_TRAP__ (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:325:30)
+    at Object.throwingMatcher [as toBeInTheDocument] (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/expect@29.7.0/node_modules/expect/build/index.js:326:15)
+    at Object.toBeInTheDocument (/Users/jonathangroberg/repos/roblox-tycoon--1-/components/__tests__/delivery-bot.test.tsx:28:58)
+    at Promise.then.completed (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
+    at new Promise (&lt;anonymous&gt;)
+    at callAsyncCircusFn (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
+    at _callCircusTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
+    at processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at _runTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
+    at _runTestsForDescribeBlock (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
+    at _runTestsForDescribeBlock (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
+    at run (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
+    at runAndTransformResultsToJestFormat (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
+    at jestAdapter (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
+    at runTestInternal (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
+    at runTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
+    at Object.worker (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
     </testcase>
-    <testcase classname="calculateEquity sums totalInvested for all businesses" name="calculateEquity sums totalInvested for all businesses" time="0.001">
+    <testcase classname="DeliveryBotEntity shows the correct carrying amount" name="DeliveryBotEntity shows the correct carrying amount" time="0.003">
+    </testcase>
+    <testcase classname="DeliveryBotEntity shows no carrying amount if zero" name="DeliveryBotEntity shows no carrying amount if zero" time="0.001">
+    </testcase>
+    <testcase classname="DeliveryBotEntity applies the correct resource color" name="DeliveryBotEntity applies the correct resource color" time="0.001">
+    </testcase>
+    <testcase classname="DeliveryBotEntity calls onDeliveryComplete when delivery finishes" name="DeliveryBotEntity calls onDeliveryComplete when delivery finishes" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="NotificationToast" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="0.539" tests="7">
+    <testcase classname="NotificationToast renders notifications with correct message" name="NotificationToast renders notifications with correct message" time="0.016">
+    </testcase>
+    <testcase classname="NotificationToast renders achievement notification with funName and icon" name="NotificationToast renders achievement notification with funName and icon" time="0.009">
+    </testcase>
+    <testcase classname="NotificationToast calls onDismiss with correct id when dismiss button is clicked" name="NotificationToast calls onDismiss with correct id when dismiss button is clicked" time="0.105">
+    </testcase>
+    <testcase classname="NotificationToast renders confetti for achievement notification" name="NotificationToast renders confetti for achievement notification" time="0.004">
+    </testcase>
+    <testcase classname="NotificationToast handles empty notifications array" name="NotificationToast handles empty notifications array" time="0.001">
+    </testcase>
+    <testcase classname="NotificationToast auto-dismisses notification after 5 seconds" name="NotificationToast auto-dismisses notification after 5 seconds" time="0.015">
+    </testcase>
+    <testcase classname="NotificationToast closes notification when clicking anywhere on the toast" name="NotificationToast closes notification when clicking anywhere on the toast" time="0.01">
+    </testcase>
+  </testsuite>
+  <testsuite name="GameStateProvider" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="0.22" tests="2">
+    <testcase classname="GameStateProvider provides game state context to children" name="GameStateProvider provides game state context to children" time="0.01">
+    </testcase>
+    <testcase classname="GameStateProvider throws if useGameState is used outside provider" name="GameStateProvider throws if useGameState is used outside provider" time="0.002">
+    </testcase>
+  </testsuite>
+  <testsuite name="calculateEquity" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:26" time="0.063" tests="3">
+    <testcase classname="calculateEquity returns 0 for empty businesses" name="calculateEquity returns 0 for empty businesses" time="0">
+    </testcase>
+    <testcase classname="calculateEquity sums totalInvested for all businesses" name="calculateEquity sums totalInvested for all businesses" time="0">
     </testcase>
     <testcase classname="calculateEquity handles missing totalInvested" name="calculateEquity handles missing totalInvested" time="0">
     </testcase>
   </testsuite>
-  <testsuite name="GameStateProvider" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="0.912" tests="2">
-    <testcase classname="GameStateProvider provides game state context to children" name="GameStateProvider provides game state context to children" time="0.046">
+  <testsuite name="AchievementsPanel" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="0.573" tests="4">
+    <testcase classname="AchievementsPanel renders all achievements with correct funName, name, and description" name="AchievementsPanel renders all achievements with correct funName, name, and description" time="0.051">
     </testcase>
-    <testcase classname="GameStateProvider throws if useGameState is used outside provider" name="GameStateProvider throws if useGameState is used outside provider" time="0.004">
+    <testcase classname="AchievementsPanel renders unlocked and locked achievements with correct styles" name="AchievementsPanel renders unlocked and locked achievements with correct styles" time="0.004">
     </testcase>
-  </testsuite>
-  <testsuite name="AchievementsPanel" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="0.998" tests="4">
-    <testcase classname="AchievementsPanel renders all achievements with correct funName, name, and description" name="AchievementsPanel renders all achievements with correct funName, name, and description" time="0.062">
+    <testcase classname="AchievementsPanel calls onClose when close button is clicked" name="AchievementsPanel calls onClose when close button is clicked" time="0.064">
     </testcase>
-    <testcase classname="AchievementsPanel renders unlocked and locked achievements with correct styles" name="AchievementsPanel renders unlocked and locked achievements with correct styles" time="0.012">
-    </testcase>
-    <testcase classname="AchievementsPanel calls onClose when close button is clicked" name="AchievementsPanel calls onClose when close button is clicked" time="0.056">
-    </testcase>
-    <testcase classname="AchievementsPanel handles empty achievements object" name="AchievementsPanel handles empty achievements object" time="0.018">
+    <testcase classname="AchievementsPanel handles empty achievements object" name="AchievementsPanel handles empty achievements object" time="0.012">
     </testcase>
   </testsuite>
-  <testsuite name="DeliveryBotEntity" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="1.038" tests="5">
-    <testcase classname="DeliveryBotEntity renders the delivery bot icon" name="DeliveryBotEntity renders the delivery bot icon" time="0.078">
+  <testsuite name="BusinessPanel" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="0.675" tests="18">
+    <testcase classname="BusinessPanel renders business panel with correct title" name="BusinessPanel renders business panel with correct title" time="0.053">
     </testcase>
-    <testcase classname="DeliveryBotEntity shows the correct carrying amount" name="DeliveryBotEntity shows the correct carrying amount" time="0.013">
+    <testcase classname="BusinessPanel calls onClose when close button is clicked" name="BusinessPanel calls onClose when close button is clicked" time="0.033">
     </testcase>
-    <testcase classname="DeliveryBotEntity shows no carrying amount if zero" name="DeliveryBotEntity shows no carrying amount if zero" time="0.01">
+    <testcase classname="BusinessPanel displays correct buffer information" name="BusinessPanel displays correct buffer information" time="0.016">
     </testcase>
-    <testcase classname="DeliveryBotEntity applies the correct resource color" name="DeliveryBotEntity applies the correct resource color" time="0.005">
+    <testcase classname="BusinessPanel calculates upgrade cost correctly (no 1.5x multiplier, independent upgrades)" name="BusinessPanel calculates upgrade cost correctly (no 1.5x multiplier, independent upgrades)" time="0">
     </testcase>
-    <testcase classname="DeliveryBotEntity calls onDeliveryComplete when delivery finishes" name="DeliveryBotEntity calls onDeliveryComplete when delivery finishes" time="0.015">
+    <testcase classname="BusinessPanel calculates upgrade cost correctly (first upgrade is 50, then 1.7x)" name="BusinessPanel calculates upgrade cost correctly (first upgrade is 50, then 1.7x)" time="0">
     </testcase>
-  </testsuite>
-  <testsuite name="NotificationToast" errors="0" failures="2" skipped="0" timestamp="2025-05-20T00:44:28" time="1.091" tests="7">
-    <testcase classname="NotificationToast renders notifications with correct message" name="NotificationToast renders notifications with correct message" time="0.044">
+    <testcase classname="BusinessPanel returns correct business name for different types and resources" name="BusinessPanel returns correct business name for different types and resources" time="0">
     </testcase>
-    <testcase classname="NotificationToast renders achievement notification with funName and icon" name="NotificationToast renders achievement notification with funName and icon" time="0.046">
-      <failure>TypeError: (((cov_8ld1bwmda(...).b[17][0]++) , window.AudioContext) || ((cov_8ld1bwmda(...).b[17][1]++) , window.webkitAudioContext)) is not a constructor
-    at playAchievementChime (/Users/jonathangroberg/repos/roblox-tycoon--1-/components/notification-toast.tsx:12:17)
-    at playAchievementChime (/Users/jonathangroberg/repos/roblox-tycoon--1-/components/notification-toast.tsx:40:13)
-    at Object.react-stack-bottom-frame (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
-    at runWithFiberInDEV (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
-    at commitHookEffectListMount (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
-    at commitHookPassiveMountEffects (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
-    at commitPassiveMountOnFiber (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
-    at recursivelyTraversePassiveMountEffects (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
-    at commitPassiveMountOnFiber (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
-    at flushPassiveEffects (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
-    at /Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
-    at flushActQueue (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:566:34)
-    at Object.&lt;anonymous&gt;.process.env.NODE_ENV.exports.act (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:859:10)
-    at /Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/@testing-library+react@16.3.0_@testing-library+dom@10.4.0_@types+react-dom@19.1.5_@type_13678f14edb207b811efad2d1cd9d44e/node_modules/@testing-library/react/dist/act-compat.js:47:25
-    at renderRoot (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/@testing-library+react@16.3.0_@testing-library+dom@10.4.0_@types+react-dom@19.1.5_@type_13678f14edb207b811efad2d1cd9d44e/node_modules/@testing-library/react/dist/pure.js:190:26)
-    at render (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/@testing-library+react@16.3.0_@testing-library+dom@10.4.0_@types+react-dom@19.1.5_@type_13678f14edb207b811efad2d1cd9d44e/node_modules/@testing-library/react/dist/pure.js:292:10)
-    at Object.&lt;anonymous&gt; (/Users/jonathangroberg/repos/roblox-tycoon--1-/components/__tests__/notification-toast.test.tsx:47:15)
-    at Promise.then.completed (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
-    at new Promise (&lt;anonymous&gt;)
-    at callAsyncCircusFn (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
-    at _callCircusTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at _runTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
-    at _runTestsForDescribeBlock (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
-    at _runTestsForDescribeBlock (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
-    at run (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
-    at runAndTransformResultsToJestFormat (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
-    at jestAdapter (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
-    at runTestInternal (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
-    at runTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
-    at Object.worker (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    <testcase classname="BusinessPanel returns correct resource name for different resource types" name="BusinessPanel returns correct resource name for different resource types" time="0.001">
     </testcase>
-    <testcase classname="NotificationToast calls onDismiss with correct id when dismiss button is clicked" name="NotificationToast calls onDismiss with correct id when dismiss button is clicked" time="0.064">
+    <testcase classname="BusinessPanel calls onUpgrade for input capacity upgrade" name="BusinessPanel calls onUpgrade for input capacity upgrade" time="0.016">
     </testcase>
-    <testcase classname="NotificationToast renders confetti for achievement notification" name="NotificationToast renders confetti for achievement notification" time="0.002">
-      <failure>TypeError: (((cov_8ld1bwmda(...).b[17][0]++) , window.AudioContext) || ((cov_8ld1bwmda(...).b[17][1]++) , window.webkitAudioContext)) is not a constructor
-    at playAchievementChime (/Users/jonathangroberg/repos/roblox-tycoon--1-/components/notification-toast.tsx:12:17)
-    at playAchievementChime (/Users/jonathangroberg/repos/roblox-tycoon--1-/components/notification-toast.tsx:40:13)
-    at Object.react-stack-bottom-frame (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)
-    at runWithFiberInDEV (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)
-    at commitHookEffectListMount (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)
-    at commitHookPassiveMountEffects (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)
-    at commitPassiveMountOnFiber (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)
-    at recursivelyTraversePassiveMountEffects (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)
-    at commitPassiveMountOnFiber (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13853:11)
-    at flushPassiveEffects (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15737:9)
-    at /Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15379:15
-    at flushActQueue (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:566:34)
-    at Object.&lt;anonymous&gt;.process.env.NODE_ENV.exports.act (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:859:10)
-    at /Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/@testing-library+react@16.3.0_@testing-library+dom@10.4.0_@types+react-dom@19.1.5_@type_13678f14edb207b811efad2d1cd9d44e/node_modules/@testing-library/react/dist/act-compat.js:47:25
-    at renderRoot (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/@testing-library+react@16.3.0_@testing-library+dom@10.4.0_@types+react-dom@19.1.5_@type_13678f14edb207b811efad2d1cd9d44e/node_modules/@testing-library/react/dist/pure.js:190:26)
-    at render (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/@testing-library+react@16.3.0_@testing-library+dom@10.4.0_@types+react-dom@19.1.5_@type_13678f14edb207b811efad2d1cd9d44e/node_modules/@testing-library/react/dist/pure.js:292:10)
-    at Object.&lt;anonymous&gt; (/Users/jonathangroberg/repos/roblox-tycoon--1-/components/__tests__/notification-toast.test.tsx:63:15)
-    at Promise.then.completed (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:298:28)
-    at new Promise (&lt;anonymous&gt;)
-    at callAsyncCircusFn (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/utils.js:231:10)
-    at _callCircusTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:316:40)
-    at processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at _runTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:252:3)
-    at _runTestsForDescribeBlock (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:126:9)
-    at _runTestsForDescribeBlock (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:121:9)
-    at run (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/run.js:71:3)
-    at runAndTransformResultsToJestFormat (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapterInit.js:122:21)
-    at jestAdapter (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-circus@29.7.0/node_modules/jest-circus/build/legacy-code-todo-rewrite/jestAdapter.js:79:19)
-    at runTestInternal (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:367:16)
-    at runTest (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/runTest.js:444:34)
-    at Object.worker (/Users/jonathangroberg/repos/roblox-tycoon--1-/node_modules/.pnpm/jest-runner@29.7.0/node_modules/jest-runner/build/testWorker.js:106:12)</failure>
+    <testcase classname="BusinessPanel calls onUpgrade for processing speed upgrade" name="BusinessPanel calls onUpgrade for processing speed upgrade" time="0.013">
     </testcase>
-    <testcase classname="NotificationToast handles empty notifications array" name="NotificationToast handles empty notifications array" time="0.006">
+    <testcase classname="BusinessPanel calls onUpgrade for output capacity upgrade" name="BusinessPanel calls onUpgrade for output capacity upgrade" time="0.016">
     </testcase>
-    <testcase classname="NotificationToast auto-dismisses notification after 5 seconds" name="NotificationToast auto-dismisses notification after 5 seconds" time="0.009">
-    </testcase>
-    <testcase classname="NotificationToast closes notification when clicking anywhere on the toast" name="NotificationToast closes notification when clicking anywhere on the toast" time="0.011">
-    </testcase>
-  </testsuite>
-  <testsuite name="GameWorld" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="1.457" tests="8">
-    <testcase classname="GameWorld renders the game world with grid" name="GameWorld renders the game world with grid" time="0.085">
-    </testcase>
-    <testcase classname="GameWorld renders all businesses" name="GameWorld renders all businesses" time="0.031">
-    </testcase>
-    <testcase classname="GameWorld handles business selection" name="GameWorld handles business selection" time="0.031">
-    </testcase>
-    <testcase classname="GameWorld shows business placement preview when placingBusiness is set" name="GameWorld shows business placement preview when placingBusiness is set" time="0.025">
-    </testcase>
-    <testcase classname="GameWorld handles business placement on click" name="GameWorld handles business placement on click" time="0.046">
-    </testcase>
-    <testcase classname="GameWorld renders active deliveries" name="GameWorld renders active deliveries" time="0.031">
-    </testcase>
-    <testcase classname="GameWorld handles delivery completion" name="GameWorld handles delivery completion" time="0.034">
-    </testcase>
-    <testcase classname="GameWorld updates mouse position on mouse move" name="GameWorld updates mouse position on mouse move" time="0.075">
-    </testcase>
-  </testsuite>
-  <testsuite name="BusinessPanel" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="1.451" tests="18">
-    <testcase classname="BusinessPanel renders business panel with correct title" name="BusinessPanel renders business panel with correct title" time="0.106">
-    </testcase>
-    <testcase classname="BusinessPanel calls onClose when close button is clicked" name="BusinessPanel calls onClose when close button is clicked" time="0.047">
-    </testcase>
-    <testcase classname="BusinessPanel displays correct buffer information" name="BusinessPanel displays correct buffer information" time="0.035">
-    </testcase>
-    <testcase classname="BusinessPanel calculates upgrade cost correctly (no 1.5x multiplier, independent upgrades)" name="BusinessPanel calculates upgrade cost correctly (no 1.5x multiplier, independent upgrades)" time="0.001">
-    </testcase>
-    <testcase classname="BusinessPanel calculates upgrade cost correctly (first upgrade is 50, then 1.7x)" name="BusinessPanel calculates upgrade cost correctly (first upgrade is 50, then 1.7x)" time="0.001">
-    </testcase>
-    <testcase classname="BusinessPanel returns correct business name for different types and resources" name="BusinessPanel returns correct business name for different types and resources" time="0.003">
-    </testcase>
-    <testcase classname="BusinessPanel returns correct resource name for different resource types" name="BusinessPanel returns correct resource name for different resource types" time="0.002">
-    </testcase>
-    <testcase classname="BusinessPanel calls onUpgrade for input capacity upgrade" name="BusinessPanel calls onUpgrade for input capacity upgrade" time="0.051">
-    </testcase>
-    <testcase classname="BusinessPanel calls onUpgrade for processing speed upgrade" name="BusinessPanel calls onUpgrade for processing speed upgrade" time="0.042">
-    </testcase>
-    <testcase classname="BusinessPanel calls onUpgrade for output capacity upgrade" name="BusinessPanel calls onUpgrade for output capacity upgrade" time="0.038">
-    </testcase>
-    <testcase classname="BusinessPanel displays correct storage information" name="BusinessPanel displays correct storage information" time="0.023">
+    <testcase classname="BusinessPanel displays correct storage information" name="BusinessPanel displays correct storage information" time="0.01">
     </testcase>
     <testcase classname="getBufferStatusColor returns red when fillPercentage &gt;= 90" name="getBufferStatusColor returns red when fillPercentage &gt;= 90" time="0">
     </testcase>
     <testcase classname="getBufferStatusColor returns yellow when 70 &lt;= fillPercentage &lt; 90" name="getBufferStatusColor returns yellow when 70 &lt;= fillPercentage &lt; 90" time="0">
     </testcase>
-    <testcase classname="getBufferStatusColor returns blue when 0 &lt; fillPercentage &lt;= 10" name="getBufferStatusColor returns blue when 0 &lt; fillPercentage &lt;= 10" time="0.001">
+    <testcase classname="getBufferStatusColor returns blue when 0 &lt; fillPercentage &lt;= 10" name="getBufferStatusColor returns blue when 0 &lt; fillPercentage &lt;= 10" time="0">
     </testcase>
-    <testcase classname="getBufferStatusColor returns green for normal operation" name="getBufferStatusColor returns green for normal operation" time="0">
+    <testcase classname="getBufferStatusColor returns green for normal operation" name="getBufferStatusColor returns green for normal operation" time="0.001">
     </testcase>
     <testcase classname="getBufferStatusColor handles edge cases" name="getBufferStatusColor handles edge cases" time="0">
     </testcase>
@@ -184,50 +123,132 @@
     <testcase classname="getResourceName edge case returns None for unknown resource type" name="getResourceName edge case returns None for unknown resource type" time="0">
     </testcase>
   </testsuite>
-  <testsuite name="TycoonGame" errors="0" failures="0" skipped="0" timestamp="2025-05-20T00:44:28" time="4.047" tests="22">
-    <testcase classname="TycoonGame renders the game and initializes with the correct game state" name="TycoonGame renders the game and initializes with the correct game state" time="0.146">
+  <testsuite name="GameWorld" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="0.789" tests="8">
+    <testcase classname="GameWorld renders the game world with grid" name="GameWorld renders the game world with grid" time="0.046">
     </testcase>
-    <testcase classname="TycoonGame initializes market prices for all resource types" name="TycoonGame initializes market prices for all resource types" time="0.09">
+    <testcase classname="GameWorld renders all businesses" name="GameWorld renders all businesses" time="0.025">
     </testcase>
-    <testcase classname="TycoonGame shows tutorial overlay on initial render" name="TycoonGame shows tutorial overlay on initial render" time="0.069">
+    <testcase classname="GameWorld handles business selection" name="GameWorld handles business selection" time="0.017">
     </testcase>
-    <testcase classname="TycoonGame closes tutorial overlay when start button is clicked" name="TycoonGame closes tutorial overlay when start button is clicked" time="0.049">
+    <testcase classname="GameWorld shows business placement preview when placingBusiness is set" name="GameWorld shows business placement preview when placingBusiness is set" time="0.016">
     </testcase>
-    <testcase classname="TycoonGame allows placing a wood camp when enough coins are available" name="TycoonGame allows placing a wood camp when enough coins are available" time="0.155">
+    <testcase classname="GameWorld handles business placement on click" name="GameWorld handles business placement on click" time="0.032">
     </testcase>
-    <testcase classname="TycoonGame prevents placing a wood camp when not enough coins are available" name="TycoonGame prevents placing a wood camp when not enough coins are available" time="0.26">
+    <testcase classname="GameWorld renders active deliveries" name="GameWorld renders active deliveries" time="0.014">
     </testcase>
-    <testcase classname="TycoonGame updates market prices over time" name="TycoonGame updates market prices over time" time="0.072">
+    <testcase classname="GameWorld handles delivery completion" name="GameWorld handles delivery completion" time="0.02">
     </testcase>
-    <testcase classname="TycoonGame handles business selection and panel display" name="TycoonGame handles business selection and panel display" time="0.113">
+    <testcase classname="GameWorld updates mouse position on mouse move" name="GameWorld updates mouse position on mouse move" time="0.029">
     </testcase>
-    <testcase classname="TycoonGame handles shipping type hiring" name="TycoonGame handles shipping type hiring" time="0.563">
+  </testsuite>
+  <testsuite name="BusinessEntity" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="1.463" tests="21">
+    <testcase classname="BusinessEntity renders the business entity with correct level" name="BusinessEntity renders the business entity with correct level" time="0.036">
     </testcase>
-    <testcase classname="TycoonGame handles shipping type selling" name="TycoonGame handles shipping type selling" time="0.467">
+    <testcase classname="BusinessEntity renders the correct business name for resource gathering" name="BusinessEntity renders the correct business name for resource gathering" time="0.006">
     </testcase>
-    <testcase classname="TycoonGame renders music controls and allows volume adjustment" name="TycoonGame renders music controls and allows volume adjustment" time="0.036">
+    <testcase classname="BusinessEntity renders the correct business name for processing" name="BusinessEntity renders the correct business name for processing" time="0.005">
     </testcase>
-    <testcase classname="TycoonGame handles business upgrades correctly" name="TycoonGame handles business upgrades correctly" time="0.263">
+    <testcase classname="BusinessEntity calls onClick when clicked" name="BusinessEntity calls onClick when clicked" time="0.011">
     </testcase>
-    <testcase classname="TycoonGame handles resource production and delivery" name="TycoonGame handles resource production and delivery" time="0.121">
+    <testcase classname="BusinessEntity shows starvation indicator when input buffer is empty for processing business" name="BusinessEntity shows starvation indicator when input buffer is empty for processing business" time="0.005">
     </testcase>
-    <testcase classname="TycoonGame handles market price fluctuations" name="TycoonGame handles market price fluctuations" time="0.049">
+    <testcase classname="BusinessEntity applies correct color classes based on business type" name="BusinessEntity applies correct color classes based on business type" time="0.003">
     </testcase>
-    <testcase classname="TycoonGame handles worker wages and resource gathering" name="TycoonGame handles worker wages and resource gathering" time="0.043">
+    <testcase classname="BusinessEntity shows tooltip with business name and instructions on hover" name="BusinessEntity shows tooltip with business name and instructions on hover" time="0.063">
     </testcase>
-    <testcase classname="TycoonGame shows relocation preview and confirmation panel, and handles confirm/cancel" name="TycoonGame shows relocation preview and confirmation panel, and handles confirm/cancel" time="0.063">
+    <testcase classname="BusinessEntity shows starvation message in tooltip when input buffer is empty" name="BusinessEntity shows starvation message in tooltip when input buffer is empty" time="0.036">
     </testcase>
-    <testcase classname="TycoonGame unlocks relocator achievement when relocating a business" name="TycoonGame unlocks relocator achievement when relocating a business" time="0.063">
+    <testcase classname="BusinessEntity shows warning message in tooltip when input buffer is low" name="BusinessEntity shows warning message in tooltip when input buffer is low" time="0.038">
     </testcase>
-    <testcase classname="TycoonGame cancels relocation when clicking outside the panel" name="TycoonGame cancels relocation when clicking outside the panel" time="0.04">
+    <testcase classname="BusinessEntity does not render resource indicators or tooltips for Market" name="BusinessEntity does not render resource indicators or tooltips for Market" time="0.005">
     </testcase>
-    <testcase classname="TycoonGame extra coverage allows placing every business type" name="TycoonGame extra coverage allows placing every business type" time="0.094">
+    <testcase classname="BusinessEntity advanced calls onMove when drag is performed" name="BusinessEntity advanced calls onMove when drag is performed" time="0.009">
     </testcase>
-    <testcase classname="TycoonGame extra coverage allows placing a business with coins exactly equal to cost" name="TycoonGame extra coverage allows placing a business with coins exactly equal to cost" time="0.037">
+    <testcase classname="BusinessEntity advanced renders correct icon and color for all business types" name="BusinessEntity advanced renders correct icon and color for all business types" time="0.012">
     </testcase>
-    <testcase classname="TycoonGame extra coverage prevents placing a business when coins are negative" name="TycoonGame extra coverage prevents placing a business when coins are negative" time="0.037">
+    <testcase classname="BusinessEntity advanced renders correct resource color and icon for all resource types" name="BusinessEntity advanced renders correct resource color and icon for all resource types" time="0.022">
     </testcase>
-    <testcase classname="TycoonGame extra coverage shows and dismisses achievement notification" name="TycoonGame extra coverage shows and dismisses achievement notification" time="0.046">
+    <testcase classname="BusinessEntity advanced renders buffer status colors for edge cases" name="BusinessEntity advanced renders buffer status colors for edge cases" time="0.008">
+    </testcase>
+    <testcase classname="BusinessEntity advanced shows yellow output warning icon and tooltip when output buffer is &gt;= 65% and &lt; 85%" name="BusinessEntity advanced shows yellow output warning icon and tooltip when output buffer is &gt;= 65% and &lt; 85%" time="0.024">
+    </testcase>
+    <testcase classname="BusinessEntity advanced shows red output warning icon and tooltip when output buffer is &gt;= 85%" name="BusinessEntity advanced shows red output warning icon and tooltip when output buffer is &gt;= 85%" time="0.022">
+    </testcase>
+    <testcase classname="BusinessEntity advanced does not show output warning icon when output buffer is below 65%" name="BusinessEntity advanced does not show output warning icon when output buffer is below 65%" time="0.605">
+    </testcase>
+    <testcase classname="BusinessEntity advanced output resource indicator is faded when outgoingStorage.current is 0" name="BusinessEntity advanced output resource indicator is faded when outgoingStorage.current is 0" time="0.003">
+    </testcase>
+    <testcase classname="BusinessEntity advanced input resource indicator is faded for RESOURCE_GATHERING type" name="BusinessEntity advanced input resource indicator is faded for RESOURCE_GATHERING type" time="0.002">
+    </testcase>
+    <testcase classname="BusinessEntity advanced getResourceIcon returns null for unknown resource type" name="BusinessEntity advanced getResourceIcon returns null for unknown resource type" time="0">
+    </testcase>
+    <testcase classname="BusinessEntity advanced getResourceColor returns default for unknown resource type" name="BusinessEntity advanced getResourceColor returns default for unknown resource type" time="0">
+    </testcase>
+  </testsuite>
+  <testsuite name="MusicControls" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="1.749" tests="9">
+    <testcase classname="MusicControls renders all music control buttons" name="MusicControls renders all music control buttons" time="0.032">
+    </testcase>
+    <testcase classname="MusicControls toggles play and pause state" name="MusicControls toggles play and pause state" time="0.014">
+    </testcase>
+    <testcase classname="MusicControls skips to next and previous song" name="MusicControls skips to next and previous song" time="0.01">
+    </testcase>
+    <testcase classname="MusicControls mutes and unmutes the audio" name="MusicControls mutes and unmutes the audio" time="0.015">
+    </testcase>
+    <testcase classname="MusicControls opens the volume popup and renders the slider" name="MusicControls opens the volume popup and renders the slider" time="0.03">
+    </testcase>
+    <testcase classname="MusicControls disables controls when no songs are unlocked" name="MusicControls disables controls when no songs are unlocked" time="0.003">
+    </testcase>
+    <testcase classname="MusicControls does not reset current song or playing state on re-render with same unlockedSongs" name="MusicControls does not reset current song or playing state on re-render with same unlockedSongs" time="0.379">
+    </testcase>
+    <testcase classname="MusicControls only changes song when unlockedSongs increases" name="MusicControls only changes song when unlockedSongs increases" time="0.756">
+    </testcase>
+    <testcase classname="MusicControls calls fadeToSong and transitions volume" name="MusicControls calls fadeToSong and transitions volume" time="0.004">
+    </testcase>
+  </testsuite>
+  <testsuite name="TycoonGame" errors="0" failures="0" skipped="0" timestamp="2025-05-21T15:20:25" time="1.887" tests="22">
+    <testcase classname="TycoonGame renders the game and initializes with the correct game state" name="TycoonGame renders the game and initializes with the correct game state" time="0.072">
+    </testcase>
+    <testcase classname="TycoonGame initializes market prices for all resource types" name="TycoonGame initializes market prices for all resource types" time="0.035">
+    </testcase>
+    <testcase classname="TycoonGame shows tutorial overlay on initial render" name="TycoonGame shows tutorial overlay on initial render" time="0.018">
+    </testcase>
+    <testcase classname="TycoonGame closes tutorial overlay when start button is clicked" name="TycoonGame closes tutorial overlay when start button is clicked" time="0.029">
+    </testcase>
+    <testcase classname="TycoonGame allows placing a wood camp when enough coins are available" name="TycoonGame allows placing a wood camp when enough coins are available" time="0.086">
+    </testcase>
+    <testcase classname="TycoonGame prevents placing a wood camp when not enough coins are available" name="TycoonGame prevents placing a wood camp when not enough coins are available" time="0.035">
+    </testcase>
+    <testcase classname="TycoonGame updates market prices over time" name="TycoonGame updates market prices over time" time="0.034">
+    </testcase>
+    <testcase classname="TycoonGame handles business selection and panel display" name="TycoonGame handles business selection and panel display" time="0.045">
+    </testcase>
+    <testcase classname="TycoonGame handles shipping type hiring" name="TycoonGame handles shipping type hiring" time="0.295">
+    </testcase>
+    <testcase classname="TycoonGame handles shipping type selling" name="TycoonGame handles shipping type selling" time="0.228">
+    </testcase>
+    <testcase classname="TycoonGame renders music controls and allows volume adjustment" name="TycoonGame renders music controls and allows volume adjustment" time="0.02">
+    </testcase>
+    <testcase classname="TycoonGame handles business upgrades correctly" name="TycoonGame handles business upgrades correctly" time="0.096">
+    </testcase>
+    <testcase classname="TycoonGame handles resource production and delivery" name="TycoonGame handles resource production and delivery" time="0.034">
+    </testcase>
+    <testcase classname="TycoonGame handles market price fluctuations" name="TycoonGame handles market price fluctuations" time="0.012">
+    </testcase>
+    <testcase classname="TycoonGame handles worker wages and resource gathering" name="TycoonGame handles worker wages and resource gathering" time="0.019">
+    </testcase>
+    <testcase classname="TycoonGame shows relocation preview and confirmation panel, and handles confirm/cancel" name="TycoonGame shows relocation preview and confirmation panel, and handles confirm/cancel" time="0.041">
+    </testcase>
+    <testcase classname="TycoonGame unlocks relocator achievement when relocating a business" name="TycoonGame unlocks relocator achievement when relocating a business" time="0.031">
+    </testcase>
+    <testcase classname="TycoonGame cancels relocation when clicking outside the panel" name="TycoonGame cancels relocation when clicking outside the panel" time="0.025">
+    </testcase>
+    <testcase classname="TycoonGame extra coverage allows placing every business type" name="TycoonGame extra coverage allows placing every business type" time="0.041">
+    </testcase>
+    <testcase classname="TycoonGame extra coverage allows placing a business with coins exactly equal to cost" name="TycoonGame extra coverage allows placing a business with coins exactly equal to cost" time="0.021">
+    </testcase>
+    <testcase classname="TycoonGame extra coverage prevents placing a business when coins are negative" name="TycoonGame extra coverage prevents placing a business when coins are negative" time="0.013">
+    </testcase>
+    <testcase classname="TycoonGame extra coverage shows and dismisses achievement notification" name="TycoonGame extra coverage shows and dismisses achievement notification" time="0.021">
     </testcase>
   </testsuite>
 </testsuites>

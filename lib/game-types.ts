@@ -41,6 +41,7 @@ export interface DeliveryBot {
   isDelivering: boolean
   targetBusinessId: string | null
   currentLoad: number
+  shippingTypeId?: string
 }
 
 export interface PendingDelivery {
