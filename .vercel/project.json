@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_svxdzqQ7jTiQfSPjmkjNZE69xkOH",
+  "orgId": "team_x73Kxzod3q75v2mFPv1hUz1B",
+  "settings": {
+    "createdAt": 1747595089733,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "22.x"
+  },
+  "name": "tycoon"
+}
