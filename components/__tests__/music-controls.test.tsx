@@ -308,3 +308,24 @@ describe('MusicControls regression: music does not stop or become unresponsive',
         expect(prevButton).toBeInTheDocument();
     });
 });
+
+describe('Regression: upgrading business does not stop or reset music', () => {
+    it('music continues playing after business upgrade (may skip to next song if achievement unlocked)', async () => {
+        // Simulate music controls and upgrade event
+        const ref = React.createRef<MusicControlsHandle>();
+        render(<MusicControls ref={ref} unlockedSongs={3} />);
+        // Start playing a song
+        act(() => {
+            ref.current?.playSongAtIndex(1);
+        });
+        // Simulate business upgrade that unlocks an achievement (triggers skipToNextSong)
+        const event = new CustomEvent('achievement', { detail: { key: 'masterUpgrader' } });
+        document.dispatchEvent(event);
+        // Wait for music to skip to next song
+        await waitFor(() => {
+            // Should be playing (not paused)
+            const playPauseButton = screen.queryByLabelText('Pause');
+            expect(playPauseButton).toBeInTheDocument();
+        });
+    });
+});
