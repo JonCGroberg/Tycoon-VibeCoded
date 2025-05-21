@@ -74,3 +74,4 @@ tasks.json
 
 # Ignore any local config overrides
 *.local.*
+.vercel
