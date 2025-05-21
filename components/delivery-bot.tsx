@@ -11,9 +11,13 @@ interface DeliveryBotEntityProps {
   targetPosition: { x: number; y: number }
   resourceType: ResourceType
   onDeliveryComplete: () => void
+<<<<<<< HEAD
+  expectedArrival: number
+=======
   deliveryStartTime: number
   deliveryExpectedArrival: number
   shippingTypeId: string
+>>>>>>> main
 }
 
 export default function DeliveryBotEntity({
@@ -22,6 +26,13 @@ export default function DeliveryBotEntity({
   targetPosition,
   resourceType,
   onDeliveryComplete,
+<<<<<<< HEAD
+  expectedArrival,
+}: DeliveryBotEntityProps) {
+  const [position, setPosition] = useState({ x: sourcePosition.x, y: sourcePosition.y })
+  const [progress, setProgress] = useState(0)
+  const duration = expectedArrival - Date.now()
+=======
   deliveryStartTime,
   deliveryExpectedArrival,
   shippingTypeId,
@@ -30,6 +41,7 @@ export default function DeliveryBotEntity({
   const [progress, setProgress] = useState(0)
   const shippingTypeConfig = getShippingTypeConfig(shippingTypeId);
   const Icon = shippingTypeConfig.icon;
+>>>>>>> main
 
   // Get resource color
   const getResourceColor = (resourceType: ResourceType) => {
@@ -56,10 +68,21 @@ export default function DeliveryBotEntity({
   }
 
   useEffect(() => {
+<<<<<<< HEAD
+    // Only start animation if the bot is actively delivering
+    if (!bot.isDelivering) {
+      setPosition({ x: sourcePosition.x, y: sourcePosition.y });
+      setProgress(0);
+      return;
+    }
+
+    const startTime = Date.now()
+=======
     const now = Date.now()
     // Calculate the remaining time for this delivery
     const totalDuration = Math.max(100, deliveryExpectedArrival - deliveryStartTime)
     const startTime = deliveryStartTime
+>>>>>>> main
 
     const animateDelivery = () => {
       const currentTime = Date.now()
@@ -85,7 +108,11 @@ export default function DeliveryBotEntity({
     return () => {
       // Cleanup if needed
     }
+<<<<<<< HEAD
+  }, [sourcePosition, targetPosition, duration, onDeliveryComplete, bot.isDelivering])
+=======
   }, [sourcePosition, targetPosition, deliveryExpectedArrival, deliveryStartTime, onDeliveryComplete])
+>>>>>>> main
 
   return (
     <div

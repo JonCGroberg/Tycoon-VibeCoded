@@ -4,6 +4,7 @@ import React from "react"
 
 import { useState, useRef } from "react"
 import { type Business, BusinessType } from "@/lib/game-types"
+import { getBusinessData } from "@/lib/business-data"
 import BusinessEntity from "./business-entity"
 import DeliveryBotEntity from "./delivery-bot"
 
@@ -46,12 +47,11 @@ const GameWorld = function GameWorld({
   // Handle click to place business
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation() // Prevent event bubbling
-    if (placingBusiness) {
-      console.log('Click detected:', {
-        placingBusiness,
-        timestamp: Date.now()
-      })
-      onPlaceBusiness(placingBusiness, mousePosition)
+    if (placingBusiness && worldRef.current) {
+      const rect = worldRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      onPlaceBusiness(placingBusiness, { x, y })
     }
   }
 
@@ -115,11 +115,16 @@ const GameWorld = function GameWorld({
         const targetBusiness = businesses.find((b) => b.id === delivery.targetBusinessId)
         if (!sourceBusiness || !targetBusiness) return null
 
+<<<<<<< HEAD
+        // Only render the bot if it's actively delivering
+        if (!delivery.bot.isDelivering) return null
+=======
         // Find the shipping type ID for this bot
         const shippingType = sourceBusiness.shippingTypes.find(st =>
           st.bots.some(bot => bot.id === delivery.bot.id)
         );
         const shippingTypeId = shippingType?.type || 'walker'; // Fallback to walker if not found
+>>>>>>> main
 
         return (
           <DeliveryBotEntity
@@ -129,9 +134,13 @@ const GameWorld = function GameWorld({
             targetPosition={targetBusiness.position}
             resourceType={delivery.resourceType}
             onDeliveryComplete={() => onDeliveryComplete(delivery.id)}
+<<<<<<< HEAD
+            expectedArrival={delivery.expectedArrival}
+=======
             deliveryStartTime={delivery.createdAt}
             deliveryExpectedArrival={delivery.expectedArrival}
             shippingTypeId={shippingTypeId}
+>>>>>>> main
           />
         )
       })}
@@ -147,11 +156,15 @@ const GameWorld = function GameWorld({
           }}
         >
           <div className="text-sm text-center text-white font-bold mt-2">
+<<<<<<< HEAD
+            {getBusinessData(placingBusiness).name}
+=======
             {placingBusiness === BusinessType.RESOURCE_GATHERING
               ? "Wood Camp"
               : placingBusiness === BusinessType.PROCESSING
                 ? "Plank Mill"
                 : "Furniture Shop"}
+>>>>>>> main
           </div>
         </div>
       )}
