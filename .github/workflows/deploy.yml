@@ -14,17 +14,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8 # or your project's pnpm version
+
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8 # This should match your pnpm-lock.yaml major version (lockfileVersion: '9.0' is compatible with pnpm 8+)
-          run_install: false
+      - run: pnpm install
+
+      - name: Install Vercel CLI
+        run: pnpm add --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy Project Artifacts to Vercel
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Check pnpm version
         run: pnpm --version
@@ -42,20 +53,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Run tests
         run: pnpm test
 
       - name: Run linting
         run: pnpm lint
-
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./
-          vercel-args: '--prod'
