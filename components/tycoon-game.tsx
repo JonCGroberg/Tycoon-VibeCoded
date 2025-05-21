@@ -853,6 +853,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
         onSelectBusiness={relocatingBusiness ? () => { } : handleSelectBusiness}
         onDeliveryComplete={handleDeliveryComplete}
         onMoveBusiness={relocatingBusiness ? handleMoveBusiness : handleMoveBusiness}
+        selectedBusinessId={selectedBusinessId}
       />
 
       {selectedBusiness && (

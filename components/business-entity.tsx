@@ -16,9 +16,10 @@ interface BusinessEntityProps {
   business: Business
   onClick: () => void
   onMove?: (businessId: string, newPosition: { x: number; y: number }) => void
+  selected?: boolean
 }
 
-const BusinessEntity = function BusinessEntity({ business, onClick, onMove }: BusinessEntityProps) {
+const BusinessEntity = function BusinessEntity({ business, onClick, onMove, selected = false }: BusinessEntityProps) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
   const dragTimeout = useRef<NodeJS.Timeout | null>(null)
@@ -210,7 +211,7 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove }: Bu
         <TooltipTrigger asChild>
           <div
             data-testid="business-entity"
-            className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105 ${isDragging ? 'opacity-50 ring-2 ring-blue-400' : ''}`}
+            className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105 ${isDragging ? 'opacity-50 ring-2 ring-blue-400' : ''} ${selected ? 'border-yellow-400 z-20' : ''}`}
             style={{
               left: business.position.x - 48,
               top: business.position.y - 48,

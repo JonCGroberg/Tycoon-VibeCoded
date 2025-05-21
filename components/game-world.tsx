@@ -15,6 +15,7 @@ interface GameWorldProps {
   onSelectBusiness: (business: Business) => void
   onDeliveryComplete: (deliveryId: string) => void
   onMoveBusiness?: (businessId: string, newPosition: { x: number; y: number }) => void
+  selectedBusinessId?: string | null
 }
 
 const GameWorld = function GameWorld({
@@ -25,6 +26,7 @@ const GameWorld = function GameWorld({
   onSelectBusiness,
   onDeliveryComplete,
   onMoveBusiness,
+  selectedBusinessId,
 }: GameWorldProps) {
   const worldRef = useRef<HTMLDivElement>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -104,6 +106,7 @@ const GameWorld = function GameWorld({
           business={business}
           onClick={() => onSelectBusiness(business)}
           onMove={onMoveBusiness}
+          selected={selectedBusinessId === business.id}
         />
       ))}
 
