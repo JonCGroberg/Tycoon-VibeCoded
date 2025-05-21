@@ -289,20 +289,21 @@ describe('MusicControls regression: music does not stop or become unresponsive',
     it('remains responsive after many play/pause/next/prev actions', () => {
         const ref = React.createRef<MusicControlsHandle>();
         render(<MusicControls ref={ref} unlockedSongs={3} />);
-        const playButton = screen.getByLabelText(/play/i);
-        const pauseButton = screen.getByLabelText(/pause/i);
         const nextButton = screen.getByLabelText(/next/i);
         const prevButton = screen.getByLabelText(/previous/i);
         // Simulate rapid user actions
         for (let i = 0; i < 10; i++) {
-            fireEvent.click(playButton);
-            fireEvent.click(pauseButton);
+            // Play or Pause button (only one is visible at a time)
+            const playPauseButton = screen.queryByLabelText('Play') || screen.queryByLabelText('Pause');
+            if (playPauseButton) fireEvent.click(playPauseButton);
+            // After click, the other button should appear
+            const toggledButton = screen.queryByLabelText('Play') || screen.queryByLabelText('Pause');
+            if (toggledButton) fireEvent.click(toggledButton);
             fireEvent.click(nextButton);
             fireEvent.click(prevButton);
         }
         // Controls should still be present and enabled
-        expect(playButton).toBeEnabled();
-        expect(pauseButton).toBeEnabled();
+        expect(screen.getByLabelText(/play|pause/i)).toBeEnabled();
         expect(nextButton).toBeEnabled();
         expect(prevButton).toBeEnabled();
     });
