@@ -1,0 +1,21 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+- **CI/CD and DevSecOps Best Practices**
+  - **Commit Early, Commit Often:** Make atomic, frequent commits. Each commit triggers automated builds and tests.
+  - **Build Only Once:** Promote the same build artifact through all pipeline stages (dev, staging, prod).
+  - **Automate Everything:** All builds, tests, security scans, and deployments must be automated via MCP servers and CI/CD pipelines.
+  - **Security-First:** Integrate SAST, DAST, dependency scanning, and IaC checks into the pipeline. No secrets in code.
+  - **Test Layering:** Use fast unit tests first, then integration, then E2E. Run tests in parallel where possible.
+  - **Environment Consistency:** Use containers or IaC for ephemeral, reproducible environments.
+  - **Progressive Delivery:** Support canary/blue-green deployments and rollbacks.
+  - **Monitor and Measure:** Track DORA metrics, pipeline health, and deployment frequency.
+  - **Team Ownership:** CI/CD and security are shared responsibilities.
+
+- **References**
+  - [CD Foundation State of CI/CD 2024](mdc:https:/cd.foundation/state-of-cicd-2024)
+  - [JetBrains TeamCity CI/CD Best Practices](mdc:https:/www.jetbrains.com/teamcity/ci-cd-guide/ci-cd-best-practices)
+  - [Dev.to: Modern CI/CD and DevSecOps Guide 2025](mdc:https:/dev.to/vellanki/modern-cicd-and-devsecops-a-complete-guide-for-2025-3gdk)
+  - [Codefresh: 11 CI/CD Best Practices](mdc:https:/codefresh.io/learn/ci-cd/11-ci-cd-best-practices-for-devops-success)

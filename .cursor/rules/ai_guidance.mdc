@@ -1,0 +1,21 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+- **AI/Agent Guidance**
+  - **Task Breakdown:** Break work into small, testable tasks. Reference `@tasks/tasks.md` and `@docs/status.md`.
+  - **Test-Driven:** Write or update tests before implementing code. Iterate until all tests pass.
+  - **Dependency and Flow Analysis:** Analyze dependencies and simulate end-to-end flows before changes.
+  - **Change Scope:** Limit changes to the task at hand; avoid unrelated refactors.
+  - **Explain Reasoning:** For every change, explain what, why, impact, and tradeoffs.
+  - **Run and Verify Tests:** Run all relevant tests and verify passing before proposing changes.
+  - **Context Restoration:** Use `@status.md`, `@architecture.mermaid`, etc., to restore lost context.
+  - **Security and Compliance:** Always check for security, compliance, and code quality gates before merging.
+  - **Progress Tracking:** Update status files and changelogs as part of every task.
+
+- **References**
+  - [Cursor Docs: Rules](mdc:https:/docs.cursor.com/context/rules)
+  - [Medium: Getting Better Results from Cursor AI with Simple Rules](mdc:https:/medium.com/@aashari/getting-better-results-from-cursor-ai-with-simple-rules-cbc87346ad88)
+  - [Builder.io: How I use Cursor (+ my best tips)](mdc:https:/www.builder.io/blog/cursor-tips)
+  - [Medium: The Ultimate Guide to AI-Powered Development with Cursor](mdc:https:/medium.com/@vrknetha/the-ultimate-guide-to-ai-powered-development-with-cursor-from-chaos-to-clean-code-fc679973bbc4)

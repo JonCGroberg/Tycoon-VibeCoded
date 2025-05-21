@@ -1,0 +1,98 @@
+---
+description: Guidelines for creating and maintaining Cursor rules to ensure consistency and effectiveness.
+globs: .cursor/rules/*.mdc
+alwaysApply: true
+---
+- **Rule Structure and Maintenance**
+  - Use modular, focused rule files for CI/CD, branching, AI guidance, and security.
+  - Reference external docs and best practices in each rule.
+  - Regularly review and update rules as new practices and tools emerge.
+  - Use file references (`@filename`) and context files (e.g., `status.md`, `architecture.mermaid`) to restore context and guide AI.
+  - Keep rules concise, actionable, and under 500 lines each.
+
+- **See Modular Rules:**
+  - [ci_cd.mdc](mdc:.cursor/rules/ci_cd.mdc)
+  - [branching.mdc](mdc:.cursor/rules/branching.mdc)
+  - [ai_guidance.mdc](mdc:.cursor/rules/ai_guidance.mdc)
+  - [security.mdc](mdc:.cursor/rules/security.mdc)
+
+- **References**
+  - [Cursor Docs: Rules](mdc:https:/docs.cursor.com/context/rules)
+  - [Cursor 101: Customizing AI Behavior](mdc:https:/cursor101.com/article/cursor-rules-customizing-ai-behavior)
+
+- **Required Rule Structure:**
+  ```markdown
+  ---
+  description: Clear, one-line description of what the rule enforces
+  globs: path/to/files/*.ext, other/path/**/*
+  alwaysApply: boolean
+  ---
+
+  - **Main Points in Bold**
+    - Sub-points with details
+    - Examples and explanations
+  ```
+
+- **File References:**
+  - Use `[filename](mdc:path/to/file)` ([filename](mdc:filename)) to reference files
+  - Example: [prisma.mdc](mdc:.cursor/rules/prisma.mdc) for rule references
+  - Example: [schema.prisma](mdc:prisma/schema.prisma) for code references
+
+- **Code Examples:**
+  - Use language-specific code blocks
+  ```typescript
+  // ✅ DO: Show good examples
+  const goodExample = true;
+
+  // ❌ DON'T: Show anti-patterns
+  const badExample = false;
+  ```
+
+- **Rule Content Guidelines:**
+  - Start with high-level overview
+  - Include specific, actionable requirements
+  - Show examples of correct implementation
+  - Reference existing code when possible
+  - Keep rules DRY by referencing other rules
+
+- **Best Practices:**
+  - Use bullet points for clarity
+  - Keep descriptions concise
+  - Include both DO and DON'T examples
+  - Reference actual code over theoretical examples
+  - Use consistent formatting across rules
+
+- **Handle GitHub Issues via Branching and Pull Requests**
+  - **Each issue must be addressed in a dedicated branch**
+    - Branch name should match the issue number or a clear slug (e.g., `issue-123-fix-typo`)
+    - Example: `git checkout -b issue-42-fix-login`
+  - **Pull requests must target the `dev` branch**
+    - Do not merge directly to `main` or other branches
+    - Example: Open PR from `issue-42-fix-login` → `dev`
+  - **Pull request title and description should reference the issue**
+    - Example: `Fix login bug (#42)`
+  - **Enable auto-deletion of branches after PR merge**
+    - This should be set in repository settings: `Automatically delete head branches`
+    - Example: After merging PR #42, branch `issue-42-fix-login` is deleted automatically
+  - **No direct commits to `dev` or `main` allowed for issue resolution**
+  - **Cross-reference:** See [project.mdc](mdc:.cursor/rules/project.mdc) for CI/CD and automation requirements
+  - **DO:**
+    ```shell
+    # Create a branch for the issue
+    git checkout -b issue-101-add-feature
+    # Push and open PR to dev
+    git push origin issue-101-add-feature
+    # Open PR: base=dev, compare=issue-101-add-feature
+    ```
+  - **DON'T:**
+    ```shell
+    # Commit directly to dev or main
+    git checkout dev
+    git commit -am "Fix issue #101"
+    git push origin dev
+    ```
+  - **Best Practices:**
+    - Keep branches focused on a single issue
+    - Reference the issue in all related PRs
+    - Ensure branch auto-deletion is enabled in repo settings
+    - Use clear, descriptive branch names

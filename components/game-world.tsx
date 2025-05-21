@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState, useRef } from "react"
 import { type Business, BusinessType } from "@/lib/game-types"
@@ -16,9 +16,10 @@ interface GameWorldProps {
   onSelectBusiness: (business: Business) => void
   onDeliveryComplete: (deliveryId: string) => void
   marketPrices: Record<string, { value: number; target: number }>
+  onMoveBusiness?: (businessId: string, newPosition: { x: number; y: number }) => void
 }
 
-export default function GameWorld({
+const GameWorld = function GameWorld({
   businesses,
   placingBusiness,
   activeDeliveries,
@@ -26,6 +27,7 @@ export default function GameWorld({
   onSelectBusiness,
   onDeliveryComplete,
   marketPrices,
+  onMoveBusiness,
 }: GameWorldProps) {
   const worldRef = useRef<HTMLDivElement>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -56,6 +58,7 @@ export default function GameWorld({
   return (
     <div
       ref={worldRef}
+      data-testid="game-world"
       className="w-full h-full bg-green-100 relative overflow-hidden border-2 border-gray-400 rounded-lg"
       onMouseMove={handleMouseMove}
       onClick={handleClick}
@@ -68,12 +71,12 @@ export default function GameWorld({
           return (
             <div
               key={`cell-${row}-${col}`}
-              className="absolute border border-gray-300"
+              className="absolute border border-gray-300 opacity-30"
               style={{
-                left: `calc(${(col / 12) * 100}% )`,
-                top: `calc(${(row / 12) * 100}% )`,
-                width: `calc(100% / 12)`,
-                height: `calc(100% / 12)`,
+                left: `${(col / 12) * 100}%`,
+                top: `${(row / 12) * 100}%`,
+                width: `${100 / 12}%`,
+                height: `${100 / 12}%`,
                 boxSizing: 'border-box',
               }}
             />
@@ -82,6 +85,7 @@ export default function GameWorld({
       </div>
 
       {/* Market price panel in top right (larger, all business resources) */}
+      {/*
       <div className="absolute top-4 right-4 z-30 bg-white bg-opacity-90 rounded shadow px-6 py-4 border-2 border-yellow-400 flex flex-col items-center min-w-[240px] max-w-xs">
         <div className="text-base font-bold text-yellow-700 mb-2">Market Prices</div>
         {Object.entries(marketPrices)
@@ -93,22 +97,34 @@ export default function GameWorld({
             </div>
           ))}
       </div>
+      */}
 
       {/* Render all businesses */}
-      {businesses.map((business) => {
-        // Remove market panel above the market entity
-        return <BusinessEntity key={business.id} business={business} onClick={() => onSelectBusiness(business)} />
-      })}
+      {businesses.map((business) => (
+        <BusinessEntity
+          key={business.id}
+          business={business}
+          onClick={() => onSelectBusiness(business)}
+          onMove={onMoveBusiness}
+        />
+      ))}
 
       {/* Render active deliveries */}
       {activeDeliveries.map((delivery) => {
         const sourceBusiness = businesses.find((b) => b.id === delivery.sourceBusinessId)
         const targetBusiness = businesses.find((b) => b.id === delivery.targetBusinessId)
-
         if (!sourceBusiness || !targetBusiness) return null
 
+<<<<<<< HEAD
         // Only render the bot if it's actively delivering
         if (!delivery.bot.isDelivering) return null
+=======
+        // Find the shipping type ID for this bot
+        const shippingType = sourceBusiness.shippingTypes.find(st =>
+          st.bots.some(bot => bot.id === delivery.bot.id)
+        );
+        const shippingTypeId = shippingType?.type || 'walker'; // Fallback to walker if not found
+>>>>>>> main
 
         return (
           <DeliveryBotEntity
@@ -116,9 +132,15 @@ export default function GameWorld({
             bot={delivery.bot}
             sourcePosition={sourceBusiness.position}
             targetPosition={targetBusiness.position}
-            resourceType={sourceBusiness.outputResource}
+            resourceType={delivery.resourceType}
             onDeliveryComplete={() => onDeliveryComplete(delivery.id)}
+<<<<<<< HEAD
             expectedArrival={delivery.expectedArrival}
+=======
+            deliveryStartTime={delivery.createdAt}
+            deliveryExpectedArrival={delivery.expectedArrival}
+            shippingTypeId={shippingTypeId}
+>>>>>>> main
           />
         )
       })}
@@ -134,10 +156,20 @@ export default function GameWorld({
           }}
         >
           <div className="text-sm text-center text-white font-bold mt-2">
+<<<<<<< HEAD
             {getBusinessData(placingBusiness).name}
+=======
+            {placingBusiness === BusinessType.RESOURCE_GATHERING
+              ? "Wood Camp"
+              : placingBusiness === BusinessType.PROCESSING
+                ? "Plank Mill"
+                : "Furniture Shop"}
+>>>>>>> main
           </div>
         </div>
       )}
     </div>
   )
 }
+
+export default React.memo(GameWorld)
