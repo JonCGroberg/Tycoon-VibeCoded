@@ -169,7 +169,7 @@ describe('BusinessEntity', () => {
     it('applies highlight class when selected', () => {
         const { container } = render(<BusinessEntity {...baseProps} selected={true} />)
         const entity = container.querySelector('[data-testid="business-entity"]')
-        expect(entity).toHaveClass('border-4')
+        expect(entity).toHaveClass('border-2')
         expect(entity).toHaveClass('border-yellow-400')
         expect(entity).toHaveClass('z-20')
     })

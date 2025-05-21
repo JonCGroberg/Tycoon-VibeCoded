@@ -14,14 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8 # or your project's pnpm version
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'pnpm'
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8 # or your project's pnpm version
 
       - run: pnpm install
 
@@ -35,7 +35,7 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }} --project=tycoon
 
       - name: Check pnpm version
         run: pnpm --version

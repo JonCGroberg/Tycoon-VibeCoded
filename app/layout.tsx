@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import { Toaster } from '@/components/ui/toaster'
+import { Analytics } from '@vercel/analytics/next'
 
 export const metadata: Metadata = {
   title: 'v0 App',
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body>
         {children}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   )

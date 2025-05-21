@@ -24,7 +24,7 @@ export const ACHIEVEMENTS = [
     name: 'Tycoon',
     funName: 'Money Bags!',
     icon: CoinsIcon,
-    description: 'Reach 10,000 coins.'
+    description: 'Reach 50,000 coins.'
   },
   {
     key: 'industrialist',
@@ -38,21 +38,21 @@ export const ACHIEVEMENTS = [
     name: 'Master Upgrader',
     funName: 'Upgrade Wizard!',
     icon: WrenchIcon,
-    description: 'Upgrade a business to level 5.'
+    description: 'Upgrade a business to level 11.'
   },
   {
     key: 'logisticsPro',
     name: 'Logistics Pro',
     funName: 'Delivery Dynamo!',
     icon: TruckIcon,
-    description: 'Complete 100 deliveries.'
+    description: 'Complete 5000 deliveries.'
   },
   {
     key: 'marketMogul',
     name: 'Market Mogul',
     funName: 'Market Marvel!',
     icon: ShoppingCartIcon,
-    description: 'Earn 5,000 coins from the market.'
+    description: 'Earn 100,000 coins from the market.'
   },
   {
     key: 'shippingMaster',
@@ -73,7 +73,7 @@ export const ACHIEVEMENTS = [
     name: 'Maxed Out',
     funName: 'Level Legend!',
     icon: TrophyIcon,
-    description: 'Upgrade a business to level 10.'
+    description: 'Upgrade a business to level 20.'
   },
   {
     key: 'fastTycoon',

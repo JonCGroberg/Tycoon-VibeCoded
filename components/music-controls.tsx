@@ -213,12 +213,14 @@ const MusicControls = forwardRef<MusicControlsHandle, MusicControlsProps>(functi
 
     // Add a handler for when the song ends
     function handleSongEnd() {
-        if (availableSongs.length > 1) {
-            // Logic for skipping to next song
-            const nextIndex = (currentIndex === -1) ? 0 : (currentIndex + 1) % availableSongs.length;
+        if (availableSongs.length > 1 && currentIndex !== -1) {
+            // Advance to next song (with fade)
+            const nextIndex = (currentIndex + 1) % availableSongs.length;
             fadeToSong(nextIndex);
-        } else {
-            setIsPlaying(false); // Stop if only one song
+        } else if (audioRef.current) {
+            // Only one song: repeat
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => { });
         }
     }
 
