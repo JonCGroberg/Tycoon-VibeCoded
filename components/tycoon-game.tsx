@@ -574,9 +574,13 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
       business.upgrades[upgradeType] = (business.upgrades[upgradeType] || 0) + 1
 
       business.level += 1
-      // Unlock 'masterUpgrader' if level 5+
-      if (business.level >= 5) {
+      // Unlock 'masterUpgrader' if level 11+
+      if (business.level >= 11) {
         unlockAchievement('masterUpgrader')
+      }
+      // Unlock 'maxedOut' if level 20+
+      if (business.level >= 20) {
+        unlockAchievement('maxedOut')
       }
       newState.coins -= upgradeCost
       business.totalInvested = (business.totalInvested || 0) + upgradeCost
@@ -738,9 +742,9 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
     }
   }, [gameState, pendingAchievementNotifications.current.size])
 
-  // Watch for coins >= 10,000 to unlock 'tycoon'
+  // Watch for coins >= 50,000 to unlock 'tycoon'
   useEffect(() => {
-    if (gameState.coins >= 10000) {
+    if (gameState.coins >= 50000) {
       unlockAchievement('tycoon')
     }
   }, [gameState.coins, unlockAchievement])
@@ -753,10 +757,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
     // (This is a simplified patch for demonstration)
     // In a real implementation, you would increment these in the delivery completion logic
     // For now, just check if achievements should be unlocked
-    if (deliveryCount >= 100) {
+    if (deliveryCount >= 5000) {
       unlockAchievement('logisticsPro')
     }
-    if (marketProfit >= 5000) {
+    if (marketProfit >= 100000) {
       unlockAchievement('marketMogul')
     }
   }, [deliveryCount, marketProfit, unlockAchievement])

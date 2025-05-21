@@ -740,8 +740,8 @@ describe('TycoonGame extra coverage', () => {
 })
 
 describe('TycoonGame achievement and overlay coverage', () => {
-    it('unlocks tycoon achievement when coins >= 10000', async () => {
-        const initialGameState = { ...initializeGameState(), coins: 10000 }
+    it('unlocks tycoon achievement when coins >= 50000', async () => {
+        const initialGameState = { ...initializeGameState(), coins: 50000 }
         customRender(<TycoonGame initialGameState={initialGameState} />)
         fireEvent.click(screen.getByText('Start Playing'))
         // Wait for achievement toast
