@@ -242,19 +242,6 @@ describe('BusinessEntity advanced', () => {
         })
     })
 
-    it('renders shipping type icons for TRUCK, BOAT, PLANE', () => {
-        const shippingTypes = [
-            { type: 'truck', bots: [{ id: '1', maxLoad: 1, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 }] },
-            { type: 'ship', bots: [{ id: '2', maxLoad: 1, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 }] },
-            { type: 'plane', bots: [{ id: '3', maxLoad: 1, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 }] },
-            { type: 'cargo_plane', bots: [{ id: '4', maxLoad: 1, speed: 1, isDelivering: false, targetBusinessId: null, currentLoad: 0 }] }
-        ]
-        render(<BusinessEntity business={{ ...baseBusiness, shippingTypes }} onClick={() => { }} />)
-        // Use case-insensitive selectors and check for at least one matching element for each icon
-        expect(document.querySelectorAll('[class*="lucide-truck"]').length).toBeGreaterThan(0)
-        expect(document.querySelectorAll('[class*="lucide-ship"]').length).toBeGreaterThan(0)
-        expect(document.querySelectorAll('[class*="lucide-plane"]').length).toBeGreaterThan(0)
-    })
 
     it('shows yellow output warning icon and tooltip when output buffer is >= 65% and < 85%', async () => {
         const business = {

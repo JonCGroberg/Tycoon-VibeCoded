@@ -1,8 +1,7 @@
 "use client"
 
 import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { Trees, Columns4, StoreIcon, TruckIcon, CoinsIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangle, ShipIcon, PlaneIcon, BikeIcon, TrainIcon, UserIcon } from "lucide-react"
-import { Alert } from "./ui/alert"
+import { Trees, Columns4, StoreIcon, CoinsIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangle } from "lucide-react"
 import { getResourceName } from "./business-panel"
 import {
   Tooltip,
@@ -224,7 +223,7 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove }: Bu
               Lvl {business.level}
             </div>
 
-            <div className="text-sm font-bold mt-2 text-center text-nowrap">{getBusinessName()}</div>
+            <div className="text-sm font-bold mt-2 text-center text-wrap">{getBusinessName()}</div>
 
             <div className="mt-2">{getBusinessIcon()}</div>
 
@@ -293,6 +292,7 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove }: Bu
                     )}
                   </div>
                 </div>
+
               </div>
             )}
           </div>

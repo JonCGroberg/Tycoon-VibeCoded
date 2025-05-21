@@ -41,17 +41,21 @@ export function Toaster() {
       )}
       {toasts.map(function ({ id, title, description, action, ...props }) {
         let funName = null, IconComponent = null;
+        let achievementToast = false;
         if (title === 'Achievement Unlocked!' && typeof description === 'string') {
           const achievement = ACHIEVEMENTS.find(a => a.name === description);
           if (achievement) {
             funName = achievement.funName;
             IconComponent = achievement.icon;
+            achievementToast = true;
           }
         }
         return (
           <Toast
             key={id}
             {...props}
+            data-testid="toast"
+            {...(achievementToast ? { 'data-achievement-toast': 'true' } : {})}
             onClick={() => {
               if (props.onOpenChange) props.onOpenChange(false)
             }}

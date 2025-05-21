@@ -20,6 +20,7 @@ import { TrophyIcon, HelpCircleIcon } from 'lucide-react'
 import { ACHIEVEMENTS } from './achievements-config'
 import { toast } from '@/components/ui/use-toast'
 import { playSuccessChime, playErrorBeep } from '@/lib/sounds'
+import React from 'react'
 
 const AchievementsPanel = dynamic(() => import("./achievements-panel"), { ssr: false })
 const NotificationToast = dynamic(() => import("./notification-toast"), { ssr: false })
@@ -90,7 +91,13 @@ export interface Notification {
 }
 
 export default function TycoonGame({ initialGameState }: { initialGameState?: any } = {}) {
+  // Hydration flag to avoid SSR/client mismatch
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
+  // Use static initial values for SSR, then update from client after hydration
   const [gameState, setGameState] = useState(() => initialGameState || initializeGameState())
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
@@ -579,6 +586,15 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
 
   // Track which achievement notifications have been shown in this session
   const shownAchievementNotifications = useRef<Set<string>>(new Set())
+  // Track pending achievement notifications to show after render
+  const pendingAchievementNotifications = useRef<Set<string>>(new Set())
+
+  // Track number of unlocked achievements (for music unlock)
+  const unlockedAchievements = Object.values(gameState.achievements).filter(Boolean).length;
+  const unlockedSongs = Math.max(1, unlockedAchievements); // 1 at start, increases as achievements are unlocked
+
+  // New: Track pending song index to play after render
+  const [pendingSongIndex, setPendingSongIndex] = useState<number | null>(null);
 
   // Helper to unlock achievement
   function unlockAchievement(key: string) {
@@ -587,7 +603,12 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       ...prev,
       achievements: { ...prev.achievements, [key]: true }
     }))
-    showAchievementNotification(key)
+    // Instead of showing notification here, queue it for useEffect
+    pendingAchievementNotifications.current.add(key)
+    // Play the newly unlocked song if not all songs are unlocked
+    if (unlockedSongs > 0) {
+      setPendingSongIndex(unlockedSongs - 1); // Defer play to useEffect
+    }
   }
 
   // Memoize equity calculation
@@ -895,6 +916,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       title: 'Achievement Unlocked!',
       description: achievement.name,
       duration: 5000,
+      className: 'animated-achievement-toast',
     });
     shownAchievementNotifications.current.add(key)
     // Skip to next song on achievement
@@ -902,6 +924,16 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       musicControlsRef.current.skipToNextSong();
     }
   }
+
+  // Show achievement notifications after render if any are pending
+  useEffect(() => {
+    if (pendingAchievementNotifications.current.size > 0) {
+      for (const key of pendingAchievementNotifications.current) {
+        showAchievementNotification(key)
+      }
+      pendingAchievementNotifications.current.clear()
+    }
+  }, [gameState, pendingAchievementNotifications.current.size])
 
   // Watch for coins >= 10,000 to unlock 'tycoon'
   useEffect(() => {
@@ -1011,6 +1043,17 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     document.addEventListener('achievement', handleAchievementEvent)
     return () => document.removeEventListener('achievement', handleAchievementEvent)
   }, [])
+
+  // After render, if pendingSongIndex is set, play the song and reset
+  useEffect(() => {
+    if (pendingSongIndex !== null && musicControlsRef.current) {
+      musicControlsRef.current.playSongAtIndex(pendingSongIndex);
+      setPendingSongIndex(null);
+    }
+  }, [pendingSongIndex]);
+
+  // Only render after hydration to avoid SSR/client mismatch
+  if (!hydrated) return null;
 
   return (
     <div className="w-full h-[100%] relative overflow-hidden select-none">
@@ -1164,7 +1207,32 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       )}
 
       {/* Music Controls in bottom right */}
-      <MusicControls ref={musicControlsRef} audioElement={audioRef.current} />
+      <MusicControls ref={musicControlsRef} audioElement={audioRef.current} unlockedSongs={unlockedSongs} />
     </div>
   )
+}
+
+// Add animated border styles for the toast (move outside component for linter)
+export function AnimatedToastStyles() {
+  return (
+    <style jsx global>{`
+      .animated-achievement-toast {
+        border: 3px solid;
+        border-image: linear-gradient(270deg, #ffb347, #ffcc33, #47eaff, #b347ff, #ffb347) 1;
+        animation: border-animate 3s linear infinite;
+        box-shadow: 0 0 16px 2px #ffe06666;
+        border-radius: 16px !important;
+        position: relative;
+        overflow: hidden;
+      }
+      @keyframes border-animate {
+        0% {
+          border-image-source: linear-gradient(270deg, #ffb347, #ffcc33, #47eaff, #b347ff, #ffb347);
+        }
+        100% {
+          border-image-source: linear-gradient(630deg, #ffb347, #ffcc33, #47eaff, #b347ff, #ffb347);
+        }
+      }
+    `}</style>
+  );
 }

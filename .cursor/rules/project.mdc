@@ -7,7 +7,7 @@ alwaysApply: true
 
 - Always run pnpm test after finishing any set of code changes
 - Dont ask to run commands, just run them
-- Test coverage should be 85%
+- Test coverage should be 95%
 
 - All tests, builds, and automation must be executed via MCP servers, not just locally
 - CI/CD and task management should use MCP commands and MCP infrastructure
@@ -18,4 +18,4 @@ alwaysApply: true
 - Use puppeteer for browser automation and end-to-end testing where applicable
 - Use sequential thinking tools for complex problem-solving, planning, and analysis
 - If UI test failures cannot be solved with Jest/RTL, use Puppeteer to debug and verify UI issues
-- Dont stop untill done
+- Dont stop until done

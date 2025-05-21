@@ -18,13 +18,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 8 # This should match your pnpm-lock.yaml major version (lockfileVersion: '9.0' is compatible with pnpm 8+)
           run_install: false
+
+      - name: Check pnpm version
+        run: pnpm --version
 
       - name: Get pnpm store directory
         shell: bash

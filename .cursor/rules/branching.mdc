@@ -1,0 +1,21 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+- **Branching and PR Workflow**
+  - **Branch Protection:** All main branches (`main`, `dev`, etc.) must be protected with:
+    - Required PRs before merging
+    - Required status checks (build, test, security, lint)
+    - Required code reviews (at least 1, or CODEOWNERS for critical paths)
+    - Auto-delete branches after PR merge
+    - No force pushes or direct commits to protected branches
+    - Use rulesets to allow bots (e.g., release bots) to bypass only as needed
+  - **Branch Naming:** Use `issue-<number>-<slug>` or `feature/<slug>`, `bugfix/<slug>`, etc.
+  - **PR Requirements:** PRs must reference the issue, include a clear description, and pass all checks before merge.
+  - **Changelog and Status:** Update changelogs and status files as part of every PR.
+
+- **References**
+  - [GitHub Docs: Branch Protection](mdc:https:/docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/managing-a-branch-protection-rule)
+  - [Arnica: GitHub Branch Protection Guide](mdc:https:/www.arnica.io/blog/what-every-developer-needs-to-know-about-github-branch-protection)
+  - [Medium: Managing GitHub Branch Protections](mdc:https:/medium.com/@lauravuo/managing-github-branch-protections-4fa37b36ee4f)
