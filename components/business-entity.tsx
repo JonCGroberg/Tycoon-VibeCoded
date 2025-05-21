@@ -293,6 +293,22 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove }: Bu
                     )}
                   </div>
                 </div>
+                {/* Shipping type icons row */}
+                {business.shippingTypes && business.shippingTypes.length > 0 && (
+                  <div className="flex flex-row items-center justify-center mt-1 gap-1">
+                    {Array.from(new Set(business.shippingTypes.map(st => st.type))).map(typeId => {
+                      try {
+                        const config = require("@/lib/shipping-types");
+                        const { getShippingTypeConfig } = config;
+                        const typeConfig = getShippingTypeConfig(typeId);
+                        const Icon = typeConfig.icon;
+                        return <Icon key={typeId} className={`w-4 h-4 text-gray-700 lucide-${typeId.replace(/_/g, '-')}`} title={typeConfig.displayName} />
+                      } catch {
+                        return null;
+                      }
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -10,35 +10,6 @@ jest.mock('../achievements-config', () => ({
 
 jest.mock('react-confetti', () => () => <div data-testid="confetti" />)
 
-// Mock the audio context to avoid errors in tests
-beforeAll(() => {
-    const mockAudioContext = jest.fn().mockImplementation(() => ({
-        createOscillator: jest.fn().mockReturnValue({
-            type: '',
-            frequency: { value: 0 },
-            connect: jest.fn(),
-            start: jest.fn(),
-            stop: jest.fn(),
-            onended: null
-        }),
-        createGain: jest.fn().mockReturnValue({
-            gain: {
-                value: 0,
-                setValueAtTime: jest.fn(),
-                linearRampToValueAtTime: jest.fn()
-            },
-            connect: jest.fn(),
-            setValueAtTime: jest.fn(),
-            linearRampToValueAtTime: jest.fn()
-        }),
-        currentTime: 0,
-        destination: {},
-        close: jest.fn(),
-    }))
-    window.AudioContext = mockAudioContext;
-    (window as any).webkitAudioContext = mockAudioContext;
-});
-
 describe('NotificationToast', () => {
     it('renders notifications with correct message', () => {
         const notifications = [{ id: '1', message: 'Hello world' }]

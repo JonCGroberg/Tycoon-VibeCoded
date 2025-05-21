@@ -1,0 +1,19 @@
+---
+description:
+globs:
+alwaysApply: true
+---
+- **Security and Compliance Best Practices**
+  - **Security-First:** Integrate SAST, DAST, dependency scanning, and IaC checks into the pipeline. No secrets in code or config.
+  - **Principle of Least Privilege:** Restrict permissions for CI/CD, bots, and contributors to the minimum required.
+  - **Credential Management:** Use secret stores for credentials and API keys. Never store secrets in code or logs.
+  - **Automated Security Gates:** All PRs and merges must pass automated security checks before deployment.
+  - **Vulnerability Management:** Regularly scan dependencies and containers for vulnerabilities. Patch promptly.
+  - **Audit and Traceability:** Ensure all changes are traceable to an issue, PR, and user. Enable audit logging for critical actions.
+  - **Compliance Automation:** Automate compliance checks (e.g., license, SBOM, regulatory) as part of CI/CD.
+  - **Incident Response:** Document and automate incident response steps for security events in the pipeline.
+
+- **References**
+  - [Dev.to: Modern CI/CD and DevSecOps Guide 2025](mdc:https:/dev.to/vellanki/modern-cicd-and-devsecops-a-complete-guide-for-2025-3gdk)
+  - [Codefresh: 11 CI/CD Best Practices](mdc:https:/codefresh.io/learn/ci-cd/11-ci-cd-best-practices-for-devops-success)
+  - [CD Foundation State of CI/CD 2024](mdc:https:/cd.foundation/state-of-cicd-2024)

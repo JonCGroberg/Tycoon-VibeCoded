@@ -3,6 +3,23 @@ description: Guidelines for creating and maintaining Cursor rules to ensure cons
 globs: .cursor/rules/*.mdc
 alwaysApply: true
 ---
+- **Rule Structure and Maintenance**
+  - Use modular, focused rule files for CI/CD, branching, AI guidance, and security.
+  - Reference external docs and best practices in each rule.
+  - Regularly review and update rules as new practices and tools emerge.
+  - Use file references (`@filename`) and context files (e.g., `status.md`, `architecture.mermaid`) to restore context and guide AI.
+  - Keep rules concise, actionable, and under 500 lines each.
+
+- **See Modular Rules:**
+  - [ci_cd.mdc](mdc:.cursor/rules/ci_cd.mdc)
+  - [branching.mdc](mdc:.cursor/rules/branching.mdc)
+  - [ai_guidance.mdc](mdc:.cursor/rules/ai_guidance.mdc)
+  - [security.mdc](mdc:.cursor/rules/security.mdc)
+
+- **References**
+  - [Cursor Docs: Rules](mdc:https:/docs.cursor.com/context/rules)
+  - [Cursor 101: Customizing AI Behavior](mdc:https:/cursor101.com/article/cursor-rules-customizing-ai-behavior)
+
 - **Required Rule Structure:**
   ```markdown
   ---
@@ -37,12 +54,6 @@ alwaysApply: true
   - Show examples of correct implementation
   - Reference existing code when possible
   - Keep rules DRY by referencing other rules
-
-- **Rule Maintenance:**
-  - Update rules when new patterns emerge
-  - Add examples from actual codebase
-  - Remove outdated patterns
-  - Cross-reference related rules
 
 - **Best Practices:**
   - Use bullet points for clarity

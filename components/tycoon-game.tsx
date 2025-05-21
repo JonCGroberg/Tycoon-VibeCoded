@@ -91,7 +91,13 @@ export interface Notification {
 }
 
 export default function TycoonGame({ initialGameState }: { initialGameState?: any } = {}) {
+  // Hydration flag to avoid SSR/client mismatch
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
+  // Use static initial values for SSR, then update from client after hydration
   const [gameState, setGameState] = useState(() => initialGameState || initializeGameState())
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null)
   const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null)
@@ -924,7 +930,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
       }
       pendingAchievementNotifications.current.clear()
     }
-  })
+  }, [gameState, pendingAchievementNotifications.current.size])
 
   // Watch for coins >= 10,000 to unlock 'tycoon'
   useEffect(() => {
@@ -1034,6 +1040,9 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: an
     document.addEventListener('achievement', handleAchievementEvent)
     return () => document.removeEventListener('achievement', handleAchievementEvent)
   }, [])
+
+  // Only render after hydration to avoid SSR/client mismatch
+  if (!hydrated) return null;
 
   return (
     <div className="w-full h-[100%] relative overflow-hidden select-none">

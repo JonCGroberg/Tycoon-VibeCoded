@@ -3,31 +3,49 @@ import '@testing-library/jest-dom'
 
 jest.mock('react-confetti', () => () => null)
 
-// Mock the audio context to avoid errors in tests (for NotificationToast and others)
-beforeAll(() => {
-    const mockAudioContext = jest.fn().mockImplementation(() => ({
-        createOscillator: jest.fn().mockReturnValue({
-            type: '',
-            frequency: { value: 0 },
-            connect: jest.fn(),
-            start: jest.fn(),
-            stop: jest.fn(),
-            onended: null
-        }),
-        createGain: jest.fn().mockReturnValue({
-            gain: {
-                value: 0,
+// Mock AudioContext for all tests
+if (typeof window !== 'undefined') {
+    class MockAudioContext {
+        constructor() {
+            this.currentTime = 0;
+            this.destination = {};
+        }
+        createOscillator() {
+            return {
+                type: '',
+                frequency: { value: 0 },
+                connect: jest.fn(),
+                start: jest.fn(),
+                stop: jest.fn(),
+                onended: null
+            };
+        }
+        createGain() {
+            return {
+                gain: {
+                    value: 0,
+                    setValueAtTime: jest.fn(),
+                    linearRampToValueAtTime: jest.fn()
+                },
+                connect: jest.fn(),
                 setValueAtTime: jest.fn(),
                 linearRampToValueAtTime: jest.fn()
-            },
-            connect: jest.fn(),
-            setValueAtTime: jest.fn(),
-            linearRampToValueAtTime: jest.fn()
-        }),
-        currentTime: 0,
-        destination: {},
-        close: jest.fn(),
-    }))
-    window.AudioContext = mockAudioContext;
-    window.webkitAudioContext = mockAudioContext;
+            };
+        }
+        close() { return Promise.resolve(); }
+    }
+    window.AudioContext = MockAudioContext;
+    window.webkitAudioContext = MockAudioContext;
+}
+
+// Mock HTMLMediaElement play/pause for all tests
+Object.defineProperty(window.HTMLMediaElement.prototype, 'play', {
+    configurable: true,
+    writable: true,
+    value: jest.fn().mockResolvedValue(undefined)
+});
+Object.defineProperty(window.HTMLMediaElement.prototype, 'pause', {
+    configurable: true,
+    writable: true,
+    value: jest.fn()
 });
