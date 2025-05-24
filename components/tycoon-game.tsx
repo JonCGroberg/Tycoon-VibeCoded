@@ -122,6 +122,9 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
         newState.businesses.forEach((business) => {
           const batchSize = business.batchSize ?? 10;
           if (business.type === BusinessType.RESOURCE_GATHERING) {
+            // Always keep incomingStorage full for resource gatherers
+            business.incomingStorage.current = 1;
+            business.incomingStorage.capacity = 1;
             // For gathering, just produce directly to output if space
             if (business.outgoingStorage.current + batchSize <= business.outgoingStorage.capacity) {
               business.productionProgress += 0.1 * (1 / business.processingTime)
@@ -461,7 +464,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
       level: 1,
       processingTime,
       batchSize: 10, // Always set batchSize
-      incomingStorage: { current: 0, capacity: 10 },
+      incomingStorage: type === BusinessType.RESOURCE_GATHERING ? { current: 1, capacity: 1 } : { current: 0, capacity: 10 },
       outgoingStorage: { current: 0, capacity: 10 },
       productionProgress: 0,
       workers: type === BusinessType.RESOURCE_GATHERING
