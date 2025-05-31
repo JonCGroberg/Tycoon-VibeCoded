@@ -631,6 +631,31 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
     })
   }, [setGameState])
 
+  const handleSellShippingType = useCallback((businessId: string, shippingTypeId: string) => {
+    setGameState((prevState: GameState) => {
+      const newState = { ...prevState }
+      const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId)
+      if (businessIndex === -1) return prevState
+      const business = newState.businesses[businessIndex]
+      const shippingType = business.shippingTypes.find((st: { type: string }) => st.type === shippingTypeId)
+      if (!shippingType || shippingType.bots.length === 0) return prevState
+      // Only allow selling bots that are not delivering
+      const sellableBotIndex = shippingType.bots.findIndex(bot => !bot.isDelivering)
+      if (sellableBotIndex === -1) return prevState // All bots are in use
+      const ownedCount = shippingType.bots.length
+      const cost = calculateShippingCost(shippingTypeId, ownedCount - 1) // Refund based on previous count
+      // Remove the bot
+      shippingType.bots.splice(sellableBotIndex, 1)
+      // Refund 50% of the cost
+      newState.coins += Math.floor(cost / 2)
+      // Remove shippingType entry if no bots left
+      if (shippingType.bots.length === 0) {
+        business.shippingTypes = business.shippingTypes.filter(st => st.type !== shippingTypeId)
+      }
+      return newState
+    })
+  }, [setGameState])
+
   const handleMoveBusiness = useCallback((businessId: string, newPosition: { x: number; y: number }) => {
     if (!relocatingBusiness) {
       // Start relocation: store original and preview position
@@ -872,6 +897,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
             setSelectedBusinessId(null)
           }}
           onHireShippingType={handleHireShippingType}
+          onSellShippingType={handleSellShippingType}
           onUpgrade={handleUpgradeBusiness}
           defaultTab="shipping"
         />
