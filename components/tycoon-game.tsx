@@ -122,6 +122,9 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
         newState.businesses.forEach((business) => {
           const batchSize = business.batchSize ?? 10;
           if (business.type === BusinessType.RESOURCE_GATHERING) {
+            // Always keep incomingStorage full for resource gatherers
+            business.incomingStorage.current = 1;
+            business.incomingStorage.capacity = 1;
             // For gathering, just produce directly to output if space
             if (business.outgoingStorage.current + batchSize <= business.outgoingStorage.capacity) {
               business.productionProgress += 0.1 * (1 / business.processingTime)
@@ -461,7 +464,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
       level: 1,
       processingTime,
       batchSize: 10, // Always set batchSize
-      incomingStorage: { current: 0, capacity: 10 },
+      incomingStorage: type === BusinessType.RESOURCE_GATHERING ? { current: 1, capacity: 1 } : { current: 0, capacity: 10 },
       outgoingStorage: { current: 0, capacity: 10 },
       productionProgress: 0,
       workers: type === BusinessType.RESOURCE_GATHERING
@@ -624,6 +627,31 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
       newState.coins -= cost;
       newState.businesses[businessIndex].totalInvested = (newState.businesses[businessIndex].totalInvested || 0) + cost;
 
+      return newState
+    })
+  }, [setGameState])
+
+  const handleSellShippingType = useCallback((businessId: string, shippingTypeId: string) => {
+    setGameState((prevState: GameState) => {
+      const newState = { ...prevState }
+      const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId)
+      if (businessIndex === -1) return prevState
+      const business = newState.businesses[businessIndex]
+      const shippingType = business.shippingTypes.find((st: { type: string }) => st.type === shippingTypeId)
+      if (!shippingType || shippingType.bots.length === 0) return prevState
+      // Only allow selling bots that are not delivering
+      const sellableBotIndex = shippingType.bots.findIndex(bot => !bot.isDelivering)
+      if (sellableBotIndex === -1) return prevState // All bots are in use
+      const ownedCount = shippingType.bots.length
+      const cost = calculateShippingCost(shippingTypeId, ownedCount - 1) // Refund based on previous count
+      // Remove the bot
+      shippingType.bots.splice(sellableBotIndex, 1)
+      // Refund 50% of the cost
+      newState.coins += Math.floor(cost / 2)
+      // Remove shippingType entry if no bots left
+      if (shippingType.bots.length === 0) {
+        business.shippingTypes = business.shippingTypes.filter(st => st.type !== shippingTypeId)
+      }
       return newState
     })
   }, [setGameState])
@@ -869,6 +897,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
             setSelectedBusinessId(null)
           }}
           onHireShippingType={handleHireShippingType}
+          onSellShippingType={handleSellShippingType}
           onUpgrade={handleUpgradeBusiness}
           defaultTab="shipping"
         />

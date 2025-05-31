@@ -17,7 +17,7 @@ export const SHIPPING_TYPES: ShippingTypeConfig[] = [
     icon: UserIcon,
     baseCost: 150,
     baseSpeed: 65,
-    baseLoad: 10,
+    baseLoad: 5,
     description: "Slowest, but can squeeze through anywhere. Minimal capacity."
   },
   {
