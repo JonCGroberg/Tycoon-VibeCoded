@@ -1,5 +1,5 @@
-import { generateUniqueId, initializeGameState } from '../game-logic'
-import { BusinessType, ResourceType } from '../game-types'
+import { generateUniqueId, initializeGameState, getUpgradeCost } from '../game-logic'
+import { BusinessType, ResourceType, type Business } from '../game-types'
 
 describe('generateUniqueId', () => {
   it('generates unique IDs with the given prefix', () => {
@@ -62,5 +62,31 @@ describe('initializeGameState', () => {
     expect(state.achievements.relocator).toBe(false)
     expect(state.achievements.maxedOut).toBe(false)
     expect(state.achievements.fastTycoon).toBe(false)
+  })
+})
+
+describe('getUpgradeCost', () => {
+  it('does not mutate the business object', () => {
+    const business = {
+      id: 'b1',
+      type: BusinessType.RESOURCE_GATHERING,
+      position: { x: 0, y: 0 },
+      incomingStorage: { current: 0, capacity: 1 },
+      outgoingStorage: { current: 0, capacity: 1 },
+      processingTime: 1,
+      productionProgress: 0,
+      workers: [],
+      shippingTypes: [],
+      level: 1,
+      inputResource: ResourceType.WOOD,
+      outputResource: ResourceType.WOOD,
+      recentProfit: 0,
+      profitDisplayTime: 0,
+      totalInvested: 0,
+    } as Business
+
+    const cost = getUpgradeCost(business, 'incomingCapacity')
+    expect(cost).toBe(50)
+    expect(business.upgrades).toBeUndefined()
   })
 })
