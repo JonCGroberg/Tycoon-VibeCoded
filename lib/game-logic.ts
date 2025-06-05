@@ -52,19 +52,19 @@ export function initializeGameState(): GameState {
 
 export function getUpgradeCost(business: Business, upgradeType?: "incomingCapacity" | "processingTime" | "outgoingCapacity"): number {
   const base = 50
-  // Track upgrades per type on the business object
-  if (!business.upgrades) {
-    business.upgrades = {
-      incomingCapacity: 0,
-      processingTime: 0,
-      outgoingCapacity: 0
-    }
+  // Read upgrades without mutating the business object
+  const upgrades = business.upgrades ?? {
+    incomingCapacity: 0,
+    processingTime: 0,
+    outgoingCapacity: 0,
   }
+
   // If no upgradeType is provided, fallback to old logic
   if (!upgradeType) {
     return Math.floor(base * Math.pow(2, business.level - 1))
   }
+
   // Each upgrade type is independent: first upgrade is 50, then 1.7x each time
-  const n = business.upgrades[upgradeType] || 0;
-  return Math.floor(base * Math.pow(1.7, n));
+  const n = upgrades[upgradeType] || 0
+  return Math.floor(base * Math.pow(1.7, n))
 }
