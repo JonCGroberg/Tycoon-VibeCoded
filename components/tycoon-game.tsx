@@ -11,7 +11,7 @@ import {
   type ActiveDelivery,
   ShippingTypeState,
 } from "@/lib/game-types"
-import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
+import { initializeGameState, generateUniqueId, getUpgradeCost } from "@/lib/game-logic"
 import type { GameState } from "@/lib/game-types"
 import { getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
 import { v4 as uuidv4 } from "uuid"
@@ -515,31 +515,6 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
   }, [])
 
   const handleUpgradeBusiness = useCallback((businessId: string, upgradeType: "incomingCapacity" | "processingTime" | "outgoingCapacity") => {
-    function getUpgradeCost(business: Business, upgradeType?: "incomingCapacity" | "processingTime" | "outgoingCapacity"): number {
-      const base = 50
-      // Track upgrades per type on the business object
-      if (!business.upgrades) {
-        business.upgrades = {
-          incomingCapacity: 0,
-          processingTime: 0,
-          outgoingCapacity: 0
-        }
-      }
-      // If no upgradeType is provided, fallback to old logic
-      if (!upgradeType) {
-        return Math.floor(base * Math.pow(2, business.level - 1))
-      }
-      // Cost is 2x for the current upgrade type, 1.5x for each other type not yet upgraded
-      let cost = base
-      cost *= Math.pow(2, business.upgrades[upgradeType])
-      const otherTypes: Array<"incomingCapacity" | "processingTime" | "outgoingCapacity"> = ["incomingCapacity", "processingTime", "outgoingCapacity"].filter(t => t !== upgradeType) as Array<"incomingCapacity" | "processingTime" | "outgoingCapacity">;
-      otherTypes.forEach(type => {
-        if (business.upgrades && business.upgrades[type] === 0) {
-          cost *= 1.5
-        }
-      })
-      return Math.floor(cost)
-    }
     setGameState((prevState: GameState) => {
       const newState = { ...prevState }
       const businessIndex = newState.businesses.findIndex((b: { id: string }) => b.id === businessId)
