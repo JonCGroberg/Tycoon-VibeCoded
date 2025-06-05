@@ -1,7 +1,19 @@
 "use client"
 
-import { type Business, BusinessType, ResourceType } from "@/lib/game-types"
-import { Trees, Columns4, StoreIcon, CoinsIcon, GemIcon, WrenchIcon, PackageIcon, BoxIcon, AlertTriangle } from "lucide-react"
+import { type Business, BusinessType, ResourceType, getBusinessDisplayName } from "@/lib/game-types"
+import {
+  Trees,
+  Columns4,
+  PackageIcon,
+  StoreIcon,
+  WrenchIcon,
+  CoinsIcon,
+  BoxIcon,
+  GemIcon,
+  Mountain,
+  Flame,
+  AlertTriangle,
+} from "lucide-react"
 import { getResourceName } from "./business-panel"
 import {
   Tooltip,
@@ -86,11 +98,29 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove, sele
       case BusinessType.RESOURCE_GATHERING:
         return <Trees className="w-6 h-6 text-green-800" />
       case BusinessType.PROCESSING:
-        return <Columns4 className="w-6 h-6 text-amber-700" />
+        if (business.outputResource === ResourceType.PLANKS) {
+          return <Columns4 className="w-6 h-6 text-amber-700" />
+        } else if (business.outputResource === ResourceType.BRICKS) {
+          return <PackageIcon className="w-6 h-6 text-red-700" />
+        } else {
+          return <Columns4 className="w-6 h-6 text-amber-700" />
+        }
+      case BusinessType.SMELTER:
+        // Smelter: Lucide Flame icon, bright orange
+        return <Flame className="w-7 h-7 text-orange-500" />
       case BusinessType.SHOP:
         return <StoreIcon className="w-6 h-6 text-blue-700" />
+      case BusinessType.TOOL_SHOP:
+        // Tool Shop: wrench icon, black
+        return <WrenchIcon className="w-7 h-7 text-black" />
       case BusinessType.MARKET:
         return <CoinsIcon className="w-6 h-6 text-yellow-500" />
+      case BusinessType.MINE:
+        return <Mountain className="w-6 h-6 text-gray-700" />
+      case BusinessType.QUARRY:
+        return <GemIcon className="w-6 h-6 text-gray-700" />
+      default:
+        return null;
     }
   }
 
@@ -100,33 +130,54 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove, sele
       case BusinessType.RESOURCE_GATHERING:
         return "bg-green-200 border-green-600"
       case BusinessType.PROCESSING:
-        return "bg-amber-200 border-amber-600"
+        if (business.outputResource === ResourceType.PLANKS) {
+          return "bg-amber-200 border-amber-600"
+        } else if (business.outputResource === ResourceType.BRICKS) {
+          return "bg-red-100 border-red-700"
+        } else {
+          return "bg-amber-200 border-amber-600"
+        }
+      case BusinessType.SMELTER:
+        // Smelter: light gray bg, dark purple border
+        return "bg-gray-100 border-purple-900"
       case BusinessType.SHOP:
         return "bg-blue-200 border-blue-600"
+      case BusinessType.TOOL_SHOP:
+        // Tool Shop: gray bg, black border
+        return "bg-gray-400 border-black"
       case BusinessType.MARKET:
         return "bg-yellow-200 border-yellow-600"
+      case BusinessType.MINE:
+        return "bg-blue-100 border-gray-700"
+      default:
+        return "bg-white border-gray-400"
     }
   }
 
-  // Get business name based on type and resources
-  const getBusinessName = () => {
-    switch (business.type) {
-      case BusinessType.RESOURCE_GATHERING:
-        return business.outputResource === ResourceType.WOOD
-          ? "Wood Camp"
-          : business.outputResource === ResourceType.STONE
-            ? "Quarry"
-            : "Mine"
-      case BusinessType.PROCESSING:
-        return business.outputResource === ResourceType.PLANKS
-          ? "Plank Mill"
-          : business.outputResource === ResourceType.BRICKS
-            ? "Brick Kiln"
-            : "Smelter"
-      case BusinessType.SHOP:
-        return business.outputResource === ResourceType.FURNITURE ? "Furniture Shop" : "Tool Shop"
-      case BusinessType.MARKET:
-        return "Market"
+  // Color and border logic for business types
+  function getBusinessStyles(type: BusinessType) {
+    switch (type) {
+      case BusinessType.MINE:
+        return {
+          background: 'bg-blue-100',
+          border: 'border-gray-700',
+        };
+      case BusinessType.SMELTER:
+        return {
+          background: 'bg-gray-100', // light gray
+          border: 'border-purple-900', // dark purple
+        };
+      case BusinessType.TOOL_SHOP:
+        return {
+          background: 'bg-gray-400', // gray
+          border: 'border-black', // black
+        };
+      // ...other business types...
+      default:
+        return {
+          background: 'bg-white',
+          border: 'border-gray-400',
+        };
     }
   }
 
@@ -211,7 +262,7 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove, sele
         <TooltipTrigger asChild>
           <div
             data-testid="business-entity"
-            className={`absolute w-24 h-24 ${getBusinessColor()} rounded-md border-2 flex flex-col items-center justify-start cursor-pointer transition-transform hover:scale-105 ${isDragging ? 'opacity-50 ring-2 ring-blue-400' : ''} ${selected ? 'border-yellow-400 z-20' : ''}`}
+            className={`absolute w-24 h-24 rounded-md border-2 flex flex-col items-center justify-center select-none ${getBusinessColor()} transition-transform hover:scale-105 ${isDragging ? 'opacity-50 ring-2 ring-blue-400' : ''} ${selected ? 'border-yellow-400 z-20' : ''}`}
             style={{
               left: business.position.x - 48,
               top: business.position.y - 48,
@@ -223,13 +274,14 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove, sele
             <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800">
               Lvl {business.level}
             </div>
-
-            <div className="text-sm font-bold mt-2 text-center text-wrap">{getBusinessName()}</div>
-
+            <div className="text-sm font-bold mt-2 text-center text-nowrap"
+              style={business.type === BusinessType.PROCESSING && business.outputResource === ResourceType.IRON_INGOT ? { color: '#FFA500' } : {}}>
+              {getBusinessDisplayName(business.type)}
+            </div>
             <div className="mt-2">{getBusinessIcon()}</div>
 
             {/* Input Buffer Visualization - Left side */}
-            {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && (
+            {business.type !== BusinessType.RESOURCE_GATHERING && business.type !== BusinessType.MARKET && business.type !== BusinessType.MINE && (
               <div className="absolute left-0 top-0 w-1 h-full flex flex-col-reverse">
                 <div
                   className={`w-full ${getBufferStatusColor(

@@ -118,14 +118,14 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
         // Create a deep copy of the state to avoid mutation
         const newState = JSON.parse(JSON.stringify(prevState)) as GameState
 
-        // Process worker gathering
+        // Process worker gathering and mine production
         newState.businesses.forEach((business) => {
           const batchSize = business.batchSize ?? 10;
-          if (business.type === BusinessType.RESOURCE_GATHERING) {
-            // Always keep incomingStorage full for resource gatherers
+          if (business.type === BusinessType.RESOURCE_GATHERING || business.type === BusinessType.MINE) {
+            // Always keep incomingStorage full for resource gatherers and mines
             business.incomingStorage.current = 1;
             business.incomingStorage.capacity = 1;
-            // For gathering, just produce directly to output if space
+            // For gathering/mining, just produce directly to output if space
             if (business.outgoingStorage.current + batchSize <= business.outgoingStorage.capacity) {
               business.productionProgress += 0.1 * (1 / business.processingTime)
               if (business.productionProgress >= 1) {
@@ -435,6 +435,24 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
           }]
         }
       ];
+    } else if (type === BusinessType.MINE) {
+      // Mine is a first-tier producer like wood cutter
+      inputResource = ResourceType.NONE;
+      outputResource = ResourceType.IRON_ORE;
+      processingTime = 1;
+      shippingTypes = [
+        {
+          type: 'walker',
+          bots: [{
+            id: uuidv4(),
+            maxLoad: getShippingTypeConfig('walker').baseLoad,
+            speed: getShippingTypeConfig('walker').baseSpeed,
+            isDelivering: false,
+            targetBusinessId: null,
+            currentLoad: 0,
+          }]
+        }
+      ];
     } else if (type === BusinessType.PROCESSING) {
       inputResource = ResourceType.WOOD;
       outputResource = ResourceType.PLANKS;
@@ -464,12 +482,11 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
       level: 1,
       processingTime,
       batchSize: 10, // Always set batchSize
-      incomingStorage: type === BusinessType.RESOURCE_GATHERING ? { current: 1, capacity: 1 } : { current: 0, capacity: 10 },
+      // For Mine, incomingStorage is always full and capacity 1 (like wood cutter)
+      incomingStorage: type === BusinessType.RESOURCE_GATHERING || type === BusinessType.MINE ? { current: 1, capacity: 1 } : { current: 0, capacity: 10 },
       outgoingStorage: { current: 0, capacity: 10 },
       productionProgress: 0,
-      workers: type === BusinessType.RESOURCE_GATHERING
-        ? [{ id: uuidv4(), gatherRate: 1 }]
-        : [],
+      workers: type === BusinessType.RESOURCE_GATHERING ? [{ id: uuidv4(), gatherRate: 1 }] : [],
       shippingTypes,
       pendingDeliveries: [],
       recentProfit: 0,
@@ -742,6 +759,11 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [relocatingBusiness, relocatingBusiness?.isDragging])
 
+  // Compute mineUnlocked: true if player has at least 10,000 coins
+  const mineUnlocked = useMemo(() => {
+    return gameState.coins >= 10000;
+  }, [gameState.coins]);
+
   // Helper to show notification (only once per achievement)
   function showAchievementNotification(key: string) {
     if (shownAchievementNotifications.current.has(key)) return; // Already notified
@@ -874,7 +896,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
           [BusinessType.MARKET]: 0
         }}
         businesses={gameState.businesses}
-      // TODO: Use marketPrices for dynamic pricing display in the future
+        mineUnlocked={mineUnlocked}
       />
 
       <GameWorld

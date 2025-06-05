@@ -12,9 +12,10 @@ interface GameHUDProps {
   flashRed?: boolean
   buildingCosts: Record<BusinessType, number>
   businesses?: { outputResource: string }[]
+  mineUnlocked: boolean
 }
 
-export default function GameHUD({ coins, equity, onPlaceBusiness, flashRed, buildingCosts, businesses }: GameHUDProps) {
+export default function GameHUD({ coins, equity, onPlaceBusiness, flashRed, buildingCosts, businesses, mineUnlocked }: GameHUDProps) {
   // Check if player owns a Plank Mill or Smelter
   const hasPlankMill = businesses?.some(b => b.outputResource === 'PLANKS')
   const hasSmelter = businesses?.some(b => b.outputResource === 'IRON_INGOT')
@@ -111,6 +112,16 @@ export default function GameHUD({ coins, equity, onPlaceBusiness, flashRed, buil
             <span>Place Tool Shop ({formatCurrency(buildingCosts[BusinessType.TOOL_SHOP])})</span>
           </Button>
         )}
+        <Button
+          variant="outline"
+          className="flex items-center justify-start"
+          onClick={() => onPlaceBusiness(BusinessType.MINE)}
+          disabled={!mineUnlocked}
+          title={mineUnlocked ? undefined : 'Unlock by delivering 500 Furniture to the Market'}
+        >
+          <BoxIcon className="w-5 h-5 mr-2 text-gray-800" />
+          <span>Place Mine ({formatCurrency(buildingCosts[BusinessType.MINE])})</span>
+        </Button>
       </div>
     </div>
   )

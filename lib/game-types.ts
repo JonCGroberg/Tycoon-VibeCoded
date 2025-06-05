@@ -99,3 +99,28 @@ export interface ActiveDelivery {
   createdAt: number
   travelTimeMs: number
 }
+
+export function getBusinessDisplayName(type: BusinessType): string {
+  switch (type) {
+    case BusinessType.RESOURCE_GATHERING:
+      return "Wood Cutter";
+    case BusinessType.QUARRY:
+      return "Quarry";
+    case BusinessType.MINE:
+      return "Mine";
+    case BusinessType.PROCESSING:
+      return "Plank Mill";
+    case BusinessType.BRICK_KILN:
+      return "Brick Kiln";
+    case BusinessType.SMELTER:
+      return "Smelter";
+    case BusinessType.SHOP:
+      return "Furniture Shop";
+    case BusinessType.TOOL_SHOP:
+      return "Tool Shop";
+    case BusinessType.MARKET:
+      return "Market";
+    default:
+      return "Unknown Business";
+  }
+}

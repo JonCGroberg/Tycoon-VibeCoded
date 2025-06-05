@@ -12,7 +12,8 @@ export function generateUniqueId(prefix: string): string {
 // Initialize a new game state
 export function initializeGameState(): GameState {
   return {
-    coins: 2000, // Starting coins increased from 500
+    // Starting coins
+    coins: 20000,
     businesses: [
       // Add a market at a fixed position
       {
