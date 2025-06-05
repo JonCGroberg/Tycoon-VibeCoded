@@ -1,6 +1,6 @@
 # Roblox Tycoon Game - Web Prototype
 
-A web-based tycoon/idle game inspired by Roblox tycoon mechanics. Build, upgrade, and manage a network of resource-gathering and processing businesses to maximize your profits!
+A web-based tycoon/idle game inspired by Roblox tycoon mechanics. Build, upgrade and manage a network of resource-gathering and processing businesses to maximize your profits!
 
 ## Features
 - Place and upgrade various business types (Wood Cutter Camp, Quarry, Mine, Plank Mill, Brick Kiln, Smelter, Tool Shop, Market)
