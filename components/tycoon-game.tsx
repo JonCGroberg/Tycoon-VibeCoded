@@ -58,6 +58,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
     isDragging: boolean;
   } | null>(null);
   const [showAchievements, setShowAchievements] = useState(false)
+  const [pan, setPan] = useState({ x: 0, y: 0 }); // Pan offset for draggable game area
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const musicControlsRef = useRef<MusicControlsHandle>(null)
@@ -760,9 +761,11 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
   }, [relocatingBusiness, relocatingBusiness?.isDragging])
 
   // Compute mineUnlocked: true if player has at least 10,000 coins
-  const mineUnlocked = useMemo(() => {
-    return gameState.coins >= 10000;
-  }, [gameState.coins]);
+  useEffect(() => {
+    if (!gameState.mineUnlocked && gameState.coins >= 10000) {
+      setGameState((prev: GameState) => ({ ...prev, mineUnlocked: true }));
+    }
+  }, [gameState.coins, gameState.mineUnlocked]);
 
   // Helper to show notification (only once per achievement)
   function showAchievementNotification(key: string) {
@@ -833,6 +836,10 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
 
   return (
     <div className="w-full h-[100%] relative overflow-hidden select-none">
+      {/* Coordinate readout overlay */}
+      <div className="fixed top-2 left-2 z-50 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded shadow pointer-events-none">
+        Offset: ({pan.x}, {pan.y})
+      </div>
       {/* Top right row: Achievements and Help */}
       <div className="absolute top-4 right-4 z-50 flex flex-row gap-2">
         <button
@@ -896,18 +903,20 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
           [BusinessType.MARKET]: 0
         }}
         businesses={gameState.businesses}
-        mineUnlocked={mineUnlocked}
+        mineUnlocked={gameState.mineUnlocked}
       />
 
       <GameWorld
         businesses={gameState.businesses}
         placingBusiness={placingBusiness}
-        activeDeliveries={gameState.activeDeliveries || []}
-        onPlaceBusiness={gameOver || relocatingBusiness ? () => { } : handlePlaceBusiness}
-        onSelectBusiness={relocatingBusiness ? () => { } : handleSelectBusiness}
+        activeDeliveries={gameState.activeDeliveries}
+        onPlaceBusiness={handlePlaceBusiness}
+        onSelectBusiness={handleSelectBusiness}
         onDeliveryComplete={handleDeliveryComplete}
-        onMoveBusiness={relocatingBusiness ? handleMoveBusiness : handleMoveBusiness}
+        onMoveBusiness={handleMoveBusiness}
         selectedBusinessId={selectedBusinessId}
+        pan={pan}
+        setPan={setPan}
       />
 
       {selectedBusiness && (

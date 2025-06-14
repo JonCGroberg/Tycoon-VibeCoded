@@ -24,7 +24,7 @@ export default function GameHUD({ coins, equity, onPlaceBusiness, flashRed, buil
   const hasMine = businesses?.some(b => b.outputResource === 'IRON_ORE')
 
   return (
-    <div className={`absolute top-4 left-4 z-10 bg-white bg-opacity-90 p-4 rounded-lg shadow-md border border-gray-300 ${flashRed ? 'error-border' : ''}`}>
+    <div className={`absolute top-4 left-4 z-[60] bg-white bg-opacity-90 p-4 rounded-lg shadow-md border border-gray-300 ${flashRed ? 'error-border' : ''}`} style={{ pointerEvents: 'auto' }}>
       <div className="mb-4">
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center">
@@ -58,10 +58,21 @@ export default function GameHUD({ coins, equity, onPlaceBusiness, flashRed, buil
           variant="outline"
           className="flex items-center justify-start"
           onClick={() => onPlaceBusiness(BusinessType.MINE)}
+          disabled={!mineUnlocked}
         >
           <BoxIcon className="w-5 h-5 mr-2 text-gray-800" />
           <span>Place Mine ({formatCurrency(buildingCosts[BusinessType.MINE])})</span>
         </Button> */}
+        {mineUnlocked && (
+          <Button
+            variant="outline"
+            className="flex items-center justify-start"
+            onClick={() => onPlaceBusiness(BusinessType.MINE)}
+          >
+            <BoxIcon className="w-5 h-5 mr-2 text-gray-800" />
+            <span>Place Mine ({formatCurrency(buildingCosts[BusinessType.MINE])})</span>
+          </Button>
+        )}
         {hasLumberYard && (
           <Button
             variant="outline"
@@ -112,16 +123,6 @@ export default function GameHUD({ coins, equity, onPlaceBusiness, flashRed, buil
             <span>Place Tool Shop ({formatCurrency(buildingCosts[BusinessType.TOOL_SHOP])})</span>
           </Button>
         )}
-        <Button
-          variant="outline"
-          className="flex items-center justify-start"
-          onClick={() => onPlaceBusiness(BusinessType.MINE)}
-          disabled={!mineUnlocked}
-          title={mineUnlocked ? undefined : 'Unlock by delivering 500 Furniture to the Market'}
-        >
-          <BoxIcon className="w-5 h-5 mr-2 text-gray-800" />
-          <span>Place Mine ({formatCurrency(buildingCosts[BusinessType.MINE])})</span>
-        </Button>
       </div>
     </div>
   )

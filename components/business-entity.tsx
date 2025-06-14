@@ -37,7 +37,7 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove, sele
   const dragTimeout = useRef<NodeJS.Timeout | null>(null)
   const pendingDrag = useRef(false)
 
-  // Track mouse move and up events globally
+  // --- Drag logic: robust handle-only drag, always works even if cursor moves quickly ---
   useEffect(() => {
     if (!isDragging) return;
     const handleMouseMove = (e: MouseEvent) => {
@@ -61,35 +61,18 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove, sele
     };
   }, [isDragging, dragOffset, onMove, business.id]);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Only the handle starts the drag
+  const handleDragHandleMouseDown = (e: React.MouseEvent) => {
     if (!onMove) return;
     e.stopPropagation();
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const offsetX = e.clientX - rect.left;
-    const offsetY = e.clientY - rect.top;
+    const gameWorld = document.querySelector('[data-testid="game-world"]') as HTMLElement | null;
+    if (!gameWorld) return;
+    const rect = gameWorld.getBoundingClientRect();
+    // Calculate offset from business top-left to mouse
+    const offsetX = e.clientX - rect.left - (business.position.x - 48);
+    const offsetY = e.clientY - rect.top - (business.position.y - 48);
     setDragOffset({ x: offsetX, y: offsetY });
-    pendingDrag.current = true;
-    dragTimeout.current = setTimeout(() => {
-      if (pendingDrag.current) {
-        setIsDragging(true);
-      }
-    }, 10);
-    window.addEventListener('mouseup', cancelPendingDrag);
-    window.addEventListener('mousemove', cancelPendingDragOnMove);
-  };
-
-  const cancelPendingDrag = () => {
-    pendingDrag.current = false;
-    if (dragTimeout.current) clearTimeout(dragTimeout.current);
-    window.removeEventListener('mouseup', cancelPendingDrag);
-    window.removeEventListener('mousemove', cancelPendingDragOnMove);
-  };
-
-  const cancelPendingDragOnMove = () => {
-    pendingDrag.current = false;
-    if (dragTimeout.current) clearTimeout(dragTimeout.current);
-    window.removeEventListener('mouseup', cancelPendingDrag);
-    window.removeEventListener('mousemove', cancelPendingDragOnMove);
+    setIsDragging(true);
   };
 
   // Get the appropriate icon based on business type
@@ -268,8 +251,16 @@ const BusinessEntity = function BusinessEntity({ business, onClick, onMove, sele
               top: business.position.y - 48,
             }}
             onClick={onClick}
-            onMouseDown={handleMouseDown}
           >
+            {/* Move handle at the top */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 -top-3 w-10 h-4 bg-gray-400 rounded cursor-move flex items-center justify-center text-xs text-white shadow"
+              style={{ zIndex: 2 }}
+              onMouseDown={handleDragHandleMouseDown}
+              title="Drag to move"
+            >
+              ≡
+            </div>
             {/* Business Level - Changed to plain text */}
             <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-bold text-gray-800">
               Lvl {business.level}

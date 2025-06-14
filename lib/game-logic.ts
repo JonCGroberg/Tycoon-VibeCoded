@@ -48,6 +48,7 @@ export function initializeGameState(): GameState {
       maxedOut: false,
       fastTycoon: false
     },
+    mineUnlocked: false // Add mineUnlocked to initial state
   }
 }
 

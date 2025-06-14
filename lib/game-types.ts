@@ -86,6 +86,7 @@ export interface GameState {
   businesses: Business[]
   activeDeliveries: ActiveDelivery[]
   achievements: { [key: string]: boolean }
+  mineUnlocked?: boolean // Permanently unlocks mine after requirement is met
 }
 
 export interface ActiveDelivery {

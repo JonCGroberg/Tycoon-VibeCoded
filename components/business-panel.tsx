@@ -85,7 +85,7 @@ export default function BusinessPanel({
   const shippingTypes = business.shippingTypes;
 
   return (
-    <div className="absolute bottom-4 right-4 w-[28rem] h-[22rem] bg-white rounded-lg shadow-lg border border-gray-300 z-20">
+    <div className="absolute bottom-4 right-4 w-[28rem] h-[22rem] bg-white rounded-lg shadow-lg border border-gray-300 z-[60]" style={{ pointerEvents: 'auto' }}>
       <div className="flex items-center justify-between p-3 border-b border-gray-200">
         <div>
           <h3 className="font-bold text-lg">{getBusinessDisplayName(business.type)}</h3>
