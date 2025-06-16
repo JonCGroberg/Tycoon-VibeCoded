@@ -6,6 +6,16 @@ import { Toaster } from '../ui/toaster'
 import { initializeGameState } from '../../lib/game-logic'
 import { BusinessType } from '@/lib/game-types'
 
+// Silence console.log during tests
+let originalConsoleLog: typeof console.log;
+beforeAll(() => {
+    originalConsoleLog = console.log;
+    console.log = jest.fn();
+});
+afterAll(() => {
+    console.log = originalConsoleLog;
+});
+
 // Mock HTMLMediaElement.prototype.play globally for JSDOM
 global.HTMLMediaElement.prototype.play = jest.fn().mockImplementation(() => Promise.resolve())
 
@@ -123,9 +133,6 @@ describe('TycoonGame', () => {
         fireEvent.click(gameWorld, { clientX: 200, clientY: 200 })
         // Wait for React state to update
         await act(async () => { await Promise.resolve(); })
-        // Log businesses in game state for debugging
-        // eslint-disable-next-line no-console
-        console.log('Businesses after placement:', document.body.innerHTML)
         expect(screen.getByText('$1,900')).toBeInTheDocument() // 2000 - 100
     })
 
@@ -173,13 +180,9 @@ describe('TycoonGame', () => {
         fireEvent.click(gameWorld, { clientX: 200, clientY: 200 })
         // Wait for React state to update
         await act(async () => { await Promise.resolve(); })
-        console.log('Businesses after placement:', document.body.innerHTML)
-        // Wait for at least one business entity to appear, log DOM if not found
         await waitFor(async () => {
             const entities = screen.queryAllByTestId('business-entity')
             if (entities.length === 0) {
-                // eslint-disable-next-line no-console
-                console.log(document.body.innerHTML)
             }
             expect(entities.length).toBeGreaterThan(0)
         }, { timeout: 2000 })
@@ -567,8 +570,6 @@ describe('TycoonGame', () => {
             if (!toast) {
                 // Print all toasts for debugging
                 const allToasts = Array.from(document.querySelectorAll('[data-testid="toast"]')).map(t => t.textContent)
-                // eslint-disable-next-line no-console
-                console.log('All toasts in DOM:', allToasts)
             }
             expect(toast).toBeInTheDocument()
             expect(toast).toHaveTextContent('Relocator')
@@ -717,8 +718,6 @@ describe('TycoonGame extra coverage', () => {
             if (!toast) {
                 // Print all toasts for debugging
                 const allToasts = Array.from(document.querySelectorAll('[data-testid="toast"]')).map(t => t.textContent)
-                // eslint-disable-next-line no-console
-                console.log('All toasts in DOM:', allToasts)
             }
             expect(toast).toBeInTheDocument()
             // Accept either the funName or the description

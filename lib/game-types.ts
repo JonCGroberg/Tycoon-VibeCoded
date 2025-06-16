@@ -42,6 +42,7 @@ export interface DeliveryBot {
   targetBusinessId: string | null
   currentLoad: number
   shippingTypeId?: string
+  wage?: number // Coins paid per delivery or per time unit
 }
 
 export interface PendingDelivery {
@@ -79,6 +80,7 @@ export interface Business {
   gatherProgress?: number
   pendingDeliveries?: PendingDelivery[]
   totalInvested: number // Track total coins spent on this business
+  operatingCost?: number // Coins paid per time unit
 }
 
 export interface GameState {

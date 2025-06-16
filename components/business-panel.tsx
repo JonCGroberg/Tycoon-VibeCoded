@@ -117,6 +117,9 @@ export default function BusinessPanel({
             <span className="mx-2">·</span>
             <span className="font-bold text-gray-400">{formatCurrency(business.totalInvested)}</span>
             <span className="font-medium text-gray-400 ml-1"> Invested</span>
+            {business.operatingCost && (
+              <span className="text-sm text-gray-600">Operating Cost: {formatCurrency(business.operatingCost)}/s</span>
+            )}
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
@@ -300,6 +303,14 @@ export default function BusinessPanel({
                           </div>
                           <Progress value={total === 0 ? 0 : (inUse / total) * 100} className="h-2 w-full bg-gray-100 mt-0.5" />
                         </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <span className="text-xs text-gray-500">Owned: {total}</span>
+                        {bots.map((bot) => (
+                          <span key={bot.id} className="ml-2 text-xs text-blue-600">
+                            Wage: {formatCurrency(bot.wage || 0)}/s
+                          </span>
+                        ))}
                       </div>
                     </li>
                   )

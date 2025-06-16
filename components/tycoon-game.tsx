@@ -13,7 +13,7 @@ import {
 } from "@/lib/game-types"
 import { initializeGameState, generateUniqueId } from "@/lib/game-logic"
 import type { GameState } from "@/lib/game-types"
-import { getShippingTypeConfig, calculateShippingCost } from "@/lib/shipping-types"
+import { getShippingTypeConfig, calculateShippingCost, getDefaultBotWage } from "@/lib/shipping-types"
 import { v4 as uuidv4 } from "uuid"
 import dynamic from "next/dynamic"
 import { TrophyIcon, HelpCircleIcon } from 'lucide-react'
@@ -294,6 +294,29 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
           }
         }
 
+        // Deduct delivery bot wages and business operating costs
+        let totalWages = 0;
+        let totalOperatingCosts = 0;
+        newState.businesses.forEach((business) => {
+          // Sum operating cost
+          if (business.operatingCost) {
+            totalOperatingCosts += business.operatingCost;
+          }
+          // Sum wages for bots that are delivering
+          business.shippingTypes.forEach((shippingType) => {
+            shippingType.bots.forEach((bot) => {
+              if (bot.isDelivering && bot.wage) {
+                totalWages += bot.wage;
+              }
+            });
+          });
+        });
+        // Deduct from coins (every tick is 0.1s, so scale costs down)
+        const tickScale = 0.1; // 0.1s per tick
+        const totalCost = (totalWages + totalOperatingCosts) * tickScale;
+        newState.coins -= totalCost;
+        if (newState.coins < 0) newState.coins = 0;
+
         return newState
       })
     }, 400); // Update every 400ms for smoother performance
@@ -432,6 +455,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
             isDelivering: false,
             targetBusinessId: null,
             currentLoad: 0,
+            wage: getDefaultBotWage('walker'),
           }]
         }
       ];
@@ -477,6 +501,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
       inputResource,
       outputResource,
       totalInvested: businessCost,
+      operatingCost: 2, // Default operating cost, can be adjusted per business type/level
     }
 
     console.log('Created new business:', newBusiness)
@@ -617,6 +642,7 @@ export default function TycoonGame({ initialGameState }: { initialGameState?: Ga
         isDelivering: false,
         targetBusinessId: null,
         currentLoad: 0,
+        wage: getDefaultBotWage(shippingTypeId),
       };
 
       if (shippingType) {

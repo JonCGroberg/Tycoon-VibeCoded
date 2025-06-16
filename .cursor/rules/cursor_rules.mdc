@@ -3,7 +3,7 @@ description: Guidelines for creating and maintaining Cursor rules to ensure cons
 globs: .cursor/rules/*.mdc
 alwaysApply: true
 ---
-- **Rule Structure and Maintenance**
+- Use Bun as the package manager and dev server
   - Use modular, focused rule files for CI/CD, branching, AI guidance, and security.
   - Reference external docs and best practices in each rule.
   - Regularly review and update rules as new practices and tools emerge.

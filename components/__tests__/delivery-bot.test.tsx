@@ -11,6 +11,7 @@ describe('DeliveryBotEntity', () => {
         isDelivering: true,
         targetBusinessId: 'b2',
         currentLoad: 5,
+        wage: 10,
     }
     const baseProps = {
         bot: baseBot,
@@ -31,6 +32,7 @@ describe('DeliveryBotEntity', () => {
     it('shows the correct carrying amount', () => {
         render(<DeliveryBotEntity {...baseProps} />)
         expect(screen.getByText('5')).toBeInTheDocument()
+        expect(baseProps.bot.wage).toBe(10)
     })
 
     it('shows no carrying amount if zero', () => {

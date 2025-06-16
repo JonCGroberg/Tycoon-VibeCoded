@@ -332,6 +332,45 @@ describe('BusinessPanel', () => {
             }
         }
     });
+
+    it('displays operating cost and bot wage', () => {
+        const business = {
+            id: 'b1',
+            type: BusinessType.RESOURCE_GATHERING,
+            position: { x: 0, y: 0 },
+            incomingStorage: { current: 1, capacity: 1 },
+            outgoingStorage: { current: 0, capacity: 10 },
+            processingTime: 1,
+            batchSize: 10,
+            productionProgress: 0,
+            workers: [{ id: 'w1', gatherRate: 1 }],
+            shippingTypes: [
+                {
+                    type: 'walker',
+                    bots: [{
+                        id: 'bot1',
+                        maxLoad: 5,
+                        speed: 65,
+                        isDelivering: false,
+                        targetBusinessId: null,
+                        currentLoad: 0,
+                        wage: 2,
+                    }]
+                }
+            ],
+            level: 1,
+            inputResource: ResourceType.WOOD,
+            outputResource: ResourceType.WOOD,
+            recentProfit: 0,
+            profitDisplayTime: 0,
+            pendingDeliveries: [],
+            totalInvested: 100,
+            operatingCost: 3,
+        }
+        render(<BusinessPanel business={business} coins={1000} onClose={() => { }} onHireShippingType={() => { }} onUpgrade={() => { }} />)
+        expect(screen.getByText(/Operating Cost: \$3\/s/i)).toBeInTheDocument()
+        expect(screen.getByText(/Wage: \$2\/s/i)).toBeInTheDocument()
+    })
 })
 
 describe('getBufferStatusColor', () => {

@@ -127,3 +127,21 @@ export function calculateShippingCost(typeId: string, ownedCount: number): numbe
   // Linear factor: baseCost * 1.1^ownedCount
   return Math.floor(config.baseCost * Math.pow(1.1, ownedCount));
 }
+
+// Helper function to get default wage for a delivery bot based on shipping type
+export function getDefaultBotWage(typeId: string): number {
+  switch (typeId) {
+    case "walker": return 1;
+    case "bicyclist": return 3;
+    case "scooter": return 5;
+    case "van": return 10;
+    case "truck": return 20;
+    case "semi": return 40;
+    case "boxtrain": return 80;
+    case "train": return 120;
+    case "ship": return 100;
+    case "plane": return 200;
+    case "cargo_plane": return 300;
+    default: return 1;
+  }
+}
