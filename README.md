@@ -1,6 +1,6 @@
 # Roblox Tycoon Game - Web Prototype
 
-A web-based tycoon/idle game inspired by Roblox tycoon mechanics. Build, upgrade, and manage a network of resource-gathering and processing businesses to maximize your profits!
+A web-based tycoon/idle game inspired by Roblox tycoon mechanics. Build, upgrade and manage a network of resource-gathering and processing businesses to maximize your profits!
 
 ## Features
 - Place and upgrade various business types (Wood Cutter Camp, Quarry, Mine, Plank Mill, Brick Kiln, Smelter, Tool Shop, Market)
@@ -46,9 +46,9 @@ A web-based tycoon/idle game inspired by Roblox tycoon mechanics. Build, upgrade
 - Use the restart button if you run out of coins.
 
 ## Customization & Development
-- All game logic is in `script.js`.
+- All game logic is implemented in TypeScript within the `lib/` directory.
 - UI styles are in `styles.css`.
-- Business types and progression can be edited in the `BUSINESS_TYPES` object in `script.js`.
+- Business types and progression are defined in TypeScript modules across `lib/` and related components in `components/`.
 
 ## License
 MIT License. See LICENSE file for details.

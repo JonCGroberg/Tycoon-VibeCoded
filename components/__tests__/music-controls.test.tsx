@@ -37,26 +37,26 @@ describe('MusicControls', () => {
         expect(screen.getByLabelText(/Mute|Unmute/)).toBeInTheDocument();
     });
 
-    it('toggles play and pause state', () => {
+    it('toggles play and pause state', async () => {
         const { ref } = renderMusicControls(1);
         act(() => {
             ref.current?.playSongAtIndex(0);
         });
-        const playBtn = screen.queryByLabelText('Play') || screen.getByLabelText('Pause');
+        const playBtn = await screen.findByLabelText('Pause');
         expect(playBtn).not.toBeDisabled();
-        fireEvent.click(playBtn!);
-        const pauseBtn = screen.queryByLabelText('Pause') || screen.queryByLabelText('Play');
+        fireEvent.click(playBtn);
+        const pauseBtn = await screen.findByLabelText('Play');
         expect(pauseBtn).not.toBeDisabled();
-        fireEvent.click(pauseBtn!);
+        fireEvent.click(pauseBtn);
     });
 
-    it('skips to next and previous song', () => {
+    it('skips to next and previous song', async () => {
         const { ref } = renderMusicControls(2);
         act(() => {
             ref.current?.playSongAtIndex(0);
         });
-        const playBtn = screen.queryByLabelText('Play') || screen.queryByLabelText('Pause');
-        fireEvent.click(playBtn!);
+        const playBtn = await screen.findByLabelText('Pause');
+        fireEvent.click(playBtn);
         fireEvent.click(screen.getByLabelText('Next Song'));
         fireEvent.click(screen.getByLabelText('Previous Song'));
     });
